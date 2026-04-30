@@ -1,12 +1,23 @@
-// Smoke test against deployed room-server v3.1 — exercises the v3.1 features
-// the voter app now depends on: typed reserve+TTL, schemas-at-construction,
-// auto schema upload, presence/, RoomError.kind.
+/**
+ * Smoke test — deployed room-server v3.2.0+
+ *
+ * Covers: schemaVersion accurate when ready() settles, reserve+TTL, validation,
+ * explicit delete emits priorValue, presence/ delete emits priorValue.userId on disconnect().
+ *
+ * Node has no built-in WebSocket — register `ws` before connecting.
+ */
+import { WebSocket } from "ws";
 import { RoomClient, RoomError } from "room-server/client";
 import { nanoid } from "nanoid";
 
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = WebSocket;
+}
+
 const HOST = "room-server.santistebanc.partykit.dev";
 const API_KEY = "ranked-vote";
-const ROOM_TTL_SEC = 60; // short TTL for smoke
+const SCHEMA_VERSION = 2;
+const ROOM_TTL_SEC = 60;
 
 const ROOM_SCHEMAS = {
   meta: {
@@ -38,6 +49,7 @@ const ROOM_SCHEMAS = {
   },
 };
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log("[smoke]", ...a);
 
 async function main() {
@@ -49,12 +61,16 @@ async function main() {
     host: HOST,
     roomId,
     config: { apiKey: API_KEY, persistence: "durable" },
-    schemas: { server: ROOM_SCHEMAS, version: 2 },
+    schemas: { server: ROOM_SCHEMAS, version: SCHEMA_VERSION },
   });
   await admin.ready(8_000);
-  log("admin ready, schemaVersion=", admin.schemaVersion);
+  if (admin.schemaVersion !== SCHEMA_VERSION) {
+    throw new Error(
+      `schemaVersion stale after ready(): ${admin.schemaVersion} expected ${SCHEMA_VERSION}`,
+    );
+  }
+  log("✓ ready() reflects schema upload (schemaVersion=", admin.schemaVersion, ")");
 
-  // 1. reserve with TTL
   const reserved = await admin.reserve(
     "meta",
     { title: "Smoke poll", state: "open", createdAt: Date.now() },
@@ -63,7 +79,6 @@ async function main() {
   if (!reserved) throw new Error("reserve returned false");
   log("✓ reserve (with TTL) succeeded");
 
-  // 2. validation: bad meta should be rejected
   try {
     await admin.set("meta", { title: "", state: "open", createdAt: Date.now() });
     throw new Error("expected validation rejection");
@@ -74,71 +89,101 @@ async function main() {
     log("✓ server-side validation works (kind='validation')");
   }
 
-  // 3. presence/ subscription
+  /** @type {({ userId?: string }) | null} */
+  let presenceDeletePrior = null;
+  /** @type {Map<string, unknown>} */
+  const presenceByKey = new Map();
+  const {
+    initial: pi,
+    unsubscribe: unsubPresence,
+  } = await admin.subscribeWithSnapshotPrefix("presence/", (e) => {
+    if (e.type === "set") {
+      presenceByKey.set(e.key, e.value);
+    } else {
+      presenceByKey.delete(e.key);
+      if (e.priorValue?.userId === userId) presenceDeletePrior = e.priorValue;
+    }
+  });
+  for (const [k, v] of Object.entries(pi.entries ?? {}))
+    presenceByKey.set(k, v);
+
   const voter = new RoomClient({
     host: HOST,
     roomId,
     config: { apiKey: API_KEY, persistence: "durable", userId },
-    schemas: { server: ROOM_SCHEMAS, version: 2 },
+    schemas: { server: ROOM_SCHEMAS, version: SCHEMA_VERSION },
   });
-  const presenceUserIds = new Set();
-  const { initial: presenceInitial, unsubscribe: unsubPresence } =
-    await admin.subscribeWithSnapshotPrefix("presence/", (e) => {
-      if (e.type === "delete") {
-        // we don't have userId in delete events — simplest is to recompute
-      } else if (e.value?.userId) {
-        presenceUserIds.add(e.value.userId);
-      }
-    });
-  for (const v of Object.values(presenceInitial.entries)) {
-    if (v?.userId) presenceUserIds.add(v.userId);
-  }
   await voter.ready(8_000);
-  log("voter ready, voter connId=", voter.connectionId);
+  await sleep(600);
 
-  // give presence a beat to propagate
-  await new Promise((r) => setTimeout(r, 500));
-  if (!presenceUserIds.has(userId)) {
-    throw new Error(`presence/ did not surface userId ${userId}`);
-  }
-  log("✓ presence/ surfaced voter userId on connect");
+  const hasPresenceUserId = [...presenceByKey.values()].some(
+    (info) =>
+      !!info &&
+      typeof info === "object" &&
+      "userId" in info &&
+      /** @type {{ userId?: string }} */ (info).userId === userId,
+  );
+  if (!hasPresenceUserId) throw new Error(`presence/ did not surface userId ${userId}`);
+  log("✓ presence/ surfaced voter userId");
 
-  // 4. write users/{id} (no lastSeen) and votes/{id}
-  await voter.set(`users/${userId}`, { id: userId, name: "Alice", mode: "voting" });
-  await voter.set(`votes/${userId}`, {
-    userId,
-    ranking: ["a", "b"],
-    submittedAt: Date.now(),
-  });
-  log("✓ write users/{id} (no lastSeen) and votes/{id} succeeded");
+  let sawExplicitPrior = false;
+  const skid = `prior-${nanoid(4)}`;
+  const { unsubscribe: unsubUsersProbe } = await admin.subscribeWithSnapshotPrefix(
+    "users/",
+    (e) => {
+      if (
+        e.type === "delete" &&
+        e.key === `users/${skid}` &&
+        e.priorValue?.id === skid
+      ) {
+        sawExplicitPrior = true;
+      }
+    },
+    { includeSelf: true },
+  );
+  await admin.set(
+    `users/${skid}`,
+    { id: skid, name: "p", mode: "idle" },
+    { ttl: ROOM_TTL_SEC },
+  );
+  await admin.delete(`users/${skid}`);
+  await sleep(400);
+  unsubUsersProbe();
+  if (!sawExplicitPrior) throw new Error("explicit delete missing priorValue on users/");
+  log("✓ explicit delete carries priorValue on users/");
 
-  // 5. verify counts via prefix subscription
+  await voter.set(
+    `users/${userId}`,
+    { id: userId, name: "Alice", mode: "voting" },
+    { ttl: ROOM_TTL_SEC },
+  );
+  await voter.set(
+    `votes/${userId}`,
+    { userId, ranking: ["a", "b"], submittedAt: Date.now() },
+    { ttl: ROOM_TTL_SEC },
+  );
+  log("✓ write users/{id} and votes/{id}");
+
   const { initial: votesSnap, unsubscribe: unsubVotes } =
     await admin.subscribeWithSnapshotPrefix("votes/", () => {});
-  const voteCount = Object.keys(votesSnap.entries).length;
-  if (voteCount !== 1) throw new Error(`expected 1 vote, got ${voteCount}`);
+  if (Object.keys(votesSnap.entries).length !== 1) {
+    throw new Error(`expected 1 vote, got ${Object.keys(votesSnap.entries).length}`);
+  }
   log("✓ votes/ snapshot contains 1 entry");
 
-  // 6. voter disconnect → presence eviction
   await voter.flushAndDisconnect(2_000);
-  await new Promise((r) => setTimeout(r, 1500));
-  // Re-snapshot presence
-  const { initial: presenceAfter } = await admin.subscribeWithSnapshotPrefix(
-    "presence/",
-    () => {},
-  );
-  const stillPresent = Object.values(presenceAfter.entries).some(
-    (v) => v?.userId === userId,
-  );
-  if (stillPresent) {
-    log("⚠ voter still in presence/ after disconnect — server-side eviction lag (acceptable)");
-  } else {
-    log("✓ voter dropped from presence/ after disconnect");
+
+  for (let i = 0; i < 30 && presenceDeletePrior == null; i++) await sleep(150);
+
+  if (!presenceDeletePrior?.userId || presenceDeletePrior.userId !== userId) {
+    throw new Error(
+      `presence/ disconnect delete lacked priorValue.userId (${JSON.stringify(presenceDeletePrior)})`,
+    );
   }
+  log("✓ presence disconnect carries priorValue.userId");
 
   unsubPresence();
   unsubVotes();
-  // 7. cleanup
   await admin.deletePrefix("votes/");
   await admin.delete("meta");
   await admin.flushAndDisconnect(2_000);
