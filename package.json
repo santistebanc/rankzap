@@ -20,6 +20,7 @@
     "room-server": "github:santistebanc/room-server#v3.2.0"
   },
   "devDependencies": {
+    "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.17",
     "@tailwindcss/vite": "4.2.4",
     "@types/qrcode": "1.5.5",
     "@types/react": "19.2.14",
