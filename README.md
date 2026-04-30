@@ -15,6 +15,7 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - `tailwindcss` v4 with CSS-variable palette (auto light/dark)
 - `nanoid` for short room ids
 - `qrcode` for the admin's share QR
+- [`room-server`](https://github.com/santistebanc/room-server) **v3.2.0** (typed `RoomClient`, schema version at `ready()`, delete events include `priorValue`)
 
 ## Local development
 

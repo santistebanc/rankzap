@@ -17,7 +17,7 @@
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-router-dom": "7.14.2",
-    "room-server": "github:santistebanc/room-server#v3.1.0"
+    "room-server": "github:santistebanc/room-server#v3.2.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.2.4",
@@ -27,6 +27,7 @@
     "@vitejs/plugin-react": "6.0.1",
     "tailwindcss": "4.2.4",
     "typescript": "6.0.3",
-    "vite": "8.0.10"
+    "vite": "8.0.10",
+    "ws": "8.18.2"
   }
 }

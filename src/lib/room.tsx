@@ -218,6 +218,7 @@ export function useRoomList<K extends string>(
           if (!alive) return;
           setItems((prev) => {
             const next = new Map(prev);
+            // v3.2+: delete events carry priorValue; we key by full path so eviction is by e.key alone.
             if (e.type === "delete") next.delete(e.key);
             else next.set(e.key, e.value);
             return next;
