@@ -25,7 +25,9 @@ cp .env.example .env       # already filled with the public room-server defaults
 npm run dev
 ```
 
-Vite 8 uses Rolldown with platform-specific native addons. On **Linux arm64** (including many WSL setups), npm sometimes skips the nested optional `@rolldown/binding-linux-*` package; this repo pins `@rolldown/binding-linux-arm64-gnu` (version-matched to Rolldown) so `npm install` always pulls it. If you still see a missing-binding error, delete `node_modules` and run `npm install` again.
+Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will skip the Rolldown native bindings and `npm run dev` may fail.
+
+Vite 8 uses Rolldown with platform-specific native addons. Nested optional bindings can fail to install; this repo declares **`optionalDependencies`** for **`@rolldown/binding-linux-{x64,arm64}-gnu`** (version-matched to Rolldown) so **Linux amd64** (GitHub Actions) and **Linux arm64** (many WSL images) both get the right native module without forcing the wrong CPU in `npm ci`. If you still see a missing-binding error, delete `node_modules` and run `npm install` again.
 
 `.env`:
 

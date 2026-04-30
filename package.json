@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -19,8 +22,11 @@
     "react-router-dom": "7.14.2",
     "room-server": "github:santistebanc/room-server#v3.2.0"
   },
-  "devDependencies": {
+  "optionalDependencies": {
     "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.17",
+    "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.17"
+  },
+  "devDependencies": {
     "@tailwindcss/vite": "4.2.4",
     "@types/qrcode": "1.5.5",
     "@types/react": "19.2.14",
