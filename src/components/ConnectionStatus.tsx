@@ -1,0 +1,27 @@
+import { useRoom } from "../lib/room";
+
+export function ConnectionStatus() {
+  const { status } = useRoom();
+
+  if (status === "ready") return null;
+
+  const label =
+    status === "connecting"
+      ? "Connecting…"
+      : status === "reconnecting"
+        ? "Reconnecting…"
+        : "Disconnected";
+
+  const tone =
+    status === "closed" ? "bg-danger-soft text-danger" : "bg-surface-2 text-muted";
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`fixed top-3 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-medium shadow-sm ${tone}`}
+    >
+      {label}
+    </div>
+  );
+}
