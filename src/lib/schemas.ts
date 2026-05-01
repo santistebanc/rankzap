@@ -21,13 +21,13 @@
 import type { JsonSchema, PresenceInfo } from "room-server/types";
 import type { Meta, Option, Settings, UserRecord, Vote } from "./types";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 7;
 
 const metaSchema: JsonSchema = {
   type: "object",
   required: ["title", "state", "createdAt"],
   properties: {
-    title: { type: "string", minLength: 1, maxLength: 100 },
+    title: { type: "string", minLength: 0, maxLength: 100 },
     state: { type: "string", enum: ["open", "closed"] },
     createdAt: { type: "number" },
   },
@@ -35,13 +35,24 @@ const metaSchema: JsonSchema = {
 
 const settingsSchema: JsonSchema = {
   type: "object",
-  required: ["tallyMode", "showLiveResults", "allowRevote", "allowAdd", "showUsers"],
+  required: [
+    "tallyMode",
+    "ballotTitle",
+    "showLiveResults",
+    "allowRevote",
+    "allowAdd",
+    "showUsers",
+    "showVoterVotes",
+  ],
   properties: {
     tallyMode: { type: "string", enum: ["borda", "dowdall", "copeland"] },
+    /** Poll heading; legacy property name retained for persisted rooms. */
+    ballotTitle: { type: "string", maxLength: 100 },
     showLiveResults: { type: "boolean" },
     allowRevote: { type: "boolean" },
     allowAdd: { type: "boolean" },
     showUsers: { type: "boolean" },
+    showVoterVotes: { type: "boolean" },
   },
 };
 
@@ -63,6 +74,7 @@ const userSchema: JsonSchema = {
     id: { type: "string", minLength: 1, maxLength: 32 },
     name: { type: "string", minLength: 1, maxLength: 32 },
     mode: { type: "string", enum: ["idle", "voting"] },
+    ignored: { type: "boolean" },
   },
 };
 
@@ -76,6 +88,7 @@ const voteSchema: JsonSchema = {
       items: { type: "string", maxLength: 32 },
     },
     submittedAt: { type: "number" },
+    ignored: { type: "boolean" },
   },
 };
 

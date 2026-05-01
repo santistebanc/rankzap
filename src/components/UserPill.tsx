@@ -12,49 +12,75 @@ interface UserPillProps {
   user: UserRecord;
   state: PillState;
   isYou?: boolean;
+  variant?: "pill" | "tab";
+  showIgnoredBadge?: boolean;
 }
 
-const STATE_CONFIG: Record<PillState, { className: string; icon: React.ReactNode; label: string }> = {
+const STATE_CONFIG: Record<
+  PillState,
+  { pillClassName: string; tabClassName: string; icon: React.ReactNode; label: string }
+> = {
   changing: {
-    className: "bg-accent-soft text-accent border-accent",
+    pillClassName: "bg-accent-soft text-accent border-accent",
+    tabClassName: "bg-accent-soft text-accent",
     icon: <PencilIcon className="size-3 animate-pulse" />,
     label: "Changing vote",
   },
   voting: {
-    className: "bg-accent-soft text-accent border-accent",
-    icon: <PencilIcon className="size-3" />,
-    label: "Voting",
+    pillClassName: "bg-accent-soft text-accent border-accent",
+    tabClassName: "bg-accent-soft text-accent",
+    icon: <PendingIcon className="size-3" />,
+    label: "Not voted yet",
   },
   voted: {
-    className: "bg-success-soft text-success border-success",
+    pillClassName: "bg-success-soft text-success border-success",
+    tabClassName: "bg-success-soft text-success",
     icon: <CheckIcon className="size-3" />,
     label: "Voted",
   },
   online: {
-    className: "bg-surface-2 text-text border-border",
-    icon: <span className="size-2 rounded-full bg-success" />,
-    label: "Online",
+    pillClassName: "bg-surface-2 text-text border-border",
+    tabClassName: "bg-surface-2 text-text",
+    icon: <PendingIcon className="size-3" />,
+    label: "Not voted yet (online)",
   },
   offline: {
-    className: "bg-transparent text-muted border-border opacity-60",
-    icon: <span className="size-2 rounded-full border border-muted" />,
-    label: "Offline",
+    pillClassName: "bg-transparent text-muted border-border opacity-60",
+    tabClassName: "bg-transparent text-muted opacity-60",
+    icon: <PendingIcon className="size-3" />,
+    label: "Not voted yet (offline)",
   },
 };
 
-function UserPillRaw({ user, state, isYou }: UserPillProps) {
+function UserPillRaw({
+  user,
+  state,
+  isYou,
+  variant = "pill",
+  showIgnoredBadge = false,
+}: UserPillProps) {
   const cfg = STATE_CONFIG[state];
+  const isTab = variant === "tab";
+  const shape = isTab
+    ? "inline-flex min-h-9 items-center gap-2 px-3 py-2 text-sm font-semibold whitespace-nowrap"
+    : "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium";
+  const tone = isTab ? cfg.tabClassName : cfg.pillClassName;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${cfg.className}`}
-      title={`${user.name}${isYou ? " (you)" : ""} — ${cfg.label}`}
+      className={`${shape} ${tone}`}
+      title={`${user.name}${isYou ? " (you)" : ""}, ${cfg.label}`}
       aria-label={`${user.name}${isYou ? " (you)" : ""}, ${cfg.label}`}
     >
       <span aria-hidden="true" className="flex items-center">
         {cfg.icon}
       </span>
-      <span className="max-w-[10rem] truncate">{user.name}</span>
-      {isYou ? <span className="text-[0.6rem] opacity-70">you</span> : null}
+      <span className="max-w-40 truncate">{user.name}</span>
+      {isYou ? <span className="text-[0.68rem] opacity-70">you</span> : null}
+      {showIgnoredBadge && user.ignored ? (
+        <span className="border border-danger/35 bg-danger-soft px-1.5 py-0.5 text-[0.64rem] font-semibold tracking-wide text-danger">
+          Ignored
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -64,8 +90,11 @@ export const UserPill = memo(UserPillRaw, (a, b) => {
     a.user.id === b.user.id &&
     a.user.name === b.user.name &&
     a.user.mode === b.user.mode &&
+    Boolean(a.user.ignored) === Boolean(b.user.ignored) &&
     a.state === b.state &&
-    a.isYou === b.isYou
+    a.isYou === b.isYou &&
+    a.variant === b.variant &&
+    a.showIgnoredBadge === b.showIgnoredBadge
   );
 });
 
@@ -93,6 +122,14 @@ function CheckIcon({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+function PendingIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="4.5" stroke="currentColor" strokeWidth="1.5" />
     </svg>
   );
 }

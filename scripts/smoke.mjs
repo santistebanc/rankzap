@@ -16,7 +16,7 @@ if (typeof globalThis.WebSocket === "undefined") {
 
 const HOST = "room-server.santistebanc.partykit.dev";
 const API_KEY = "ranked-vote";
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 const ROOM_TTL_SEC = 60;
 
 const ROOM_SCHEMAS = {
@@ -24,7 +24,7 @@ const ROOM_SCHEMAS = {
     type: "object",
     required: ["title", "state", "createdAt"],
     properties: {
-      title: { type: "string", minLength: 1, maxLength: 100 },
+      title: { type: "string", minLength: 0, maxLength: 100 },
       state: { type: "string", enum: ["open", "closed"] },
       createdAt: { type: "number" },
     },
@@ -80,7 +80,11 @@ async function main() {
   log("✓ reserve (with TTL) succeeded");
 
   try {
-    await admin.set("meta", { title: "", state: "open", createdAt: Date.now() });
+    await admin.set("meta", {
+      title: "x".repeat(101),
+      state: "open",
+      createdAt: Date.now(),
+    });
     throw new Error("expected validation rejection");
   } catch (e) {
     if (!(e instanceof RoomError) || e.kind !== "validation") {
@@ -88,6 +92,9 @@ async function main() {
     }
     log("✓ server-side validation works (kind='validation')");
   }
+
+  await admin.set("meta", { title: "", state: "open", createdAt: Date.now() });
+  log("✓ empty meta title accepted");
 
   /** @type {({ userId?: string }) | null} */
   let presenceDeletePrior = null;

@@ -1,13 +1,32 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRoomList } from "../lib/room";
+import { fallbackVoterName } from "../lib/identity";
 import type { UserRecord } from "../lib/types";
 import { UserPill, type PillState } from "./UserPill";
 
 interface UsersListProps {
   selfUserId?: string;
+  includeSelf?: boolean;
+  showIgnoredBadge?: boolean;
+  /** `tabStrip`: one horizontal row of boxy segments (like main tabs), with scroll on overflow. */
+  variant?: "pills" | "tabStrip";
+  /** Selected voter in `tabStrip` (shows pressed state). */
+  selectedVoterId?: string | null;
+  /** Toggle or select a voter for `tabStrip` (caller handles single-select / toggle). */
+  onToggleVoter?: (userId: string) => void;
+  /** Called when the selected voter disappears from this list (e.g. went offline without a vote). */
+  onInvalidateVoterSelection?: () => void;
 }
 
-export function UsersList({ selfUserId }: UsersListProps) {
+export function UsersList({
+  selfUserId,
+  includeSelf = true,
+  showIgnoredBadge = false,
+  variant = "pills",
+  selectedVoterId = null,
+  onToggleVoter,
+  onInvalidateVoterSelection,
+}: UsersListProps) {
   const usersMap = useRoomList("users/");
   const votesMap = useRoomList("votes/");
   const presenceMap = useRoomList("presence/");
@@ -24,18 +43,43 @@ export function UsersList({ selfUserId }: UsersListProps) {
 
   const votedUserIds = useMemo(() => {
     const set = new Set<string>();
-    for (const key of votesMap.keys()) {
-      set.add(key.replace(/^votes\//, ""));
+    for (const [key, vote] of votesMap.entries()) {
+      if (!key.startsWith("votes/")) continue;
+      if (vote?.ranking?.length) set.add(key.replace(/^votes\//, ""));
     }
     return set;
   }, [votesMap]);
 
   const visible = useMemo(() => {
     const arr: UserRecord[] = [];
+    const inMap = new Set<string>();
     for (const u of usersMap.values()) {
+      inMap.add(u.id);
+      if (!includeSelf && u.id === selfUserId) continue;
       const online = onlineUserIds.has(u.id);
       const voted = votedUserIds.has(u.id);
       if (online || voted) arr.push(u);
+    }
+    const syntheticSeen = new Set(arr.map((u) => u.id));
+    for (const uid of onlineUserIds) {
+      if (!includeSelf && uid === selfUserId) continue;
+      if (inMap.has(uid) || syntheticSeen.has(uid)) continue;
+      syntheticSeen.add(uid);
+      arr.push({
+        id: uid,
+        name: fallbackDisplayName(uid),
+        mode: "idle",
+      });
+    }
+    for (const uid of votedUserIds) {
+      if (!includeSelf && uid === selfUserId) continue;
+      if (syntheticSeen.has(uid)) continue;
+      syntheticSeen.add(uid);
+      arr.push({
+        id: uid,
+        name: fallbackDisplayName(uid),
+        mode: "idle",
+      });
     }
     arr.sort((a, b) => {
       // Self first, then voters, then by name.
@@ -47,38 +91,77 @@ export function UsersList({ selfUserId }: UsersListProps) {
       return a.name.localeCompare(b.name);
     });
     return arr;
-  }, [usersMap, onlineUserIds, votedUserIds, selfUserId]);
+  }, [usersMap, onlineUserIds, votedUserIds, selfUserId, includeSelf]);
 
-  const onlineCount = visible.filter((u) => onlineUserIds.has(u.id)).length;
-  const votedCount = visible.filter((u) => votedUserIds.has(u.id)).length;
+  useEffect(() => {
+    if (variant !== "tabStrip" || selectedVoterId == null) return;
+    if (visible.some((u) => u.id === selectedVoterId)) return;
+    onInvalidateVoterSelection?.();
+  }, [variant, visible, selectedVoterId, onInvalidateVoterSelection]);
 
-  return (
-    <section aria-label="Participants" className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between text-xs text-muted">
-        <span>
-          {votedCount} voted · {onlineCount} online
-        </span>
-        <span>{visible.length} total</span>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
+  if (variant === "tabStrip") {
+    return (
+      <div role="group" aria-label="Voters" className="flex w-full flex-nowrap overflow-x-auto bg-surface-2">
         {visible.length === 0 ? (
-          <span className="text-xs text-muted">No participants yet.</span>
+          <div className="flex min-h-9 min-w-full shrink-0 items-center px-3 py-2 text-sm text-muted sm:min-w-0">
+            No voters yet.
+          </div>
         ) : (
-          visible.map((u) => (
-            <UserPill
-              key={u.id}
-              user={u}
-              state={pillStateFor(
-                u,
-                onlineUserIds.has(u.id),
-                votedUserIds.has(u.id),
-              )}
-              isYou={u.id === selfUserId}
-            />
-          ))
+          visible.map((u) => {
+            const selected = selectedVoterId === u.id;
+            return (
+              <div
+                key={u.id}
+                className={`flex shrink-0 border-r border-border last:border-r-0 ${
+                  selected ? "ring-2 ring-inset ring-accent" : ""
+                }`}
+              >
+                <button
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onToggleVoter?.(u.id)}
+                  className="min-h-9 w-full text-left outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                >
+                  <UserPill
+                    user={u}
+                    variant="tab"
+                    showIgnoredBadge={showIgnoredBadge}
+                    state={pillStateFor(
+                      u,
+                      onlineUserIds.has(u.id),
+                      votedUserIds.has(u.id),
+                    )}
+                    isYou={u.id === selfUserId}
+                  />
+                </button>
+              </div>
+            );
+          })
         )}
       </div>
-    </section>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {visible.length === 0 ? (
+        <span className="text-xs text-muted">No voters yet.</span>
+      ) : (
+        visible.map((u) => (
+          <UserPill
+            key={u.id}
+            user={u}
+            showIgnoredBadge={showIgnoredBadge}
+            state={pillStateFor(
+              u,
+              onlineUserIds.has(u.id),
+              votedUserIds.has(u.id),
+            )}
+            isYou={u.id === selfUserId}
+          />
+        ))
+      )}
+    </div>
   );
 }
 
@@ -92,4 +175,8 @@ function pillStateFor(
   if (user.mode === "voting") return "voting";
   if (hasVoted) return "voted";
   return "online";
+}
+
+function fallbackDisplayName(userId: string): string {
+  return fallbackVoterName(userId);
 }

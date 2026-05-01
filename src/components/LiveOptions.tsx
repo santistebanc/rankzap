@@ -26,12 +26,18 @@ export function LiveOptions({
 }: LiveOptionsProps) {
   const optionsMap = useRoomList("options/");
   const votesMap = useRoomList("votes/");
+  const usersMap = useRoomList("users/");
 
   const options = useMemo<Option[]>(() => {
     return [...optionsMap.values()].sort((a, b) => a.addedAt - b.addedAt);
   }, [optionsMap]);
 
-  const votes = useMemo<Vote[]>(() => [...votesMap.values()], [votesMap]);
+  const votes = useMemo<Vote[]>(() => {
+    const ignoredUserIds = new Set(
+      [...usersMap.values()].filter((u) => u.ignored).map((u) => u.id),
+    );
+    return [...votesMap.values()].filter((v) => !ignoredUserIds.has(v.userId));
+  }, [usersMap, votesMap]);
 
   const tally = useMemo(
     () => computeTally({ options, votes, mode: tallyMode }),
@@ -44,14 +50,14 @@ export function LiveOptions({
 
   if (options.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
+      <div className="border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
         No options yet.
       </div>
     );
   }
 
   return (
-    <ul className="flex flex-col gap-2" aria-label="Options">
+    <ul className="flex flex-col gap-3" aria-label="Poll options">
       {orderedIds.map((id) => {
         const option = options.find((o) => o.id === id);
         if (!option) return null;
@@ -125,7 +131,7 @@ function OptionRow({
 
   return (
     <li
-      className="relative overflow-hidden rounded-lg border border-border bg-surface"
+      className="relative overflow-hidden border border-border bg-surface"
       aria-label={ariaLabel}
     >
       {showResults ? (
@@ -135,9 +141,9 @@ function OptionRow({
           style={{ width: `${pct}%` }}
         />
       ) : null}
-      <div className="relative flex items-center gap-2 px-3 py-2.5">
+      <div className="relative flex items-center gap-3 px-3 py-2.5">
         {showResults ? (
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-sm font-semibold tabular-nums text-accent">
             {rank}
           </span>
         ) : null}
@@ -163,14 +169,16 @@ function OptionRow({
                 inputRef.current?.blur();
               }
             }}
-            className="flex-1 min-w-0 rounded-md bg-transparent px-1.5 py-1 outline-none focus:bg-surface-2"
+            className="min-h-8 flex-1 min-w-0 bg-transparent px-2 py-1.5 outline-none focus:bg-surface-2"
           />
         ) : (
-          <span className="flex-1 min-w-0 truncate">{option.text}</span>
+          <span className="flex-1 min-w-0 text-sm font-medium leading-5 wrap-break-word">
+            {option.text}
+          </span>
         )}
 
         {showResults ? (
-          <span className="shrink-0 text-xs font-medium tabular-nums text-muted">
+          <span className="shrink-0 text-sm font-semibold tabular-nums text-muted">
             {formatScore(score)}
           </span>
         ) : null}
@@ -180,7 +188,7 @@ function OptionRow({
             type="button"
             onClick={remove}
             aria-label={`Remove ${option.text}`}
-            className="shrink-0 rounded-md p-1 text-muted hover:bg-danger-soft hover:text-danger"
+            className="min-h-8 min-w-8 shrink-0 p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
           >
             <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
               <path

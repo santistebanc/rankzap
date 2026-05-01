@@ -97,6 +97,11 @@ interface RoomProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provide a room-scoped {@link RoomClient}. When `roomId` changes, the parent
+ * should remount this provider (e.g. `key={roomId}`) so the ref-counted cache
+ * swaps to the correct client and subtree state resets.
+ */
 export function RoomProvider({ roomId, userId, children }: RoomProviderProps) {
   const entryRef = useRef<CacheEntry | null>(null);
   if (entryRef.current === null) {
@@ -195,7 +200,7 @@ export function useRoomValue<K extends string>(
  *
  * The server caps the initial snapshot at 1000 entries per prefix (documented
  * trade-off — see room-server v3.1 README). For this app each prefix tops out
- * at participant count, so it's never close. If you need to cross 1000, shard
+ * at typical poll sizes, so it's never close. If you need to cross 1000, shard
  * at write time and run N concurrent subscriptions.
  */
 export function useRoomList<K extends string>(

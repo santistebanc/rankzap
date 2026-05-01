@@ -11,6 +11,7 @@ interface SubmitVoteProps {
   hasVoted: boolean;
   disabled: boolean;
   disabledReason?: string;
+  beforeSubmit?: () => Promise<void>;
   onSubmitted: () => void;
 }
 
@@ -28,6 +29,7 @@ export function SubmitVote({
   hasVoted,
   disabled,
   disabledReason,
+  beforeSubmit,
   onSubmitted,
 }: SubmitVoteProps) {
   const { client } = useRoom();
@@ -39,10 +41,13 @@ export function SubmitVote({
     setState("submitting");
     setErrorMsg(null);
     try {
+      if (beforeSubmit) {
+        await withTimeout(beforeSubmit(), SUBMIT_TIMEOUT_MS);
+      }
       await withTimeout(
         client.set(
           `votes/${userId}`,
-          { userId, ranking, submittedAt: Date.now() },
+          { userId, ranking, submittedAt: Date.now(), ignored: false },
           SET_OPTS,
         ),
         SUBMIT_TIMEOUT_MS,
@@ -60,32 +65,38 @@ export function SubmitVote({
   let label: string;
   if (state === "submitting") label = "Submitting…";
   else if (state === "success") label = "Submitted!";
-  else if (state === "error") label = "Failed — retry?";
+  else if (state === "error") label = "Failed, try again";
   else label = hasVoted ? "Update vote" : "Submit vote";
 
   const tone =
     state === "error"
-      ? "bg-danger text-white"
+      ? "bg-danger text-white hover:brightness-95"
       : state === "success"
-        ? "bg-success text-white"
-        : "bg-accent text-white";
+        ? "bg-success text-white hover:brightness-95"
+        : "border border-accent/30 bg-accent-soft text-accent hover:brightness-98";
 
   return (
-    <div className="flex flex-col gap-1">
-      <button
-        type="button"
-        onClick={submit}
-        disabled={disabled || state === "submitting" || ranking.length === 0}
-        title={disabled ? disabledReason : undefined}
-        className={`w-full rounded-lg px-4 py-3 text-sm font-semibold transition-colors disabled:opacity-50 ${tone}`}
+    <div className="flex min-w-0 flex-1 flex-col gap-2">
+      <div
+        className={`flex min-w-0 items-center gap-2 ${
+          disabled && disabledReason ? "justify-between" : "justify-end"
+        }`}
       >
-        {label}
-      </button>
-      {disabled && disabledReason ? (
-        <p className="text-xs text-muted">{disabledReason}</p>
-      ) : null}
+        {disabled && disabledReason ? (
+          <p className="min-w-0 flex-1 text-xs leading-5 text-muted">{disabledReason}</p>
+        ) : null}
+        <button
+          type="button"
+          onClick={submit}
+          disabled={disabled || state === "submitting" || ranking.length === 0}
+          title={disabled ? disabledReason : undefined}
+          className={`inline-flex h-12 shrink-0 items-center justify-center whitespace-nowrap px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${tone}`}
+        >
+          {label}
+        </button>
+      </div>
       {state === "error" && errorMsg ? (
-        <p className="text-xs text-danger" role="alert">
+        <p className="text-xs leading-5 text-danger" role="alert">
           {errorMsg}
         </p>
       ) : null}
@@ -97,14 +108,14 @@ function describeError(e: unknown): string {
   if (e instanceof RoomError) {
     switch (e.kind) {
       case "transient":
-        return "Network hiccup — try again.";
+        return "Network hiccup, try again.";
       case "rateLimit":
-        return "Slow down — too many writes.";
+        return "Slow down, too many writes.";
       case "validation":
         return "Vote rejected by server validation.";
       case "auth":
       case "schemaConflict":
-        return "Session expired — refresh the page.";
+        return "Session expired, refresh the page.";
       default:
         return e.message || "Couldn't submit your vote.";
     }

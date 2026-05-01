@@ -42,10 +42,59 @@ const safeRemove = (key: string): void => {
 // ── Admin: last created room ────────────────────────────────────────────────
 
 const K_ADMIN_LAST_ROOM = "voter:admin:lastRoomId";
+const K_ADMIN_RECENT_POLLS = "voter:admin:recentPolls";
 
 export const getAdminLastRoomId = (): string | null => safeGet(K_ADMIN_LAST_ROOM);
 export const setAdminLastRoomId = (id: string): void => safeSet(K_ADMIN_LAST_ROOM, id);
 export const clearAdminLastRoomId = (): void => safeRemove(K_ADMIN_LAST_ROOM);
+
+export interface RecentPollEntry {
+  roomId: string;
+  savedAt: number;
+}
+
+export const getRecentPolls = (): RecentPollEntry[] => {
+  const raw = safeGet(K_ADMIN_RECENT_POLLS);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (x): x is RecentPollEntry =>
+          Boolean(x) &&
+          typeof x.roomId === "string" &&
+          x.roomId.length > 0 &&
+          typeof x.savedAt === "number",
+      )
+      .sort((a, b) => b.savedAt - a.savedAt);
+  } catch {
+    return [];
+  }
+};
+
+export const setRecentPolls = (entries: RecentPollEntry[]): void => {
+  safeSet(K_ADMIN_RECENT_POLLS, JSON.stringify(entries));
+};
+
+export const addRecentPoll = (roomId: string): void => {
+  const now = Date.now();
+  const next = getRecentPolls()
+    .filter((x) => x.roomId !== roomId)
+    .concat({ roomId, savedAt: now })
+    .sort((a, b) => b.savedAt - a.savedAt)
+    .slice(0, 20);
+  setRecentPolls(next);
+};
+
+/** Remove one poll from the recents list and clear admin last-room if it matches. */
+export const removeRecentPoll = (roomId: string): void => {
+  const next = getRecentPolls().filter((x) => x.roomId !== roomId);
+  setRecentPolls(next);
+  if (getAdminLastRoomId() === roomId) {
+    clearAdminLastRoomId();
+  }
+};
 
 // ── Voter: global identity ──────────────────────────────────────────────────
 
@@ -89,4 +138,10 @@ export const getVoterTally = (roomId: string): TallyMode | null => {
 
 export const setVoterTally = (roomId: string, mode: TallyMode): void => {
   safeSet(tallyKey(roomId), mode);
+};
+
+/** Drop per-room voter prefs from this browser (rank + tally mode). */
+export const clearPollLocalStorage = (roomId: string): void => {
+  safeRemove(rankKey(roomId));
+  safeRemove(tallyKey(roomId));
 };

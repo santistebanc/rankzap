@@ -2,32 +2,9 @@ import { nanoid } from "nanoid";
 import { clampName } from "./types";
 import { getVoterName, getVoterUserId, setVoterName, setVoterUserId } from "./storage";
 
-const ANIMAL_NAMES = [
-  "Otter",
-  "Fox",
-  "Heron",
-  "Owl",
-  "Bear",
-  "Wolf",
-  "Hare",
-  "Lynx",
-  "Stag",
-  "Pike",
-  "Robin",
-  "Quail",
-  "Mole",
-  "Newt",
-  "Shrike",
-];
-
-function defaultDisplayName(): string {
-  const animal = ANIMAL_NAMES[Math.floor(Math.random() * ANIMAL_NAMES.length)];
-  const num = Math.floor(Math.random() * 900) + 100;
-  return `${animal} ${num}`;
-}
-
 export interface VoterIdentity {
   userId: string;
+  /** Empty until the voter chooses a display name */
   name: string;
 }
 
@@ -37,16 +14,20 @@ export function getOrCreateVoterIdentity(): VoterIdentity {
     userId = nanoid(12);
     setVoterUserId(userId);
   }
-  let name = getVoterName();
-  if (!name) {
-    name = defaultDisplayName();
-    setVoterName(name);
-  }
-  return { userId, name: clampName(name) };
+  const stored = getVoterName();
+  const name = stored ? clampName(stored) : "";
+  return { userId, name };
 }
 
 export function persistVoterName(name: string): string {
   const clamped = clampName(name);
-  if (clamped) setVoterName(clamped);
+  setVoterName(clamped);
   return clamped;
+}
+
+export function fallbackVoterName(userId: string): string {
+  const seed = userId.slice(0, 6);
+  const n = Number.parseInt(seed, 36);
+  const suffix = Number.isFinite(n) ? (n % 999) + 1 : 1;
+  return `User ${suffix}`;
 }

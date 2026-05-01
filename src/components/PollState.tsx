@@ -43,10 +43,10 @@ export function PollState({ controllable }: PollStateProps) {
     return (
       <div className="flex items-center gap-2 text-sm">
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+          className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
             isOpen
               ? "bg-success-soft text-success"
-              : "bg-surface-2 text-muted border border-border"
+              : "border border-border bg-surface-2 text-muted"
           }`}
         >
           <span
@@ -60,25 +60,27 @@ export function PollState({ controllable }: PollStateProps) {
   }
 
   return (
-    <section aria-label="Poll state" className="flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onClick={toggleState}
-        className={`flex-1 min-w-[10rem] rounded-lg px-3 py-2 text-sm font-medium ${
-          isOpen
-            ? "border border-border bg-surface text-text hover:bg-surface-2"
-            : "bg-success text-white"
-        }`}
-      >
-        {isOpen ? "Close poll" : "Open poll"}
-      </button>
-      <button
-        type="button"
-        onClick={resetVotes}
-        className="flex-1 min-w-[10rem] rounded-lg border border-danger-soft bg-transparent px-3 py-2 text-sm font-medium text-danger hover:bg-danger-soft"
-      >
-        Reset votes
-      </button>
+    <section aria-label="Poll state" className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={toggleState}
+          className={`min-h-9 flex-1 px-3 text-sm font-semibold ${
+            isOpen
+              ? "border border-border bg-surface-2 text-text hover:bg-surface"
+              : "bg-success text-white"
+          }`}
+        >
+          {isOpen ? "Close poll" : "Reopen poll"}
+        </button>
+        <button
+          type="button"
+          onClick={resetVotes}
+          className="min-h-9 flex-1 border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
+        >
+          Reset all votes
+        </button>
+      </div>
     </section>
   );
 }

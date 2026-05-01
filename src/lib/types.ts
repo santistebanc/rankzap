@@ -13,9 +13,27 @@ export const TALLY_MODE_LABELS: Record<TallyMode, string> = {
   dowdall: "Dowdall",
   copeland: "Copeland",
 };
+export const TALLY_MODE_INFO: Record<
+  TallyMode,
+  { title: string; summary: string }
+> = {
+  borda: {
+    title: "Borda Count",
+    summary: "Rewards broadly liked options, higher ranks earn more points.",
+  },
+  dowdall: {
+    title: "Dowdall",
+    summary: "Strongly favors first choices while still counting lower ranks.",
+  },
+  copeland: {
+    title: "Copeland",
+    summary: "Compares options head to head, strongest in direct matchups wins.",
+  },
+};
 
 export type PollState = "open" | "closed";
 
+/** Optional poll title from room bootstrap; prefer `Settings.ballotTitle` for the heading. */
 export interface Meta {
   title: string;
   state: PollState;
@@ -24,10 +42,16 @@ export interface Meta {
 
 export interface Settings {
   tallyMode: TallyMode;
+  /**
+   * Poll heading shown to admins and voters (optional).
+   * Stored under the key `ballotTitle` for backward compatibility with existing rooms.
+   */
+  ballotTitle: string;
   showLiveResults: boolean;
   allowRevote: boolean;
   allowAdd: boolean;
   showUsers: boolean;
+  showVoterVotes: boolean;
 }
 
 export interface Option {
@@ -45,26 +69,30 @@ export interface UserRecord {
   id: string;
   name: string;
   mode: UserMode;
+  ignored?: boolean;
 }
 
 export interface Vote {
   userId: string;
   ranking: string[];
   submittedAt: number;
+  ignored?: boolean;
 }
 
 export const DEFAULT_META = (): Meta => ({
-  title: "Rank the options",
+  title: "",
   state: "open",
   createdAt: Date.now(),
 });
 
 export const DEFAULT_SETTINGS = (): Settings => ({
   tallyMode: "borda",
+  ballotTitle: "",
   showLiveResults: true,
   allowRevote: true,
   allowAdd: true,
   showUsers: true,
+  showVoterVotes: true,
 });
 
 export function clampTitle(s: string): string {

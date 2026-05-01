@@ -23,9 +23,9 @@ export function computeTally({ options, votes, mode }: TallyInput): TallyEntry[]
   const optionIds = new Set(options.map((o) => o.id));
   const orderById = new Map(options.map((o, i) => [o.id, { addedAt: o.addedAt, idx: i }]));
 
-  const cleanedVotes: string[][] = votes.map((v) =>
-    v.ranking.filter((id) => optionIds.has(id)),
-  );
+  const cleanedVotes: string[][] = votes
+    .filter((v) => !v.ignored)
+    .map((v) => v.ranking.filter((id) => optionIds.has(id)));
 
   let scores: Map<string, number>;
   switch (mode) {

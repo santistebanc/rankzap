@@ -19,10 +19,6 @@ export function Username({ name, onCommit }: UsernameProps) {
 
   const commit = (next: string) => {
     const clamped = clampName(next);
-    if (!clamped) {
-      setDraft(name);
-      return;
-    }
     if (clamped !== name) {
       persistVoterName(clamped);
       onCommit(clamped);
@@ -30,26 +26,31 @@ export function Username({ name, onCommit }: UsernameProps) {
   };
 
   return (
-    <label className="flex flex-col gap-1">
-      <span className="text-xs font-medium text-muted">Your name</span>
-      <input
-        ref={inputRef}
-        value={draft}
-        maxLength={NAME_MAX}
-        onChange={(e) => setDraft(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={(e) => {
-          setFocused(false);
-          commit(e.target.value);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            inputRef.current?.blur();
-          }
-        }}
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
-      />
-    </label>
+    <div className="flex flex-col gap-1">
+      <div className="flex min-h-12 w-full min-w-0 items-center gap-2">
+        <input
+          ref={inputRef}
+          value={draft}
+          maxLength={NAME_MAX}
+          placeholder="Your name"
+          autoComplete="name"
+          onChange={(e) => {
+            setDraft(e.target.value);
+          }}
+          onFocus={() => setFocused(true)}
+          onBlur={(e) => {
+            setFocused(false);
+            commit(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              inputRef.current?.blur();
+            }
+          }}
+          className="h-12 min-w-0 w-full max-w-72 border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-accent"
+        />
+      </div>
+    </div>
   );
 }
