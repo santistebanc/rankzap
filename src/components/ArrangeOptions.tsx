@@ -3,6 +3,7 @@ import {
   DndContext,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   closestCenter,
   useSensor,
   useSensors,
@@ -36,7 +37,10 @@ export function ArrangeOptions({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
@@ -153,7 +157,7 @@ function SortableRow({
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative flex cursor-grab touch-none select-none items-center gap-3 border border-border bg-surface px-3 py-2.5 active:cursor-grabbing [&>*]:pointer-events-none ${
+      className={`relative flex min-h-11 cursor-grab touch-none select-none items-center gap-3 border border-border bg-surface px-3 py-2.5 active:cursor-grabbing [&>*]:pointer-events-none ${
         isDragging ? "z-20 opacity-70 shadow-lg ring-2 ring-accent" : ""
       }`}
     >

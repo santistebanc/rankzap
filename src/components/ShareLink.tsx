@@ -56,11 +56,11 @@ export function ShareBar({ roomId }: ShareBarProps) {
         <span className="text-xs text-muted">Share this link with voters.</span>
       </div>
       <div
-        className="flex min-h-10 w-full min-w-0 items-stretch border border-border bg-surface-2"
+        className="flex min-h-11 w-full min-w-0 items-stretch border border-border bg-surface-2"
         role="region"
         aria-label="Poll link for voters"
       >
-        <div className="flex min-h-10 min-w-0 flex-1 items-center px-3 py-2">
+        <div className="flex min-h-11 min-w-0 flex-1 items-center px-3 py-2">
           <p className="m-0 min-w-0 flex-1 cursor-text select-text font-mono text-sm leading-snug break-all text-text">
             {url}
           </p>
@@ -70,7 +70,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
           onClick={copy}
           title={copied ? "Copied" : "Copy link"}
           aria-label={copied ? "Copied" : "Copy link"}
-          className="inline-flex shrink-0 items-center justify-center border-border border-l bg-surface-2 px-3 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l bg-surface-2 px-2 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           {copied ? <CheckIcon /> : <CopyIcon />}
         </button>
@@ -79,14 +79,14 @@ export function ShareBar({ roomId }: ShareBarProps) {
           onClick={() => setIsQrOpen(true)}
           title="Show QR code"
           aria-label="Show QR code"
-          className="inline-flex shrink-0 items-center justify-center border-border border-l bg-surface-2 px-3 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l bg-surface-2 px-2 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <QrIcon />
         </button>
       </div>
       {isQrOpen ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))]"
           role="dialog"
           aria-modal="true"
           aria-label="QR code for this poll link"
@@ -101,7 +101,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
               <button
                 type="button"
                 onClick={() => setIsQrOpen(false)}
-                className="inline-flex items-center justify-center rounded-sm p-1 text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm p-2 text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
                 aria-label="Close QR code modal"
                 title="Close"
               >

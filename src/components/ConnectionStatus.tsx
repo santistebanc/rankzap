@@ -19,7 +19,7 @@ export function ConnectionStatus() {
     <div
       role="status"
       aria-live="polite"
-      className={`fixed top-3 left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-medium shadow-sm ${tone}`}
+      className={`fixed left-1/2 z-50 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-medium shadow-sm top-[max(0.75rem,env(safe-area-inset-top,0px))] ${tone}`}
     >
       {label}
     </div>

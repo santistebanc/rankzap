@@ -32,7 +32,7 @@ export function Tabs<Id extends string>({ tabs, active, onChange }: TabsProps<Id
             disabled={tab.disabled}
             title={tab.disabled && tab.hint ? tab.hint : undefined}
             onClick={() => !tab.disabled && onChange(tab.id)}
-            className={`h-9 w-28 shrink-0 px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+            className={`min-h-11 min-w-0 flex-1 shrink px-3 py-2.5 text-sm whitespace-nowrap transition-colors ${
               selected
                 ? "bg-surface-2 font-semibold text-text"
                 : "font-medium text-muted hover:bg-surface-2/80 hover:text-text"

@@ -55,7 +55,7 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 border-b border-border px-3 py-2.5 last:border-b-0 sm:px-4">
+    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-4 border-b border-border px-3 py-3 last:border-b-0 sm:min-h-12 sm:px-4">
       <div className="min-w-0">
         <div className="text-sm font-semibold">{label}</div>
       </div>
@@ -65,13 +65,13 @@ function Toggle({
         aria-checked={value}
         aria-label={label}
         onClick={() => onChange(!value)}
-        className={`relative h-6 w-10 shrink-0 cursor-pointer transition-colors ${
+        className={`relative h-7 w-11 shrink-0 cursor-pointer transition-colors ${
           value ? "bg-accent" : "border border-border bg-surface-2"
         }`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 left-0.5 size-5 bg-surface shadow transition-transform ${
+          className={`absolute top-0.5 left-0.5 size-6 bg-surface shadow transition-transform ${
             value ? "translate-x-4" : "translate-x-0"
           }`}
         />

@@ -384,12 +384,12 @@ export function Home() {
     items.length === 0 ? "No options yet" : items.join(", ");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6 sm:px-6 sm:py-8">
+    <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-8">
       <section className="w-full border border-border/80 bg-surface p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-6">
         <div className="inline-flex bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">
           Ranked voting
         </div>
-        <h1 className="mt-4 max-w-[10ch] text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+        <h1 className="mt-4 max-w-prose text-4xl font-semibold tracking-tight text-text sm:text-5xl">
           Create a poll and share it.
         </h1>
         <p className="mt-4 max-w-[42ch] text-base leading-7 text-muted sm:text-lg">
@@ -401,7 +401,7 @@ export function Home() {
             type="button"
             onClick={startPoll}
             disabled={busy}
-            className="inline-flex min-h-10 cursor-pointer items-center justify-center bg-accent px-4 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 cursor-pointer items-center justify-center bg-accent px-5 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {creatingPoll ? "Creating…" : "Create poll"}
           </button>
@@ -438,7 +438,7 @@ export function Home() {
                         type="button"
                         onClick={() => void deletePoll(p.roomId)}
                         disabled={busy}
-                        className="inline-flex size-7 shrink-0 cursor-pointer items-center justify-center border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
                         title="Delete poll"
                         aria-label={`Delete poll ${p.roomId}`}
                       >
@@ -479,7 +479,7 @@ export function Home() {
 
 function TrashIcon() {
   return (
-    <svg viewBox="0 0 16 16" className="size-3 shrink-0" fill="none" aria-hidden="true">
+    <svg viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" aria-hidden="true">
       <path
         d="M2 4.5h12M5.5 4.5V3.25a1 1 0 011-1h3a1 1 0 011 1V4.5"
         stroke="currentColor"
@@ -507,7 +507,7 @@ function DeleteSpinnerIcon() {
   return (
     <svg
       viewBox="0 0 16 16"
-      className="size-3 shrink-0 animate-spin"
+      className="size-4 shrink-0 animate-spin"
       fill="none"
       aria-hidden="true"
     >

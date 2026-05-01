@@ -17,7 +17,7 @@ export function TallyModeSelector({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as TallyMode)}
-        className="h-9 min-w-38 cursor-pointer border border-border bg-surface-2 px-2.5 pr-8 text-sm font-medium text-text outline-none transition-colors hover:border-accent/40 focus:border-accent"
+        className="h-11 min-h-11 min-w-38 cursor-pointer border border-border bg-surface-2 px-2.5 pr-8 text-sm font-medium text-text outline-none transition-colors hover:border-accent/40 focus:border-accent"
         aria-label={ariaLabel}
       >
         {TALLY_MODES.map((m) => (

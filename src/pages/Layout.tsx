@@ -36,6 +36,7 @@ import { LiveOptions } from "../components/LiveOptions";
 import { TallyModeSelector } from "../components/TallyModeSelector";
 import { Settings as SettingsPanel } from "../components/Settings";
 import { VoterRankingPanel } from "../components/VoterRankingPanel";
+import { Tabs } from "../components/Tabs";
 
 interface LayoutProps {
   isAdmin: boolean;
@@ -386,7 +387,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   // Skeleton until meta loads
   if (!ready) {
     return (
-      <main className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-5 sm:px-5 sm:py-6">
+      <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
         <p className="py-12 text-center text-sm text-muted">Loading poll…</p>
       </main>
     );
@@ -463,7 +464,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                             console.warn("[voter] failed to toggle ignored:", e),
                           );
                         }}
-                        className="inline-flex h-10 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
+                        className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
                       >
                         {isIgnored ? "Unignore vote" : "Ignore vote"}
                       </button>
@@ -477,7 +478,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                             .delete(`votes/${selectedVoterId}`)
                             .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
                         }}
-                        className="inline-flex h-10 items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
+                        className="inline-flex min-h-11 items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
                       >
                         Delete vote
                       </button>
@@ -500,23 +501,23 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   const settingsSection = isAdmin ? <SettingsPanel /> : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-3 py-3 pb-12 sm:px-4 sm:py-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
       {isAdmin ? (
-        <div className="flex items-center justify-between py-1">
+        <div className="flex items-center justify-between gap-2 py-1">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="inline-flex h-9 w-9 items-center justify-center border border-border bg-surface-2 text-text hover:bg-surface"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border bg-surface-2 text-text hover:bg-surface"
             aria-label="Go to home"
             title="Home"
           >
             <HomeIcon />
           </button>
-          <div className="flex flex-wrap items-center justify-end gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <button
               type="button"
               onClick={togglePollState}
-              className={`inline-flex h-9 min-w-[100px] items-center justify-center px-3 text-sm font-semibold ${
+              className={`inline-flex min-h-11 min-w-[100px] items-center justify-center px-3 text-sm font-semibold ${
                 meta.state === "open"
                   ? "border border-border bg-surface-2 text-text hover:bg-surface"
                   : "bg-success text-white"
@@ -527,7 +528,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             <button
               type="button"
               onClick={resetVotes}
-              className="inline-flex h-9 min-w-[100px] items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
+              className="inline-flex min-h-11 min-w-[100px] items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
             >
               Reset votes
             </button>
@@ -571,6 +572,19 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
 
       {!isAdmin ? (
         <section className="flex flex-col gap-4">
+          <Tabs<VoterView>
+            tabs={[
+              {
+                id: "compose",
+                label: "Rank options",
+                disabled: meta.state === "closed",
+                hint: meta.state === "closed" ? "Poll is closed." : undefined,
+              },
+              { id: "results", label: "Results" },
+            ]}
+            active={voterView}
+            onChange={setVoterView}
+          />
           <div>
             <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
               <div
@@ -613,9 +627,11 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 ) : null}
                 {settings.showLiveResults ? (
                   <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                       <h3 className="text-base font-semibold tracking-tight">Live results</h3>
-                      <TallyModeSelector value={tallyMode} onChange={onTallyModeChange} />
+                      <div className="shrink-0 self-start sm:self-auto">
+                        <TallyModeSelector value={tallyMode} onChange={onTallyModeChange} />
+                      </div>
                     </div>
                     <LiveOptions
                       removable={false}
@@ -628,7 +644,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                   <p className="text-sm text-muted">
                     {hasVoted
                       ? "The host hid the live scoreboard. Your vote still counts."
-                      : "The host hid the live scoreboard. Use Vote now when you're ready to rank options."}
+                      : "The host hid the live scoreboard. Open the Rank options tab when you're ready to rank."}
                   </p>
                 )}
               </div>
@@ -637,15 +653,15 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
         </section>
       ) : null}
       {!isAdmin ? (
-        <section className="mt-auto flex flex-col gap-3 pt-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <section className="sticky bottom-0 z-30 -mx-3 mt-auto flex flex-col gap-3 border-t border-border/80 bg-surface/95 px-3 py-3 pt-4 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:-mx-4 sm:px-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             {identity ? (
-              <div className="inline-flex items-center gap-2">
-                <span className="text-xs font-semibold text-muted">Your Name</span>
+              <div className="flex min-w-0 flex-col gap-1 sm:max-w-md">
+                <span className="text-xs font-semibold text-muted">Your name</span>
                 <Username name={name} onCommit={setName} />
               </div>
             ) : null}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               {voterView === "compose" ? (
                 <SubmitVote
                   userId={identity?.userId ?? ""}
@@ -671,36 +687,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                     setVoterView("results");
                   }}
                 />
-              ) : null}
-              {settings.showLiveResults && voterView !== "results" ? (
-                <button
-                  type="button"
-                  onClick={() => setVoterView("results")}
-                  className="inline-flex h-12 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                >
-                  Live results
-                </button>
-              ) : null}
-              {meta.state !== "closed" && voterView !== "compose" ? (
-                hasVoted ? (
-                  settings.allowRevote ? (
-                    <button
-                      type="button"
-                      onClick={() => setVoterView("compose")}
-                      className="inline-flex h-12 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                    >
-                      Change vote
-                    </button>
-                  ) : null
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setVoterView("compose")}
-                    className="inline-flex h-12 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                  >
-                    Vote now
-                  </button>
-                )
               ) : null}
             </div>
           </div>

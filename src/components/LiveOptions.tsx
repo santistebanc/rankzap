@@ -188,7 +188,7 @@ function OptionRow({
             type="button"
             onClick={remove}
             aria-label={`Remove ${option.text}`}
-            className="min-h-8 min-w-8 shrink-0 p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
+            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center p-2 text-muted hover:bg-danger-soft hover:text-danger"
           >
             <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
               <path

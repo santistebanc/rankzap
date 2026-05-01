@@ -68,6 +68,8 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   background-image:
     radial-gradient(circle at top left, color-mix(in oklch, var(--accent) 10%, transparent), transparent 28%),
     linear-gradient(to bottom, color-mix(in oklch, var(--surface-2) 50%, transparent) 0, transparent 20rem);
