@@ -153,7 +153,7 @@ function SortableRow({
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative flex cursor-grab items-center gap-3 border border-border bg-surface px-3 py-2.5 select-none active:cursor-grabbing ${
+      className={`relative flex cursor-grab touch-none select-none items-center gap-3 border border-border bg-surface px-3 py-2.5 active:cursor-grabbing [&>*]:pointer-events-none ${
         isDragging ? "z-20 opacity-70 shadow-lg ring-2 ring-accent" : ""
       }`}
     >
@@ -163,7 +163,7 @@ function SortableRow({
       >
         {displayRank}
       </span>
-      <span className="flex-1 min-w-0 text-sm font-medium leading-5 wrap-break-word">
+      <span className="min-w-0 flex-1 text-sm font-medium leading-5 wrap-break-word">
         {option.text}
       </span>
       <span
