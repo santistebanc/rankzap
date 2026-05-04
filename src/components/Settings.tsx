@@ -71,10 +71,16 @@ function Toggle({
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 left-0.5 size-6 bg-surface shadow transition-transform ${
+          className={`absolute top-0.5 left-0.5 flex size-6 items-center justify-center bg-surface shadow transition-transform ${
             value ? "translate-x-4" : "translate-x-0"
           }`}
-        />
+        >
+          {value ? (
+            <svg viewBox="0 0 10 10" className="size-3 text-accent" fill="none">
+              <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : null}
+        </span>
       </button>
     </label>
   );

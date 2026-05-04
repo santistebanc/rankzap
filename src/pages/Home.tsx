@@ -239,6 +239,7 @@ export function Home() {
   const [openingRoomId, setOpeningRoomId] = useState<string | null>(null);
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDeleteRoomId, setConfirmingDeleteRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -314,11 +315,6 @@ export function Home() {
   };
 
   const deletePoll = async (roomId: string) => {
-    const confirmed = window.confirm(
-      "Permanently delete this poll and all its options and votes? This cannot be undone.",
-    );
-    if (!confirmed) return;
-
     setDeletingRoomId(roomId);
     setError(null);
     let timedOut = false;
@@ -410,7 +406,7 @@ export function Home() {
         <div className="mt-6">
           <h2 className="text-sm font-semibold text-text">Recent polls</h2>
           <div
-            className="mt-2 h-[min(50vh,20rem)] overflow-y-auto overflow-x-hidden border border-border/40 bg-surface-2/50 px-2 py-2"
+            className="mt-2 max-h-[min(50vh,20rem)] overflow-y-auto overflow-x-hidden border border-border/40 bg-surface-2/50 px-2 py-2"
             aria-busy={loadingRecents}
           >
             {loadingRecents ? (
@@ -434,20 +430,37 @@ export function Home() {
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => void deletePoll(p.roomId)}
-                        disabled={busy}
-                        className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
-                        title="Delete poll"
-                        aria-label={`Delete poll ${p.roomId}`}
-                      >
-                        {deletingRoomId === p.roomId ? (
-                          <DeleteSpinnerIcon />
-                        ) : (
+                      {confirmingDeleteRoomId === p.roomId ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDeleteRoomId(null)}
+                            disabled={busy}
+                            className="inline-flex min-h-11 cursor-pointer items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
+                            disabled={busy}
+                            className="inline-flex min-h-11 cursor-pointer items-center justify-center bg-danger px-3 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:opacity-60"
+                          >
+                            {deletingRoomId === p.roomId ? "Deleting…" : "Confirm"}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingDeleteRoomId(p.roomId)}
+                          disabled={busy}
+                          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
+                          title="Delete poll"
+                          aria-label={`Delete poll ${p.roomId}`}
+                        >
                           <TrashIcon />
-                        )}
-                      </button>
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => void openExisting(p.roomId)}

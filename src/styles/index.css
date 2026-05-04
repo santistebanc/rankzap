@@ -8,6 +8,7 @@
   --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-overlay: var(--overlay);
   --color-accent-soft: var(--accent-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -23,6 +24,7 @@
   color-scheme: light;
 
   --bg: oklch(0.975 0.008 220);
+  --overlay: oklch(0.1 0.015 240);
   --surface: oklch(0.995 0.004 220);
   --surface-2: oklch(0.967 0.008 220);
   --border: oklch(0.885 0.015 220);

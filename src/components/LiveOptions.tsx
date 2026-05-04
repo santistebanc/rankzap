@@ -46,6 +46,7 @@ export function LiveOptions({
 
   const orderedIds = showResults ? tally.map((t) => t.optionId) : options.map((o) => o.id);
   const tallyByOption = new Map(tally.map((t) => [t.optionId, t]));
+  const optionById = useMemo(() => new Map(options.map((o) => [o.id, o])), [options]);
   const maxScore = Math.max(0, ...tally.map((t) => t.score));
 
   if (options.length === 0) {
@@ -59,7 +60,7 @@ export function LiveOptions({
   return (
     <ul className="flex flex-col gap-3" aria-label="Poll options">
       {orderedIds.map((id) => {
-        const option = options.find((o) => o.id === id);
+        const option = optionById.get(id);
         if (!option) return null;
         const t = tallyByOption.get(id);
         return (
@@ -137,8 +138,8 @@ function OptionRow({
       {showResults ? (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 bg-accent-soft transition-[width] duration-300"
-          style={{ width: `${pct}%` }}
+          className="absolute inset-y-0 left-0 w-full origin-left bg-accent-soft transition-transform duration-300"
+          style={{ transform: `scaleX(${pct / 100})` }}
         />
       ) : null}
       <div className="relative flex items-center gap-3 px-3 py-2.5">

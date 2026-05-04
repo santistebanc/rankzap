@@ -29,7 +29,6 @@ export function Tabs<Id extends string>({ tabs, active, onChange }: TabsProps<Id
             type="button"
             aria-selected={selected}
             aria-disabled={tab.disabled}
-            disabled={tab.disabled}
             title={tab.disabled && tab.hint ? tab.hint : undefined}
             onClick={() => !tab.disabled && onChange(tab.id)}
             className={`min-h-11 min-w-0 flex-1 shrink px-3 py-2.5 text-sm whitespace-nowrap transition-colors ${

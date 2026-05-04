@@ -101,43 +101,46 @@ export function UsersList({
 
   if (variant === "tabStrip") {
     return (
-      <div role="group" aria-label="Voters" className="flex w-full flex-nowrap overflow-x-auto bg-surface-2">
-        {visible.length === 0 ? (
-          <div className="flex min-h-9 min-w-full shrink-0 items-center px-3 py-2 text-sm text-muted sm:min-w-0">
-            No voters yet.
-          </div>
-        ) : (
-          visible.map((u) => {
-            const selected = selectedVoterId === u.id;
-            return (
-              <div
-                key={u.id}
-                className={`flex shrink-0 border-r border-border last:border-r-0 ${
-                  selected ? "ring-2 ring-inset ring-accent" : ""
-                }`}
-              >
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onToggleVoter?.(u.id)}
-                  className="min-h-9 w-full text-left outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      <div className="relative">
+        <div role="group" aria-label="Voters" className="flex w-full flex-nowrap overflow-x-auto bg-surface-2">
+          {visible.length === 0 ? (
+            <div className="flex min-h-9 min-w-full shrink-0 items-center px-3 py-2 text-sm text-muted sm:min-w-0">
+              No voters yet.
+            </div>
+          ) : (
+            visible.map((u) => {
+              const selected = selectedVoterId === u.id;
+              return (
+                <div
+                  key={u.id}
+                  className={`flex shrink-0 border-r border-border last:border-r-0 ${
+                    selected ? "ring-2 ring-inset ring-accent" : ""
+                  }`}
                 >
-                  <UserPill
-                    user={u}
-                    variant="tab"
-                    showIgnoredBadge={showIgnoredBadge}
-                    state={pillStateFor(
-                      u,
-                      onlineUserIds.has(u.id),
-                      votedUserIds.has(u.id),
-                    )}
-                    isYou={u.id === selfUserId}
-                  />
-                </button>
-              </div>
-            );
-          })
-        )}
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => onToggleVoter?.(u.id)}
+                    className="min-h-9 w-full text-left outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                  >
+                    <UserPill
+                      user={u}
+                      variant="tab"
+                      showIgnoredBadge={showIgnoredBadge}
+                      state={pillStateFor(
+                        u,
+                        onlineUserIds.has(u.id),
+                        votedUserIds.has(u.id),
+                      )}
+                      isYou={u.id === selfUserId}
+                    />
+                  </button>
+                </div>
+              );
+            })
+          )}
+        </div>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-surface-2 to-transparent" />
       </div>
     );
   }
