@@ -122,6 +122,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   const [voterView, setVoterView] = useState<VoterView>("results");
   const pollWasClosedRef = useRef(false);
   const [pendingAddedOptions, setPendingAddedOptions] = useState<Option[]>([]);
+  const [confirmingAction, setConfirmingAction] = useState<"close" | "reset" | "deleteVote" | null>(null);
 
   // Computed values from shared state
   const options = useMemo<Option[]>(
@@ -213,12 +214,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
 
   // Admin actions
   const togglePollState = useCallback(async () => {
-    if (meta.state === "open") {
-      const ok = window.confirm(
-        "Close the poll? Voters won't be able to submit or change their vote until you reopen it.",
-      );
-      if (!ok) return;
-    }
     try {
       await client.set("meta", { ...meta, state: meta.state === "open" ? "closed" : "open" }, SET_OPTS);
     } catch (e) {
@@ -227,8 +222,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   }, [client, meta]);
 
   const resetVotes = useCallback(async () => {
-    const ok = window.confirm("Reset all votes? This cannot be undone.");
-    if (!ok) return;
     try {
       await client.deletePrefix("votes/");
     } catch (e) {
@@ -321,6 +314,9 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   useEffect(() => {
     if (!isAdmin && !settings.showVoterVotes) setSelectedVoterId(null);
   }, [isAdmin, settings.showVoterVotes]);
+  useEffect(() => {
+    setConfirmingAction((a) => (a === "deleteVote" ? null : a));
+  }, [selectedVoterId]);
 
   useEffect(() => {
     if (isAdmin) return;
@@ -469,19 +465,37 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                         {isIgnored ? "Unignore vote" : "Ignore vote"}
                       </button>
                       {hasSelectedVote ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const ok = window.confirm("Delete this voter's submitted vote?");
-                          if (!ok) return;
-                          void client
-                            .delete(`votes/${selectedVoterId}`)
-                            .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
-                        }}
-                        className="inline-flex min-h-11 items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
-                      >
-                        Delete vote
-                      </button>
+                        confirmingAction === "deleteVote" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingAction(null)}
+                              className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setConfirmingAction(null);
+                                void client
+                                  .delete(`votes/${selectedVoterId}`)
+                                  .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
+                              }}
+                              className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
+                            >
+                              Confirm delete
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingAction("deleteVote")}
+                            className="inline-flex min-h-11 items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
+                          >
+                            Delete vote
+                          </button>
+                        )
                       ) : null}
                   </div>
                       </>
@@ -514,24 +528,64 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             <HomeIcon />
           </button>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={togglePollState}
-              className={`inline-flex min-h-11 min-w-[100px] items-center justify-center px-3 text-sm font-semibold ${
-                meta.state === "open"
-                  ? "border border-border bg-surface-2 text-text hover:bg-surface"
-                  : "bg-success text-white"
-              }`}
-            >
-              {meta.state === "open" ? "Close poll" : "Reopen poll"}
-            </button>
-            <button
-              type="button"
-              onClick={resetVotes}
-              className="inline-flex min-h-11 min-w-[100px] items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
-            >
-              Reset votes
-            </button>
+            {meta.state === "open" && confirmingAction === "close" ? (
+              <div className="inline-flex items-center gap-1.5">
+                <span className="text-xs text-muted">Close poll?</span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingAction(null)}
+                  className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setConfirmingAction(null); void togglePollState(); }}
+                  className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
+                >
+                  Confirm
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
+                className={`inline-flex min-h-11 min-w-[100px] items-center justify-center px-3 text-sm font-semibold ${
+                  meta.state === "open"
+                    ? "border border-border bg-surface-2 text-text hover:bg-surface"
+                    : "bg-success text-white"
+                }`}
+              >
+                {meta.state === "open" ? "Close poll" : "Reopen poll"}
+              </button>
+            )}
+            {confirmingAction === "reset" ? (
+              <div className="inline-flex items-center gap-1.5">
+                <span className="text-xs text-muted">Reset all votes?</span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingAction(null)}
+                  className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setConfirmingAction(null); void resetVotes(); }}
+                  className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
+                >
+                  Confirm
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingAction("reset")}
+                className="inline-flex min-h-11 min-w-[100px] items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
+              >
+                Reset votes
+              </button>
+            )}
           </div>
         </div>
       ) : null}
@@ -561,6 +615,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 pollTitleInputRef.current?.blur();
               }
             }}
+            aria-label="Poll title"
             className="min-w-0 w-full min-h-12 border border-border bg-surface-2 px-3 py-2.5 text-2xl outline-none transition-colors hover:border-border focus:border-accent"
           />
         </div>
