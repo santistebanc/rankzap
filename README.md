@@ -8,15 +8,15 @@
 
 Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies.
 
-- Two pages per poll: an **admin** view (`/#/admin/:roomId`) and a **voter** view (`/#/vote/:roomId`).
+- Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
 - Three tally modes: **Borda Count**, **Dowdall**, **Copeland**. Voters can locally override the global default for their own view.
 - Real-time sync, presence (online + voting / changing-vote / voted indicators), and persistence via [`santistebanc/room-server`](https://github.com/santistebanc/room-server).
-- Static SPA — deploys cleanly to GitHub Pages (HashRouter, no SPA-fallback config needed).
+- Static SPA — deploys to GitHub Pages with BrowserRouter + SPA 404 fallback.
 
 ## Stack
 
 - Vite 8 + React 19 + TypeScript 6
-- `react-router-dom` 7 (`HashRouter`)
+- `react-router-dom` 7 (`BrowserRouter`)
 - `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
 - `tailwindcss` v4 with CSS-variable palette (auto light/dark)
 - `nanoid` for short room ids
@@ -58,7 +58,7 @@ npm run preview    # serve the built bundle locally
 3. **Settings → Secrets and variables → Actions** → add `VITE_HOST` and `VITE_API_KEY`.
 4. Push to `main`. The workflow at `.github/workflows/deploy.yml` builds and publishes automatically.
 
-`vite.config.ts` uses `base: "./"` so the produced bundle works whether deployed at the domain root or under `https://<user>.github.io/<repo>/`. Combined with `HashRouter`, deep links and shared voter URLs survive page refreshes on any static host.
+`vite.config.ts` uses `base: "/"` and the repo includes `public/404.html` + an `index.html` restore script so deep links and refreshes work on GitHub Pages with clean URLs.
 
 ## How it works
 
@@ -66,9 +66,9 @@ npm run preview    # serve the built bundle locally
 
 | Path | Page |
 |---|---|
-| `/#/` | **Home** — auto-resume your last admin poll if it still exists, else generate a fresh `nanoid(6)` and atomically reserve it via `room.setIf("meta", default, null)`. Falls back to `nanoid(8)` after 20 collisions. 8s overall timeout with retry. |
-| `/#/admin/:roomId` | Admin controls — title, options, settings, poll state, share link with QR. |
-| `/#/vote/:roomId` | Voter — name, drag-to-rank, submit, results. |
+| `/` | **Home** — auto-resume your last admin poll if it still exists, else generate a fresh `nanoid(6)` and atomically reserve it via `room.setIf("meta", default, null)`. Falls back to `nanoid(8)` after 20 collisions. 8s overall timeout with retry. |
+| `/:roomId/admin` | Admin controls — title, options, settings, poll state, share link with QR. |
+| `/:roomId` | Voter — name, drag-to-rank, submit, results. |
 
 Anything else 404s back to `/`.
 
@@ -124,7 +124,7 @@ src/
     identity.ts                 # voter userId/name (admin has no identity)
     types.ts                    # Settings, Meta, Option, Vote + parsers + length caps
     tally.ts                    # borda / dowdall / copeland
-    url.ts                      # buildVoterUrl / buildAdminUrl (HashRouter aware)
+    url.ts                      # buildVoterUrl / buildAdminUrl (clean URLs)
   pages/
     Home.tsx                    # Resume-or-create flow
     AdminPage.tsx

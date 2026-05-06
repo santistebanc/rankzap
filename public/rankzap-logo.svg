@@ -3,18 +3,32 @@
   <desc id="desc">A rounded square with a lightning bolt and the word rankzap.</desc>
   <defs>
     <style>
-      .canvas { fill: #f4f0e6; }
-      .canvas-stroke { fill: none; stroke: #d8d3c8; stroke-width: 1; }
-      .bg { fill: #3f6699; }
-      .bolt { fill: #f4f0e6; }
-      .rank { fill: #202430; font: 700 54px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
-      .zap { fill: #3f6699; font: 700 54px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+      .plate { fill: #ffffff; }
+      .plate-stroke { fill: none; stroke: #e5e7eb; stroke-width: 1; }
+      .tile { fill: #dbe6f5; }
+      .bolt {
+        fill: none;
+        stroke: #3f6699;
+        stroke-width: 2.25;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .rank {
+        fill: #202430;
+        font: 700 56px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        letter-spacing: -0.02em;
+      }
+      .zap {
+        fill: #3f6699;
+        font: 700 56px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        letter-spacing: -0.02em;
+      }
     </style>
   </defs>
-  <rect class="canvas" x="2" y="2" width="556" height="116" rx="16" />
-  <rect class="canvas-stroke" x="2.5" y="2.5" width="555" height="115" rx="15.5" />
-  <rect class="bg" x="8" y="8" width="104" height="104" rx="22" />
-  <path class="bolt" d="M67 24L41 66h19l-6 30 32-47H66z" />
-  <text class="rank" x="132" y="77">rank</text>
-  <text class="zap" x="262" y="77">zap</text>
+  <rect class="plate" x="2" y="2" width="556" height="116" rx="16" />
+  <rect class="plate-stroke" x="2.5" y="2.5" width="555" height="115" rx="15.5" />
+  <rect class="tile" x="16" y="18" width="84" height="84" rx="25" />
+  <path class="bolt" transform="translate(36.9 36.9) scale(1.925)" d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
+  <text class="rank" x="116" y="80">rank</text>
+  <text class="zap" x="228" y="80">zap</text>
 </svg>

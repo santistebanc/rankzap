@@ -305,7 +305,7 @@ export function Home() {
         return;
       }
       addRecentPoll(roomId);
-      navigate(`/admin/${roomId}`);
+      navigate(`/${roomId}/admin`);
     } catch (e) {
       if (!timedOut) {
         setOpeningRoomId(null);
@@ -366,7 +366,7 @@ export function Home() {
       if (timedOut) return;
       setAdminLastRoomId(fresh);
       addRecentPoll(fresh);
-      navigate(`/admin/${fresh}`);
+      navigate(`/${fresh}/admin`);
     } catch (e) {
       if (!timedOut) {
         setCreatingPoll(false);

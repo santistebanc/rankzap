@@ -7,8 +7,8 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/admin/:roomId" element={<AdminPage />} />
-      <Route path="/vote/:roomId" element={<RankzapPage />} />
+      <Route path="/:roomId/admin" element={<AdminPage />} />
+      <Route path="/:roomId" element={<RankzapPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

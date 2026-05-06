@@ -9,6 +9,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4f0e6" />
     <title>Rankzap</title>
+    <script>
+      (function () {
+        // GitHub Pages SPA fallback: restore redirected deep links from 404.html.
+        var params = new URLSearchParams(window.location.search);
+        var redirectedPath = params.get("p");
+        if (!redirectedPath) return;
+        var next = redirectedPath + (params.get("q") || "");
+        window.history.replaceState(null, "", next);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
