@@ -48,7 +48,8 @@ export function Username({ name, onCommit }: UsernameProps) {
               inputRef.current?.blur();
             }
           }}
-          className="h-12 min-w-0 w-full max-w-full border border-border bg-surface px-3 py-2.5 text-sm outline-none focus:border-accent sm:max-w-72"
+          aria-label="Your name"
+          className="h-12 min-w-0 w-full max-w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-accent sm:max-w-72"
         />
       </div>
     </div>

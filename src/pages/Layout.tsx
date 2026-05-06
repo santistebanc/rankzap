@@ -390,123 +390,120 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   }
 
   const scoreboardSection = (
-    <section className="py-1" aria-labelledby="scoreboard-heading">
-      <h2 id="scoreboard-heading" className="sr-only">
-        Scoreboard
-      </h2>
-      <div className="flex flex-col gap-6">
-        <LiveOptions
-          removable
-          showResults
-          tallyMode={settings.tallyMode}
-          editable
+    <section className="flex flex-col gap-4" aria-label="Poll">
+      <div className="overflow-hidden rounded-xl bg-surface shadow-card">
+        <input
+          ref={pollTitleInputRef}
+          id="poll-title"
+          type="text"
+          maxLength={100}
+          value={pollTitleDraft}
+          placeholder="Poll title"
+          onChange={(e) => setPollTitleDraft(e.target.value)}
+          onFocus={() => setIsPollTitleFocused(true)}
+          onBlur={() => { setIsPollTitleFocused(false); commitPollTitle(); }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); pollTitleInputRef.current?.blur(); }
+            if (e.key === "Escape") {
+              pendingPollTitleRef.current = null;
+              setPollTitleDraft(committedPollTitle);
+              pollTitleInputRef.current?.blur();
+            }
+          }}
+          aria-label="Poll title"
+          className="w-full border-b border-border/20 bg-transparent px-4 py-3 text-base font-semibold outline-none placeholder:text-muted/40 transition-colors hover:bg-surface-2/30 focus:bg-surface-2/30"
         />
+        <LiveOptions removable showResults tallyMode={settings.tallyMode} editable />
         <AddOption addedBy="admin" />
-        {hasAnyVotersForAdmin ? (
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-semibold text-muted">Voters</span>
-            <div className="overflow-hidden border border-border/80 bg-surface shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
-              <UsersList
-                selfUserId={identity?.userId}
-              showIgnoredBadge
-                variant="tabStrip"
-                selectedVoterId={selectedVoterId}
-                onToggleVoter={toggleVoterSelection}
-                onInvalidateVoterSelection={clearVoterSelection}
-              />
-              <Activity mode={selectedVoterId ? "visible" : "hidden"}>
-                <div
-                  className="border-t border-border px-4 py-3 sm:px-4"
-                  inert={!selectedVoterId ? true : undefined}
-                >
-                  {(() => {
-                    if (!selectedVoterId) return null;
-                    const selectedVote = votesMap.get(`votes/${selectedVoterId}`);
-                    const hasSelectedVote = Boolean(selectedVote?.ranking?.length);
-                    const selectedUser = usersMap.get(`users/${selectedVoterId}`);
-                    const isIgnored = Boolean(selectedUser?.ignored || selectedVote?.ignored);
-                    return (
-                      <>
-                  <VoterRankingPanel
-                    voterName={
-                      usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"
-                    }
-                    ranking={selectedVote?.ranking}
-                    optionById={optionById}
-                  />
-                  <div className="mt-3 flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!selectedUser) return;
-                          const nextIgnored = !isIgnored;
-                          const writes = [
-                            client.set(
-                              `users/${selectedVoterId}`,
-                              { ...selectedUser, ignored: nextIgnored },
-                              SET_OPTS,
-                            ),
-                          ];
-                          if (selectedVote) {
-                            writes.push(
-                              client.set(
-                                `votes/${selectedVoterId}`,
-                                { ...selectedVote, ignored: nextIgnored },
-                                SET_OPTS,
-                              ),
-                            );
-                          }
-                          void Promise.all(writes).catch((e) =>
-                            console.warn("[voter] failed to toggle ignored:", e),
-                          );
-                        }}
-                        className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                      >
-                        {isIgnored ? "Unignore vote" : "Ignore vote"}
-                      </button>
-                      {hasSelectedVote ? (
-                        confirmingAction === "deleteVote" ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setConfirmingAction(null)}
-                              className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setConfirmingAction(null);
-                                void client
-                                  .delete(`votes/${selectedVoterId}`)
-                                  .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
-                              }}
-                              className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
-                            >
-                              Confirm delete
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setConfirmingAction("deleteVote")}
-                            className="inline-flex min-h-11 items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
-                          >
-                            Delete vote
-                          </button>
-                        )
-                      ) : null}
-                  </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </Activity>
-            </div>
-          </div>
-        ) : null}
       </div>
+
+      {hasAnyVotersForAdmin ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs font-semibold text-muted">Voters</span>
+          <UsersList
+            selfUserId={identity?.userId}
+            showIgnoredBadge
+            variant="tabStrip"
+            selectedVoterId={selectedVoterId}
+            onToggleVoter={toggleVoterSelection}
+            onInvalidateVoterSelection={clearVoterSelection}
+          />
+          <Activity mode={selectedVoterId ? "visible" : "hidden"}>
+            <div
+              className="px-1 py-2"
+              inert={!selectedVoterId ? true : undefined}
+            >
+                {(() => {
+                  if (!selectedVoterId) return null;
+                  const selectedVote = votesMap.get(`votes/${selectedVoterId}`);
+                  const hasSelectedVote = Boolean(selectedVote?.ranking?.length);
+                  const selectedUser = usersMap.get(`users/${selectedVoterId}`);
+                  const isIgnored = Boolean(selectedUser?.ignored || selectedVote?.ignored);
+                  return (
+                    <>
+                      <VoterRankingPanel
+                        voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
+                        ranking={selectedVote?.ranking}
+                        optionById={optionById}
+                      />
+                      <div className="mt-3 flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!selectedUser) return;
+                            const nextIgnored = !isIgnored;
+                            const writes = [
+                              client.set(`users/${selectedVoterId}`, { ...selectedUser, ignored: nextIgnored }, SET_OPTS),
+                            ];
+                            if (selectedVote) {
+                              writes.push(client.set(`votes/${selectedVoterId}`, { ...selectedVote, ignored: nextIgnored }, SET_OPTS));
+                            }
+                            void Promise.all(writes).catch((e) => console.warn("[voter] failed to toggle ignored:", e));
+                          }}
+                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2"
+                        >
+                          {isIgnored ? "Unignore vote" : "Ignore vote"}
+                        </button>
+                        {hasSelectedVote ? (
+                          confirmingAction === "deleteVote" ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingAction(null)}
+                                className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setConfirmingAction(null);
+                                  void client.delete(`votes/${selectedVoterId}`)
+                                    .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
+                                }}
+                                className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95"
+                              >
+                                Confirm delete
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingAction("deleteVote")}
+                              className="inline-flex min-h-11 items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98"
+                            >
+                              Delete vote
+                            </button>
+                          )
+                        ) : null}
+                      </div>
+                    </>
+                  );
+                })()}
+            </div>
+          </Activity>
+        </div>
+      ) : null}
     </section>
   );
 
@@ -517,11 +514,11 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
       {isAdmin ? (
-        <div className="flex items-center justify-between gap-2 py-1">
+        <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border bg-surface-2 text-text hover:bg-surface"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text shadow-card hover:bg-surface-2"
             aria-label="Go to home"
             title="Home"
           >
@@ -531,29 +528,15 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             {meta.state === "open" && confirmingAction === "close" ? (
               <div className="inline-flex items-center gap-1.5">
                 <span className="text-xs text-muted">Close poll?</span>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingAction(null)}
-                  className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setConfirmingAction(null); void togglePollState(); }}
-                  className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
-                >
-                  Confirm
-                </button>
+                <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
+                <button type="button" onClick={() => { setConfirmingAction(null); void togglePollState(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
-                className={`inline-flex min-h-11 min-w-[100px] items-center justify-center px-3 text-sm font-semibold ${
-                  meta.state === "open"
-                    ? "border border-border bg-surface-2 text-text hover:bg-surface"
-                    : "bg-success text-white"
+                className={`inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full px-4 text-sm font-semibold ${
+                  meta.state === "open" ? "border border-border bg-surface text-text shadow-card hover:bg-surface-2" : "bg-success text-white"
                 }`}
               >
                 {meta.state === "open" ? "Close poll" : "Reopen poll"}
@@ -562,62 +545,15 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             {confirmingAction === "reset" ? (
               <div className="inline-flex items-center gap-1.5">
                 <span className="text-xs text-muted">Reset all votes?</span>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingAction(null)}
-                  className="inline-flex min-h-11 items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text hover:bg-surface"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setConfirmingAction(null); void resetVotes(); }}
-                  className="inline-flex min-h-11 items-center justify-center bg-danger px-3 text-sm font-semibold text-white hover:brightness-95"
-                >
-                  Confirm
-                </button>
+                <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
+                <button type="button" onClick={() => { setConfirmingAction(null); void resetVotes(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmingAction("reset")}
-                className="inline-flex min-h-11 min-w-[100px] items-center justify-center border border-danger/25 bg-danger-soft px-3 text-sm font-semibold text-danger hover:brightness-98"
-              >
+              <button type="button" onClick={() => setConfirmingAction("reset")} className="inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98">
                 Reset votes
               </button>
             )}
           </div>
-        </div>
-      ) : null}
-      {isAdmin ? (
-        <div className="py-1">
-          <input
-            ref={pollTitleInputRef}
-            id="poll-title"
-            type="text"
-            maxLength={100}
-            value={pollTitleDraft}
-            placeholder="Poll title"
-            onChange={(e) => setPollTitleDraft(e.target.value)}
-            onFocus={() => setIsPollTitleFocused(true)}
-            onBlur={() => {
-              setIsPollTitleFocused(false);
-              commitPollTitle();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                pollTitleInputRef.current?.blur();
-              }
-              if (e.key === "Escape") {
-                pendingPollTitleRef.current = null;
-                setPollTitleDraft(committedPollTitle);
-                pollTitleInputRef.current?.blur();
-              }
-            }}
-            aria-label="Poll title"
-            className="min-w-0 w-full min-h-12 border border-border bg-surface-2 px-3 py-2.5 text-2xl outline-none transition-colors hover:border-border focus:border-accent"
-          />
         </div>
       ) : null}
 
@@ -626,7 +562,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
       {settingsSection}
 
       {!isAdmin ? (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <Tabs<VoterView>
             tabs={[
               {
@@ -642,58 +578,42 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
           />
           <div>
             <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
-              <div
-                className="flex flex-col gap-6"
-                inert={voterView !== "compose" ? true : undefined}
-              >
+              <div className="flex flex-col gap-3" inert={voterView !== "compose" ? true : undefined}>
                 {meta.state === "closed" ? (
-                  <div className="border border-border bg-surface-2 px-3 py-2 text-sm font-semibold text-muted">
+                  <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
                     Poll is closed.
                   </div>
                 ) : null}
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-sm text-muted">
-                    Reorder the items according to your preference.
-                  </p>
-                  <h3 className="text-2xl font-semibold tracking-tight">{pollHeading}</h3>
-                </div>
-                <ArrangeOptions
-                  options={voterVisibleOptions}
-                  ranking={ranking}
-                  onChange={updateRanking}
-                />
-                {settings.allowAdd ? (
-                  <AddOption
-                    addedBy={identity?.userId ?? ""}
-                    onAddOption={stageVoterOptions}
+                <div className="overflow-hidden rounded-xl bg-surface shadow-card">
+                  <div className="border-b border-border/20 px-4 py-3">
+                    <h3 className="font-semibold tracking-tight">{pollHeading}</h3>
+                    <p className="mt-0.5 text-xs text-muted">Drag items to rank by preference.</p>
+                  </div>
+                  <ArrangeOptions
+                    options={voterVisibleOptions}
+                    ranking={ranking}
+                    onChange={updateRanking}
                   />
-                ) : null}
+                  {settings.allowAdd ? (
+                    <AddOption addedBy={identity?.userId ?? ""} onAddOption={stageVoterOptions} />
+                  ) : null}
+                </div>
               </div>
             </Activity>
             <Activity mode={voterView === "results" ? "visible" : "hidden"}>
-              <div
-                className="flex flex-col gap-6"
-                inert={voterView !== "results" ? true : undefined}
-              >
+              <div className="flex flex-col gap-3" inert={voterView !== "results" ? true : undefined}>
                 {meta.state === "closed" ? (
-                  <div className="border border-border bg-surface-2 px-3 py-2 text-sm font-semibold text-muted">
+                  <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
                     Poll is closed.
                   </div>
                 ) : null}
                 {settings.showLiveResults ? (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                  <div className="overflow-hidden rounded-xl bg-surface shadow-card">
+                    <div className="flex items-center justify-between gap-3 border-b border-border/20 px-4 py-3">
                       <h3 className="text-base font-semibold tracking-tight">Live results</h3>
-                      <div className="shrink-0 self-start sm:self-auto">
-                        <TallyModeSelector value={tallyMode} onChange={onTallyModeChange} />
-                      </div>
+                      <TallyModeSelector value={tallyMode} onChange={onTallyModeChange} />
                     </div>
-                    <LiveOptions
-                      removable={false}
-                      showResults
-                      tallyMode={tallyMode}
-                      editable={false}
-                    />
+                    <LiveOptions removable={false} showResults tallyMode={tallyMode} editable={false} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted">
@@ -708,7 +628,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
         </section>
       ) : null}
       {!isAdmin ? (
-        <section className="sticky bottom-0 z-30 -mx-3 mt-auto flex flex-col gap-3 border-t border-border/80 bg-surface/95 px-3 py-3 pt-4 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:-mx-4 sm:px-4">
+        <section className="sticky bottom-0 z-30 -mx-3 mt-auto flex flex-col gap-3 border-t border-border/10 bg-surface/90 px-3 py-3 pt-4 backdrop-blur-lg pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:-mx-4 sm:px-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
             {identity ? (
               <div className="flex min-w-0 flex-col gap-1 sm:max-w-md">
@@ -750,7 +670,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
       {!isAdmin && settings.showUsers && hasAnyOtherVoters ? (
         <section className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-muted">Other voters</span>
-          <div className="overflow-hidden border border-border/80 bg-surface shadow-[0_16px_40px_rgba(15,23,42,0.05)]">
+          <div className="overflow-hidden rounded-xl bg-surface shadow-card">
             <UsersList
               selfUserId={identity?.userId}
               includeSelf={false}
@@ -761,7 +681,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             />
             <Activity mode={settings.showVoterVotes && selectedVoterId ? "visible" : "hidden"}>
               <div
-                className="border-t border-border px-4 py-3 sm:px-4"
+                className="border-t border-border/20 px-4 py-3"
                 inert={!(settings.showVoterVotes && selectedVoterId) ? true : undefined}
               >
                 {settings.showVoterVotes && selectedVoterId ? (

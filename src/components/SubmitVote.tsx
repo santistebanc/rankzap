@@ -90,7 +90,7 @@ export function SubmitVote({
           onClick={submit}
           disabled={disabled || state === "submitting" || ranking.length === 0}
           title={disabled ? disabledReason : undefined}
-          className={`inline-flex h-12 shrink-0 items-center justify-center whitespace-nowrap px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${tone}`}
+          className={`inline-flex h-10 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-5 text-sm font-semibold transition-colors disabled:opacity-50 ${tone}`}
         >
           {label}
         </button>

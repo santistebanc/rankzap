@@ -17,7 +17,7 @@ export function AccordionSection({
 
   return (
     <section
-      className="overflow-hidden border border-border/80 bg-surface shadow-[0_16px_40px_rgba(15,23,42,0.05)]"
+      className="overflow-hidden rounded-xl bg-surface shadow-card"
       aria-labelledby={triggerId}
     >
       <button
@@ -30,7 +30,7 @@ export function AccordionSection({
       >
         <span className="text-base font-semibold tracking-tight text-text">{title}</span>
         <span
-          className={`flex size-8 shrink-0 items-center justify-center rounded-md border border-border/80 bg-surface-2 text-muted transition-[transform,color] duration-200 ${
+          className={`flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-surface-2 text-muted transition-[transform,color] duration-200 ${
             open ? "rotate-180 text-text" : ""
           }`}
           aria-hidden

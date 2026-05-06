@@ -77,7 +77,7 @@ function UserPillRaw({
       <span className="max-w-40 truncate">{user.name}</span>
       {isYou ? <span className="text-[0.68rem] opacity-70">you</span> : null}
       {showIgnoredBadge && user.ignored ? (
-        <span className="border border-danger/35 bg-danger-soft px-1.5 py-0.5 text-[0.64rem] font-semibold tracking-wide text-danger">
+        <span className="rounded-full border border-danger/35 bg-danger-soft px-1.5 py-0.5 text-[0.64rem] font-semibold tracking-wide text-danger">
           Ignored
         </span>
       ) : null}

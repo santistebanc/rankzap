@@ -78,7 +78,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
         <span className="text-xs text-muted">Share this link with voters.</span>
       </div>
       <div
-        className="flex min-h-11 w-full min-w-0 items-stretch border border-border bg-surface-2"
+        className="flex min-h-11 w-full min-w-0 items-stretch overflow-hidden rounded-xl border border-border bg-surface-2"
         role="region"
         aria-label="Poll link for voters"
       >
@@ -117,7 +117,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
         >
           <div
             ref={qrDialogRef}
-            className="w-full max-w-sm border border-border bg-surface p-4 shadow-xl"
+            className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-page"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">

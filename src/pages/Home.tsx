@@ -381,14 +381,14 @@ export function Home() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-8">
-      <section className="w-full border border-border/80 bg-surface p-5 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-6">
-        <div className="inline-flex bg-accent-soft px-2 py-1 text-xs font-semibold text-accent">
+      <section className="w-full overflow-hidden rounded-2xl bg-surface p-6 shadow-page sm:p-8">
+        <div className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
           Ranked voting
         </div>
-        <h1 className="mt-4 max-w-prose text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+        <h1 className="mt-5 max-w-prose text-4xl font-semibold tracking-tight text-text sm:text-5xl">
           Create a poll and share it.
         </h1>
-        <p className="mt-4 max-w-[42ch] text-base leading-7 text-muted sm:text-lg">
+        <p className="mt-3 max-w-[42ch] text-base leading-7 text-muted sm:text-lg">
           Quick ranked voting for small groups.
         </p>
 
@@ -397,26 +397,26 @@ export function Home() {
             type="button"
             onClick={startPoll}
             disabled={busy}
-            className="inline-flex min-h-11 cursor-pointer items-center justify-center bg-accent px-5 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {creatingPoll ? "Creating…" : "Create poll"}
           </button>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-7">
           <h2 className="text-sm font-semibold text-text">Recent polls</h2>
           <div
-            className="mt-2 max-h-[min(50vh,20rem)] overflow-y-auto overflow-x-hidden border border-border/40 bg-surface-2/50 px-2 py-2"
+            className="mt-2 max-h-[min(50vh,20rem)] overflow-y-auto overflow-x-hidden rounded-xl bg-surface-2/50 px-2 py-2"
             aria-busy={loadingRecents}
           >
             {loadingRecents ? (
-              <p className="text-sm text-muted">Checking recent polls…</p>
+              <p className="px-1 text-sm text-muted">Checking recent polls…</p>
             ) : recentPolls.length === 0 ? (
-              <p className="text-sm text-muted">No recent polls found.</p>
+              <p className="px-1 text-sm text-muted">No recent polls found.</p>
             ) : (
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-1.5">
                 {recentPolls.map((p) => (
-                  <li key={p.roomId} className="flex items-center justify-between gap-2 border border-border bg-surface-2 px-3 py-2">
+                  <li key={p.roomId} className="flex items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2.5 shadow-card">
                     <div className="min-w-0 flex-1">
                       {p.title ? (
                         <div className="truncate text-sm font-semibold tracking-tight text-text">{p.title}</div>
@@ -436,7 +436,7 @@ export function Home() {
                             type="button"
                             onClick={() => setConfirmingDeleteRoomId(null)}
                             disabled={busy}
-                            className="inline-flex min-h-11 cursor-pointer items-center justify-center border border-border bg-surface-2 px-3 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-60"
+                            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-border bg-surface-2 px-3 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-60"
                           >
                             Cancel
                           </button>
@@ -444,7 +444,7 @@ export function Home() {
                             type="button"
                             onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
                             disabled={busy}
-                            className="inline-flex min-h-11 cursor-pointer items-center justify-center bg-danger px-3 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:opacity-60"
+                            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-danger px-3 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:opacity-60"
                           >
                             {deletingRoomId === p.roomId ? "Deleting…" : "Confirm"}
                           </button>
@@ -454,7 +454,7 @@ export function Home() {
                           type="button"
                           onClick={() => setConfirmingDeleteRoomId(p.roomId)}
                           disabled={busy}
-                          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
                           title="Delete poll"
                           aria-label={`Delete poll ${p.roomId}`}
                         >
@@ -465,7 +465,7 @@ export function Home() {
                         type="button"
                         onClick={() => void openExisting(p.roomId)}
                         disabled={busy}
-                        className="inline-flex min-h-9 cursor-pointer items-center justify-center border border-border bg-surface px-3 text-sm font-semibold text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {openingRoomId === p.roomId ? "Opening…" : "Open"}
                       </button>
@@ -480,7 +480,7 @@ export function Home() {
         {error ? (
           <div
             role="alert"
-            className="mt-4 border border-danger/20 bg-danger-soft px-3 py-2 text-sm text-danger"
+            className="mt-4 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger"
           >
             {error}
           </div>
@@ -508,32 +508,6 @@ function TrashIcon() {
       />
       <path
         d="M6.5 7v3.5M9.5 7v3.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function DeleteSpinnerIcon() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      className="size-4 shrink-0 animate-spin"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        className="opacity-25"
-      />
-      <path
-        d="M8 2a6 6 0 016 6"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
