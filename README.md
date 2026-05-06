@@ -1,4 +1,4 @@
-# voter
+# rankzap
 
 Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies.
 
@@ -81,11 +81,11 @@ Every write uses a 30-day TTL. Heartbeats refresh `users/*`; admin/voter actions
 ### localStorage layout (admin/voter strictly isolated)
 
 ```
-voter:admin:lastRoomId               # last poll this browser CREATED — only Home reads/writes
-voter:vote:userId                    # global voter identity
-voter:vote:name                      # last entered display name
-voter:room:{roomId}:vote:rank        # voter's local drag order (saved on every drag-end)
-voter:room:{roomId}:vote:tally       # voter's local tally-mode override
+rankzap:admin:lastRoomId             # last poll this browser CREATED — only Home reads/writes
+rankzap:vote:userId                  # global voter identity
+rankzap:vote:name                    # last entered display name
+rankzap:room:{roomId}:vote:rank      # voter's local drag order (saved on every drag-end)
+rankzap:room:{roomId}:vote:tally     # voter's local tally-mode override
 ```
 
 A user voting in someone else's poll never leaves any "admin" footprint — visiting `/` afterwards generates a brand-new poll, not a redirect into the one they just voted in.
@@ -122,7 +122,7 @@ src/
   pages/
     Home.tsx                    # Resume-or-create flow
     AdminPage.tsx
-    VoterPage.tsx               # Tabs + heartbeat + ranking persistence + fallback panels
+    RankzapPage.tsx             # Tabs + heartbeat + ranking persistence + fallback panels
   components/
     ConnectionStatus.tsx        # Top-of-screen pill: connecting / reconnecting / fatal
     ShareLink.tsx               # voter URL + Copy + Open-in-new-tab + collapsible QR

@@ -21,7 +21,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 
 if (!HOST || !API_KEY) {
   console.error(
-    "[voter] Missing VITE_HOST or VITE_API_KEY — set them in .env or repo secrets.",
+    "[rankzap] Missing VITE_HOST or VITE_API_KEY — set them in .env or repo secrets.",
   );
 }
 
@@ -180,7 +180,7 @@ export function useRoomValue<K extends string>(
         const v = res.initial.value;
         if (v !== null && v !== undefined) setValue(v);
       })
-      .catch((e) => console.warn("[voter] subscribeWithSnapshotKey failed:", e));
+      .catch((e) => console.warn("[rankzap] subscribeWithSnapshotKey failed:", e));
 
     return () => {
       alive = false;
@@ -239,7 +239,7 @@ export function useRoomList<K extends string>(
         unsubscribe = res.unsubscribe;
         if (res.initial.truncated) {
           console.warn(
-            `[voter] prefix "${prefix}" exceeded snapshot limit (1000 entries); some entries may be missing until next change.`,
+            `[rankzap] prefix "${prefix}" exceeded snapshot limit (1000 entries); some entries may be missing until next change.`,
           );
         }
         setItems((prev) => {
@@ -250,7 +250,7 @@ export function useRoomList<K extends string>(
           return next;
         });
       })
-      .catch((e) => console.warn("[voter] subscribeWithSnapshotPrefix failed:", e));
+      .catch((e) => console.warn("[rankzap] subscribeWithSnapshotPrefix failed:", e));
 
     return () => {
       alive = false;

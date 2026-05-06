@@ -26,6 +26,8 @@ interface ArrangeOptionsProps {
   options: Option[];
   ranking: string[];
   onChange: (next: string[]) => void;
+  /** When true, ranking is read-only (no drag-and-drop). */
+  reorderingDisabled?: boolean;
   onDragStateChange?: (isDragging: boolean) => void;
 }
 
@@ -33,6 +35,7 @@ export function ArrangeOptions({
   options,
   ranking,
   onChange,
+  reorderingDisabled = false,
   onDragStateChange,
 }: ArrangeOptionsProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -112,7 +115,10 @@ export function ArrangeOptions({
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={ranking} strategy={verticalListSortingStrategy}>
-        <ul className="flex flex-col" aria-label="Drag to rank options">
+        <ul
+          className="flex flex-col"
+          aria-label={reorderingDisabled ? "Your ranked options" : "Drag to rank options"}
+        >
           {ranking.map((id, index) => {
             const option = optionById.get(id);
             if (!option) return null;
@@ -121,6 +127,7 @@ export function ArrangeOptions({
                 key={id}
                 option={option}
                 displayRank={projectedRankById.get(id) ?? index + 1}
+                reorderingDisabled={reorderingDisabled}
               />
             );
           })}
@@ -137,25 +144,40 @@ function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: numb
   return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
 }
 
-function SortableRow({ option, displayRank }: { option: Option; displayRank: number }) {
+function SortableRow({
+  option,
+  displayRank,
+  reorderingDisabled,
+}: {
+  option: Option;
+  displayRank: number;
+  reorderingDisabled: boolean;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: option.id,
+    disabled: reorderingDisabled,
   });
 
-  const style: React.CSSProperties = { transform: CSS.Transform.toString(transform), transition };
+  const style: React.CSSProperties = reorderingDisabled
+    ? {}
+    : { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <li
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className={`group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 touch-none select-none cursor-grab active:cursor-grabbing ${
-        isDragging ? "z-20 bg-surface-2 opacity-80 shadow-lg ring-1 ring-accent/40" : "hover:bg-surface-2/50"
-      }`}
+      {...(reorderingDisabled ? {} : listeners)}
+      className={`group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 ${
+        reorderingDisabled
+          ? ""
+          : "touch-none select-none cursor-grab active:cursor-grabbing"
+      } ${isDragging ? "z-20 bg-surface-2 opacity-80 shadow-lg ring-1 ring-accent/40" : "hover:bg-surface-2/50"}`}
       aria-label={`${option.text}, rank ${displayRank}`}
     >
-      <div className="relative flex w-full min-w-0 items-center gap-2 *:pointer-events-none">
+      <div
+        className={`relative flex w-full min-w-0 items-center gap-2 ${reorderingDisabled ? "" : "*:pointer-events-none"}`}
+      >
         <span
           className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent"
           aria-hidden="true"
@@ -163,9 +185,13 @@ function SortableRow({ option, displayRank }: { option: Option; displayRank: num
           {displayRank}
         </span>
         <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="min-w-0 flex-1 leading-5 wrap-break-word">{option.text}</span>
-        <span aria-hidden="true" className="drag-handle shrink-0 p-1 text-muted/50">
-          <GripVertical className="size-4" strokeWidth={2} aria-hidden />
-        </span>
+        {reorderingDisabled ? (
+          <span aria-hidden="true" className="size-6 shrink-0 p-1" />
+        ) : (
+          <span aria-hidden="true" className="drag-handle shrink-0 p-1 text-muted/50">
+            <GripVertical className="size-4" strokeWidth={2} aria-hidden />
+          </span>
+        )}
       </div>
     </li>
   );

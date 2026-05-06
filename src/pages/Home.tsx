@@ -19,6 +19,7 @@ import {
   setRecentPolls,
   type RecentPollEntry,
 } from "../lib/storage";
+import { RankzapLogo } from "../components/RankzapLogo";
 
 const HOST = import.meta.env.VITE_HOST;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -383,10 +384,8 @@ export function Home() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-8">
       <section className="w-full overflow-hidden rounded-2xl bg-surface p-6 shadow-page sm:p-8">
-        <div className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
-          Ranked voting
-        </div>
-        <h1 className="mt-5 max-w-prose text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+        <RankzapLogo />
+        <h1 className="mt-6 max-w-prose text-4xl font-semibold tracking-tight text-text sm:mt-7 sm:text-5xl">
           Create a poll and share it.
         </h1>
         <p className="mt-3 max-w-[42ch] text-base leading-7 text-muted sm:text-lg">

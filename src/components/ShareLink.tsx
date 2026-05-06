@@ -27,7 +27,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
         if (alive) setQrDataUrl(data);
       })
       .catch((e) => {
-        console.warn("[voter] qr generation failed:", e);
+        console.warn("[rankzap] qr generation failed:", e);
       });
     return () => {
       alive = false;
@@ -40,7 +40,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
-      console.warn("[voter] clipboard write failed:", e);
+      console.warn("[rankzap] clipboard write failed:", e);
     }
   };
 

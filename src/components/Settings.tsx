@@ -10,7 +10,7 @@ export function Settings() {
   const update = (patch: Partial<SettingsT>) => {
     void client
       .set("settings", { ...settings, ...patch }, SET_OPTS)
-      .catch((e) => console.warn("[voter] failed to update settings:", e));
+      .catch((e) => console.warn("[rankzap] failed to update settings:", e));
   };
 
   return (

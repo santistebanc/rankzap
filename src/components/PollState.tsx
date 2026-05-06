@@ -25,7 +25,7 @@ export function PollState({ controllable }: PollStateProps) {
         SET_OPTS,
       );
     } catch (e) {
-      console.warn("[voter] failed to toggle poll state:", e);
+      console.warn("[rankzap] failed to toggle poll state:", e);
     }
   };
 
@@ -35,7 +35,7 @@ export function PollState({ controllable }: PollStateProps) {
     try {
       await client.deletePrefix("votes/");
     } catch (e) {
-      console.warn("[voter] failed to reset votes:", e);
+      console.warn("[rankzap] failed to reset votes:", e);
     }
   };
 

@@ -56,7 +56,7 @@ export function SubmitVote({
       setTimeout(() => setState("idle"), 1500);
       onSubmitted();
     } catch (e) {
-      console.warn("[voter] submit failed:", e);
+      console.warn("[rankzap] submit failed:", e);
       setState("error");
       setErrorMsg(describeError(e));
     }

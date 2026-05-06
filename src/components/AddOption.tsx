@@ -24,7 +24,7 @@ export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
     try {
       await client.set(`options/${id}`, { id, text: clamped, addedBy, addedAt: Date.now() }, SET_OPTS);
     } catch (e) {
-      console.warn("[voter] failed to add option:", e);
+      console.warn("[rankzap] failed to add option:", e);
     }
   };
 

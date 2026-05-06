@@ -6,11 +6,11 @@
  * fall back to in-memory state for the session.
  *
  * Key layout (must stay in sync with the plan):
- *   voter:admin:lastRoomId          - last poll this browser CREATED
- *   voter:vote:userId               - global voter identity
- *   voter:vote:name                 - last entered display name
- *   voter:room:{roomId}:vote:rank   - voter's local drag order
- *   voter:room:{roomId}:vote:tally  - voter's local tally-mode override
+ *   rankzap:admin:lastRoomId          - last poll this browser CREATED
+ *   rankzap:vote:userId               - global voter identity
+ *   rankzap:vote:name                 - last entered display name
+ *   rankzap:room:{roomId}:vote:rank   - voter's local drag order
+ *   rankzap:room:{roomId}:vote:tally  - voter's local tally-mode override
  */
 
 import type { TallyMode } from "./types";
@@ -39,12 +39,22 @@ const safeRemove = (key: string): void => {
   }
 };
 
+const NS = "rankzap";
+const LEGACY_NS = "voter";
+const withNs = (suffix: string) => `${NS}:${suffix}`;
+const withLegacyNs = (suffix: string) => `${LEGACY_NS}:${suffix}`;
+const safeGetCompat = (key: string, legacyKey: string): string | null =>
+  safeGet(key) ?? safeGet(legacyKey);
+
 // ── Admin: last created room ────────────────────────────────────────────────
 
-const K_ADMIN_LAST_ROOM = "voter:admin:lastRoomId";
-const K_ADMIN_RECENT_POLLS = "voter:admin:recentPolls";
+const K_ADMIN_LAST_ROOM = withNs("admin:lastRoomId");
+const K_ADMIN_LAST_ROOM_LEGACY = withLegacyNs("admin:lastRoomId");
+const K_ADMIN_RECENT_POLLS = withNs("admin:recentPolls");
+const K_ADMIN_RECENT_POLLS_LEGACY = withLegacyNs("admin:recentPolls");
 
-export const getAdminLastRoomId = (): string | null => safeGet(K_ADMIN_LAST_ROOM);
+export const getAdminLastRoomId = (): string | null =>
+  safeGetCompat(K_ADMIN_LAST_ROOM, K_ADMIN_LAST_ROOM_LEGACY);
 export const setAdminLastRoomId = (id: string): void => safeSet(K_ADMIN_LAST_ROOM, id);
 export const clearAdminLastRoomId = (): void => safeRemove(K_ADMIN_LAST_ROOM);
 
@@ -54,7 +64,7 @@ export interface RecentPollEntry {
 }
 
 export const getRecentPolls = (): RecentPollEntry[] => {
-  const raw = safeGet(K_ADMIN_RECENT_POLLS);
+  const raw = safeGetCompat(K_ADMIN_RECENT_POLLS, K_ADMIN_RECENT_POLLS_LEGACY);
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
@@ -98,21 +108,26 @@ export const removeRecentPoll = (roomId: string): void => {
 
 // ── Voter: global identity ──────────────────────────────────────────────────
 
-const K_VOTER_USER_ID = "voter:vote:userId";
-const K_VOTER_NAME = "voter:vote:name";
+const K_VOTER_USER_ID = withNs("vote:userId");
+const K_VOTER_USER_ID_LEGACY = withLegacyNs("vote:userId");
+const K_VOTER_NAME = withNs("vote:name");
+const K_VOTER_NAME_LEGACY = withLegacyNs("vote:name");
 
-export const getVoterUserId = (): string | null => safeGet(K_VOTER_USER_ID);
+export const getVoterUserId = (): string | null =>
+  safeGetCompat(K_VOTER_USER_ID, K_VOTER_USER_ID_LEGACY);
 export const setVoterUserId = (id: string): void => safeSet(K_VOTER_USER_ID, id);
 
-export const getVoterName = (): string | null => safeGet(K_VOTER_NAME);
+export const getVoterName = (): string | null =>
+  safeGetCompat(K_VOTER_NAME, K_VOTER_NAME_LEGACY);
 export const setVoterName = (name: string): void => safeSet(K_VOTER_NAME, name);
 
 // ── Voter: per-room drag order ──────────────────────────────────────────────
 
-const rankKey = (roomId: string) => `voter:room:${roomId}:vote:rank`;
+const rankKey = (roomId: string) => withNs(`room:${roomId}:vote:rank`);
+const rankKeyLegacy = (roomId: string) => withLegacyNs(`room:${roomId}:vote:rank`);
 
 export const getVoterRank = (roomId: string): string[] | null => {
-  const raw = safeGet(rankKey(roomId));
+  const raw = safeGetCompat(rankKey(roomId), rankKeyLegacy(roomId));
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
@@ -129,10 +144,11 @@ export const setVoterRank = (roomId: string, ranking: string[]): void => {
 
 // ── Voter: per-room local tally override ────────────────────────────────────
 
-const tallyKey = (roomId: string) => `voter:room:${roomId}:vote:tally`;
+const tallyKey = (roomId: string) => withNs(`room:${roomId}:vote:tally`);
+const tallyKeyLegacy = (roomId: string) => withLegacyNs(`room:${roomId}:vote:tally`);
 
 export const getVoterTally = (roomId: string): TallyMode | null => {
-  const v = safeGet(tallyKey(roomId));
+  const v = safeGetCompat(tallyKey(roomId), tallyKeyLegacy(roomId));
   return v === "borda" || v === "dowdall" || v === "copeland" ? v : null;
 };
 

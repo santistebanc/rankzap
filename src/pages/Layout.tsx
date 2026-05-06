@@ -208,7 +208,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     try {
       await client.set("meta", { ...meta, state: meta.state === "open" ? "closed" : "open" }, SET_OPTS);
     } catch (e) {
-      console.warn("[voter] failed to toggle poll state:", e);
+      console.warn("[rankzap] failed to toggle poll state:", e);
     }
   }, [client, meta]);
 
@@ -216,7 +216,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     try {
       await client.deletePrefix("votes/");
     } catch (e) {
-      console.warn("[voter] failed to reset votes:", e);
+      console.warn("[rankzap] failed to reset votes:", e);
     }
   }, [client]);
 
@@ -228,7 +228,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
       void client
         .set("settings", { ...settings, ballotTitle: next }, SET_OPTS)
         .catch((e) => {
-          console.warn("[voter] failed to update poll title:", e);
+          console.warn("[rankzap] failed to update poll title:", e);
           pendingPollTitleRef.current = null;
         });
     } else {
@@ -296,7 +296,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
         { id: identity.userId, name: displayName, mode, ignored: existingIgnored },
         SET_OPTS,
       )
-      .catch((e) => console.warn("[voter] failed to update user record:", e));
+      .catch((e) => console.warn("[rankzap] failed to update user record:", e));
   }, [client, status, identity, name, mode, usersMap]);
 
   useEffect(() => {
@@ -368,13 +368,13 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   useEffect(() => {
     const fromSettings = clampTitle(settings.ballotTitle ?? "").trim();
     const fromMeta = clampTitle(meta.title ?? "").trim();
-    document.title = fromSettings || fromMeta || "Vote";
+    document.title = fromSettings || fromMeta || "Rankzap";
   }, [settings.ballotTitle, meta.title]);
 
   // Skeleton until meta loads
   if (!ready) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
+      <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
         <p className="py-12 text-center text-sm text-muted">Loading poll…</p>
       </main>
     );
@@ -450,7 +450,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                             if (selectedVote) {
                               writes.push(client.set(`votes/${selectedVoterId}`, { ...selectedVote, ignored: nextIgnored }, SET_OPTS));
                             }
-                            void Promise.all(writes).catch((e) => console.warn("[voter] failed to toggle ignored:", e));
+                            void Promise.all(writes).catch((e) => console.warn("[rankzap] failed to toggle ignored:", e));
                           }}
                           className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2"
                         >
@@ -471,7 +471,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                                 onClick={() => {
                                   setConfirmingAction(null);
                                   void client.delete(`votes/${selectedVoterId}`)
-                                    .catch((e) => console.warn("[voter] failed to delete voter's vote:", e));
+                                    .catch((e) => console.warn("[rankzap] failed to delete voter's vote:", e));
                                 }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95"
                               >
@@ -504,7 +504,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   const settingsSection = isAdmin ? <SettingsPanel /> : null;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
+    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
       {isAdmin ? (
         <div className="flex items-center justify-between gap-2">
           <button
@@ -555,20 +555,31 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
 
       {!isAdmin ? (
         <section className="flex flex-col gap-4">
-          <div className="flex justify-end">
-          <Tabs<VoterView>
-            tabs={[
-              {
-                id: "compose",
-                label: "Your Vote",
-                disabled: meta.state === "closed",
-                hint: meta.state === "closed" ? "Poll is closed." : undefined,
-              },
-              { id: "results", label: "Results" },
-            ]}
-            active={voterView}
-            onChange={setVoterView}
-          />
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text shadow-card hover:bg-surface-2"
+              aria-label="Go to home"
+              title="Home"
+            >
+              <House className="size-4" aria-hidden />
+            </button>
+            <div className="flex min-w-0 justify-end">
+              <Tabs<VoterView>
+                tabs={[
+                  {
+                    id: "compose",
+                    label: "Your Vote",
+                    disabled: meta.state === "closed",
+                    hint: meta.state === "closed" ? "Poll is closed." : undefined,
+                  },
+                  { id: "results", label: "Results" },
+                ]}
+                active={voterView}
+                onChange={setVoterView}
+              />
+            </div>
           </div>
           <div>
             <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
@@ -581,12 +592,17 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 <div className="overflow-hidden rounded-xl bg-surface shadow-card">
                   <div className="border-b border-border/20 px-4 py-3">
                     <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
-                    <p className="mt-0.5 text-xs text-muted">Drag items to rank by preference.</p>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {!settings.allowRevote && hasVoted
+                        ? "Your ranking can't be changed — vote updates aren't allowed."
+                        : "Drag items to rank by preference."}
+                    </p>
                   </div>
                   <ArrangeOptions
                     options={voterVisibleOptions}
                     ranking={ranking}
                     onChange={updateRanking}
+                    reorderingDisabled={!settings.allowRevote && hasVoted}
                   />
                   {settings.allowAdd ? (
                     <AddOption addedBy={identity?.userId ?? ""} onAddOption={stageVoterOptions} />
@@ -633,18 +649,21 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                     Poll is closed.
                   </div>
                 ) : null}
-                {settings.showLiveResults ? (
+                {settings.showLiveResults || meta.state === "closed" ? (
                   <div className="overflow-hidden rounded-xl bg-surface shadow-card">
                     <div className="border-b border-border/20 px-4 py-3">
                       <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
+                      {meta.state === "closed" && !settings.showLiveResults ? (
+                        <p className="mt-0.5 text-xs text-muted">Final results — the poll is closed.</p>
+                      ) : null}
                     </div>
                     <LiveOptions removable={false} showResults tallyMode={settings.tallyMode} editable={false} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted">
                     {hasVoted
-                      ? "The host hid the live scoreboard. Your vote still counts."
-                      : "The host hid the live scoreboard. Open the Your Vote tab when you're ready to rank."}
+                      ? "Live rankings stay hidden until this poll closes. Your vote counts — full results will appear here then."
+                      : "Live rankings stay hidden until this poll closes. Use the Your Vote tab to rank; full results will show here when it's over."}
                   </p>
                 )}
               </div>

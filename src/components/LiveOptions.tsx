@@ -106,13 +106,13 @@ function OptionRow({
     if (!clamped || clamped === option.text) { setDraft(option.text); return; }
     void client
       .set(`options/${option.id}`, { ...option, text: clamped }, SET_OPTS)
-      .catch((e) => console.warn("[voter] failed to update option:", e));
+      .catch((e) => console.warn("[rankzap] failed to update option:", e));
   };
 
   const remove = () => {
     void client
       .delete(`options/${option.id}`)
-      .catch((e) => console.warn("[voter] failed to delete option:", e));
+      .catch((e) => console.warn("[rankzap] failed to delete option:", e));
   };
 
   const pct = maxScore > 0 ? Math.max(2, (score / maxScore) * 100) : 0;

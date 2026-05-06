@@ -1,5 +1,5 @@
 import { Layout } from "./Layout";
 
-export function VoterPage() {
+export function RankzapPage() {
   return <Layout isAdmin={false} />;
 }
