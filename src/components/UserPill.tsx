@@ -1,3 +1,4 @@
+import { Check, Circle, Pencil } from "lucide-react";
 import { memo } from "react";
 import type { UserRecord } from "../lib/types";
 
@@ -23,31 +24,31 @@ const STATE_CONFIG: Record<
   changing: {
     pillClassName: "bg-accent-soft text-accent border-accent",
     tabClassName: "bg-accent-soft text-accent",
-    icon: <PencilIcon className="size-3 animate-pulse" />,
+    icon: <Pencil className="size-3 animate-pulse" aria-hidden />,
     label: "Changing vote",
   },
   voting: {
     pillClassName: "bg-accent-soft text-accent border-accent",
     tabClassName: "bg-accent-soft text-accent",
-    icon: <PendingIcon className="size-3" />,
+    icon: <Circle className="size-3" aria-hidden />,
     label: "Not voted yet",
   },
   voted: {
     pillClassName: "bg-success-soft text-success border-success",
     tabClassName: "bg-success-soft text-success",
-    icon: <CheckIcon className="size-3" />,
+    icon: <Check className="size-3" aria-hidden />,
     label: "Voted",
   },
   online: {
     pillClassName: "bg-surface-2 text-text border-border",
     tabClassName: "bg-surface-2 text-text",
-    icon: <PendingIcon className="size-3" />,
+    icon: <Circle className="size-3" aria-hidden />,
     label: "Not voted yet (online)",
   },
   offline: {
     pillClassName: "bg-transparent text-muted border-border opacity-60",
     tabClassName: "bg-transparent text-muted opacity-60",
-    icon: <PendingIcon className="size-3" />,
+    icon: <Circle className="size-3" aria-hidden />,
     label: "Not voted yet (offline)",
   },
 };
@@ -74,7 +75,7 @@ function UserPillRaw({
       <span aria-hidden="true" className="flex items-center">
         {cfg.icon}
       </span>
-      <span className="max-w-40 truncate">{user.name}</span>
+      <span style={{ fontSize: adaptiveSize(user.name, 11, 14, 10, 30) }} className="max-w-40 truncate">{user.name}</span>
       {isYou ? <span className="text-[0.68rem] opacity-70">you</span> : null}
       {showIgnoredBadge && user.ignored ? (
         <span className="rounded-full border border-danger/35 bg-danger-soft px-1.5 py-0.5 text-[0.64rem] font-semibold tracking-wide text-danger">
@@ -98,38 +99,9 @@ export const UserPill = memo(UserPillRaw, (a, b) => {
   );
 });
 
-function PencilIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M11.5 2.5l2 2L5 13l-3 .5.5-3L11.5 2.5z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M3 8l3.5 3.5L13 5"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function PendingIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 16 16" fill="none" className={className} aria-hidden="true">
-      <circle cx="8" cy="8" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
+function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
+  const len = text.length;
+  if (len <= minChars) return maxPx;
+  if (len >= maxChars) return minPx;
+  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
 }

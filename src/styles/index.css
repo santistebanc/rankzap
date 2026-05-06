@@ -76,6 +76,11 @@ select {
   border-radius: 3px;
 }
 
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: color-mix(in oklch, var(--accent) 22%, transparent);
 }

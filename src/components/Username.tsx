@@ -49,7 +49,7 @@ export function Username({ name, onCommit }: UsernameProps) {
             }
           }}
           aria-label="Your name"
-          className="h-12 min-w-0 w-full max-w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm outline-none focus:border-accent sm:max-w-72"
+          className="h-12 min-w-0 w-full max-w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm outline-none sm:max-w-72"
         />
       </div>
     </div>

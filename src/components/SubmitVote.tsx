@@ -77,23 +77,21 @@ export function SubmitVote({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
-      <div
-        className={`flex min-w-0 items-center gap-2 ${
-          disabled && disabledReason ? "justify-between" : "justify-end"
-        }`}
-      >
+      <div className="flex min-w-0 flex-col gap-1">
         {disabled && disabledReason ? (
-          <p className="min-w-0 flex-1 text-xs leading-5 text-muted">{disabledReason}</p>
+          <span className="block w-full text-right text-xs text-muted">{disabledReason}</span>
         ) : null}
-        <button
-          type="button"
-          onClick={submit}
-          disabled={disabled || state === "submitting" || ranking.length === 0}
-          title={disabled ? disabledReason : undefined}
-          className={`inline-flex h-10 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-5 text-sm font-semibold transition-colors disabled:opacity-50 ${tone}`}
-        >
-          {label}
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={submit}
+            disabled={disabled || state === "submitting" || ranking.length === 0}
+            title={disabled ? disabledReason : undefined}
+            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-colors disabled:opacity-50 ${tone}`}
+          >
+            {label}
+          </button>
+        </div>
       </div>
       {state === "error" && errorMsg ? (
         <p className="text-xs leading-5 text-danger" role="alert">

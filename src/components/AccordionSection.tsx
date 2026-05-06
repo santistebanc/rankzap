@@ -1,4 +1,5 @@
 import { type ReactNode, useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface AccordionSectionProps {
   title: string;
@@ -35,19 +36,7 @@ export function AccordionSection({
           }`}
           aria-hidden
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          <ChevronDown className="size-[18px]" strokeWidth={2} aria-hidden />
         </span>
       </button>
       <div

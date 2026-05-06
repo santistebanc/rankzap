@@ -19,6 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import type { Option } from "../lib/types";
 
 interface ArrangeOptionsProps {
@@ -97,7 +98,7 @@ export function ArrangeOptions({
 
   if (options.length === 0) {
     return (
-      <p className="px-4 py-4 text-sm text-muted/70">Waiting for options to be added…</p>
+      <p className="px-4 py-3 text-sm text-muted/70">Waiting for options to be added…</p>
     );
   }
 
@@ -129,6 +130,13 @@ export function ArrangeOptions({
   );
 }
 
+function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
+  const len = text.length;
+  if (len <= minChars) return maxPx;
+  if (len >= maxChars) return minPx;
+  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
+}
+
 function SortableRow({ option, displayRank }: { option: Option; displayRank: number }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: option.id,
@@ -142,27 +150,23 @@ function SortableRow({ option, displayRank }: { option: Option; displayRank: num
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative flex items-center gap-2 border-t border-border/20 px-4 py-2.5 first:border-t-0 touch-none select-none cursor-grab active:cursor-grabbing [&>*]:pointer-events-none ${
+      className={`group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 touch-none select-none cursor-grab active:cursor-grabbing ${
         isDragging ? "z-20 bg-surface-2 opacity-80 shadow-lg ring-1 ring-accent/40" : "hover:bg-surface-2/50"
       }`}
+      aria-label={`${option.text}, rank ${displayRank}`}
     >
-      <span
-        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent"
-        aria-hidden="true"
-      >
-        {displayRank}
-      </span>
-      <span className="min-w-0 flex-1 text-sm leading-5 wrap-break-word">{option.text}</span>
-      <span aria-hidden="true" className="drag-handle shrink-0 p-1 text-muted/50">
-        <svg viewBox="0 0 16 16" fill="currentColor" className="size-4" aria-hidden="true">
-          <circle cx="6" cy="4" r="1.25" />
-          <circle cx="10" cy="4" r="1.25" />
-          <circle cx="6" cy="8" r="1.25" />
-          <circle cx="10" cy="8" r="1.25" />
-          <circle cx="6" cy="12" r="1.25" />
-          <circle cx="10" cy="12" r="1.25" />
-        </svg>
-      </span>
+      <div className="relative flex w-full min-w-0 items-center gap-2 *:pointer-events-none">
+        <span
+          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent"
+          aria-hidden="true"
+        >
+          {displayRank}
+        </span>
+        <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="min-w-0 flex-1 leading-5 wrap-break-word">{option.text}</span>
+        <span aria-hidden="true" className="drag-handle shrink-0 p-1 text-muted/50">
+          <GripVertical className="size-4" strokeWidth={2} aria-hidden />
+        </span>
+      </div>
     </li>
   );
 }

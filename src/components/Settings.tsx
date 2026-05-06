@@ -1,5 +1,6 @@
+import { Check } from "lucide-react";
 import { SET_OPTS, useRoom, useRoomValue } from "../lib/room";
-import { DEFAULT_SETTINGS, type Settings as SettingsT } from "../lib/types";
+import { DEFAULT_SETTINGS, TALLY_MODES, TALLY_MODE_LABELS, type Settings as SettingsT } from "../lib/types";
 
 export function Settings() {
   const { client } = useRoom();
@@ -15,6 +16,26 @@ export function Settings() {
   return (
     <section aria-label="Settings" className="w-full">
       <div className="flex flex-col">
+        <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 sm:min-h-12 sm:px-4">
+          <div className="text-sm font-semibold">Scoring method</div>
+          <div role="group" aria-label="Scoring method" className="flex gap-1 rounded-full bg-surface-2 p-1">
+            {TALLY_MODES.map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={settings.tallyMode === m}
+                onClick={() => update({ tallyMode: m })}
+                className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors ${
+                  settings.tallyMode === m
+                    ? "bg-accent text-white"
+                    : "text-muted hover:text-text"
+                }`}
+              >
+                {TALLY_MODE_LABELS[m]}
+              </button>
+            ))}
+          </div>
+        </div>
         <Toggle
           label="Show live results to voters"
           value={settings.showLiveResults}
@@ -76,9 +97,7 @@ function Toggle({
           }`}
         >
           {value ? (
-            <svg viewBox="0 0 10 10" className="size-3 text-accent" fill="none">
-              <path d="M2 5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <Check className="size-3 text-accent" strokeWidth={2.5} aria-hidden />
           ) : null}
         </span>
       </button>

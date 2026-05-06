@@ -14,16 +14,15 @@ import {
   DEFAULT_SETTINGS,
   clampOption,
   type Option,
-  type TallyMode,
+
   type UserMode,
 } from "../lib/types";
+import { House } from "lucide-react";
 import { nanoid } from "nanoid";
 import { fallbackVoterName, getOrCreateVoterIdentity } from "../lib/identity";
 import {
   getVoterRank,
-  getVoterTally,
   setVoterRank,
-  setVoterTally,
 } from "../lib/storage";
 import { ShareBar } from "../components/ShareLink";
 import { ConnectionStatus } from "../components/ConnectionStatus";
@@ -33,7 +32,6 @@ import { ArrangeOptions } from "../components/ArrangeOptions";
 import { AddOption } from "../components/AddOption";
 import { SubmitVote } from "../components/SubmitVote";
 import { LiveOptions } from "../components/LiveOptions";
-import { TallyModeSelector } from "../components/TallyModeSelector";
 import { Settings as SettingsPanel } from "../components/Settings";
 import { VoterRankingPanel } from "../components/VoterRankingPanel";
 import { Tabs } from "../components/Tabs";
@@ -110,9 +108,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     return !stored || stored.length === 0;
   });
   
-  const [tallyMode, setTallyModeLocal] = useState<TallyMode>(
-    () => getVoterTally(roomId) ?? settings.tallyMode,
-  );
   const pollTitleInputRef = useRef<HTMLInputElement>(null);
   /** While a title write is in flight, avoid syncing draft from stale `committedPollTitle`. */
   const pendingPollTitleRef = useRef<string | null>(null);
@@ -199,10 +194,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     setVoterRank(roomId, next);
   }, [roomId]);
 
-  const onTallyModeChange = useCallback((m: TallyMode) => {
-    setTallyModeLocal(m);
-    setVoterTally(roomId, m);
-  }, [roomId]);
 
   const toggleVoterSelection = useCallback((userId: string) => {
     setSelectedVoterId((prev) => (prev === userId ? null : userId));
@@ -411,7 +402,8 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             }
           }}
           aria-label="Poll title"
-          className="w-full border-b border-border/20 bg-transparent px-4 py-3 text-base font-semibold outline-none placeholder:text-muted/40 transition-colors hover:bg-surface-2/30 focus:bg-surface-2/30"
+          style={{ fontSize: adaptiveSize(pollTitleDraft, 15, 24, 8, 70) }}
+          className="w-full border-b border-border/20 bg-transparent px-4 py-3 font-semibold outline-none placeholder:text-muted/40 transition-[font-size,colors] duration-150 hover:bg-surface-2/30 focus:bg-surface-2/30"
         />
         <LiveOptions removable showResults tallyMode={settings.tallyMode} editable />
         <AddOption addedBy="admin" />
@@ -522,7 +514,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             aria-label="Go to home"
             title="Home"
           >
-            <HomeIcon />
+            <House className="size-4" aria-hidden />
           </button>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {meta.state === "open" && confirmingAction === "close" ? (
@@ -562,12 +554,13 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
       {settingsSection}
 
       {!isAdmin ? (
-        <section className="flex flex-col gap-3">
+        <section className="flex flex-col gap-4">
+          <div className="flex justify-end">
           <Tabs<VoterView>
             tabs={[
               {
                 id: "compose",
-                label: "Rank options",
+                label: "Your Vote",
                 disabled: meta.state === "closed",
                 hint: meta.state === "closed" ? "Poll is closed." : undefined,
               },
@@ -576,9 +569,10 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             active={voterView}
             onChange={setVoterView}
           />
+          </div>
           <div>
             <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
-              <div className="flex flex-col gap-3" inert={voterView !== "compose" ? true : undefined}>
+              <div className="flex flex-col gap-4" inert={voterView !== "compose" ? true : undefined}>
                 {meta.state === "closed" ? (
                   <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
                     Poll is closed.
@@ -586,7 +580,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 ) : null}
                 <div className="overflow-hidden rounded-xl bg-surface shadow-card">
                   <div className="border-b border-border/20 px-4 py-3">
-                    <h3 className="font-semibold tracking-tight">{pollHeading}</h3>
+                    <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
                     <p className="mt-0.5 text-xs text-muted">Drag items to rank by preference.</p>
                   </div>
                   <ArrangeOptions
@@ -598,10 +592,42 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                     <AddOption addedBy={identity?.userId ?? ""} onAddOption={stageVoterOptions} />
                   ) : null}
                 </div>
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  {identity ? (
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <span className="text-xs font-semibold text-muted">Your name</span>
+                      <Username name={name} onCommit={setName} />
+                    </div>
+                  ) : null}
+                  <SubmitVote
+                    userId={identity?.userId ?? ""}
+                    ranking={ranking}
+                    hasVoted={hasVoted}
+                    disabled={
+                      meta.state === "closed" ||
+                      (!settings.allowRevote && hasVoted) ||
+                      !canSubmitVote
+                    }
+                    disabledReason={
+                      meta.state === "closed"
+                        ? "Poll is closed."
+                        : !settings.allowRevote && hasVoted
+                          ? "Revoting is disabled."
+                          : !canSubmitVote
+                            ? "No changes to submit yet."
+                            : undefined
+                    }
+                    beforeSubmit={persistPendingAddedOptions}
+                    onSubmitted={() => {
+                      setPendingAddedOptions([]);
+                      setVoterView("results");
+                    }}
+                  />
+                </div>
               </div>
             </Activity>
             <Activity mode={voterView === "results" ? "visible" : "hidden"}>
-              <div className="flex flex-col gap-3" inert={voterView !== "results" ? true : undefined}>
+              <div className="flex flex-col gap-4" inert={voterView !== "results" ? true : undefined}>
                 {meta.state === "closed" ? (
                   <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
                     Poll is closed.
@@ -609,17 +635,16 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 ) : null}
                 {settings.showLiveResults ? (
                   <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-                    <div className="flex items-center justify-between gap-3 border-b border-border/20 px-4 py-3">
-                      <h3 className="text-base font-semibold tracking-tight">Live results</h3>
-                      <TallyModeSelector value={tallyMode} onChange={onTallyModeChange} />
+                    <div className="border-b border-border/20 px-4 py-3">
+                      <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
                     </div>
-                    <LiveOptions removable={false} showResults tallyMode={tallyMode} editable={false} />
+                    <LiveOptions removable={false} showResults tallyMode={settings.tallyMode} editable={false} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted">
                     {hasVoted
                       ? "The host hid the live scoreboard. Your vote still counts."
-                      : "The host hid the live scoreboard. Open the Rank options tab when you're ready to rank."}
+                      : "The host hid the live scoreboard. Open the Your Vote tab when you're ready to rank."}
                   </p>
                 )}
               </div>
@@ -627,78 +652,44 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
           </div>
         </section>
       ) : null}
-      {!isAdmin ? (
-        <section className="sticky bottom-0 z-30 -mx-3 mt-auto flex flex-col gap-3 border-t border-border/10 bg-surface/90 px-3 py-3 pt-4 backdrop-blur-lg pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:-mx-4 sm:px-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            {identity ? (
-              <div className="flex min-w-0 flex-col gap-1 sm:max-w-md">
-                <span className="text-xs font-semibold text-muted">Your name</span>
-                <Username name={name} onCommit={setName} />
-              </div>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              {voterView === "compose" ? (
-                <SubmitVote
-                  userId={identity?.userId ?? ""}
-                  ranking={ranking}
-                  hasVoted={hasVoted}
-                  disabled={
-                    meta.state === "closed" ||
-                    (!settings.allowRevote && hasVoted) ||
-                    !canSubmitVote
-                  }
-                  disabledReason={
-                    meta.state === "closed"
-                      ? "Poll is closed."
-                      : !settings.allowRevote && hasVoted
-                        ? "Revoting is disabled."
-                        : !canSubmitVote
-                          ? "No changes to submit yet."
-                          : undefined
-                  }
-                  beforeSubmit={persistPendingAddedOptions}
-                  onSubmitted={() => {
-                    setPendingAddedOptions([]);
-                    setVoterView("results");
-                  }}
-                />
-              ) : null}
-            </div>
-          </div>
-        </section>
-      ) : null}
       {!isAdmin && settings.showUsers && hasAnyOtherVoters ? (
         <section className="flex flex-col gap-1.5">
           <span className="text-xs font-semibold text-muted">Other voters</span>
-          <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-            <UsersList
-              selfUserId={identity?.userId}
-              includeSelf={false}
-              variant="tabStrip"
-              selectedVoterId={selectedVoterId}
-              onToggleVoter={toggleVoterSelection}
-              onInvalidateVoterSelection={clearVoterSelection}
-            />
-            <Activity mode={settings.showVoterVotes && selectedVoterId ? "visible" : "hidden"}>
-              <div
-                className="border-t border-border/20 px-4 py-3"
-                inert={!(settings.showVoterVotes && selectedVoterId) ? true : undefined}
-              >
-                {settings.showVoterVotes && selectedVoterId ? (
-                  <VoterRankingPanel
-                    voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
-                    ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
-                    optionById={optionById}
-                  />
-                ) : null}
-              </div>
-            </Activity>
-          </div>
+          <UsersList
+            selfUserId={identity?.userId}
+            includeSelf={false}
+            variant="tabStrip"
+            selectedVoterId={selectedVoterId}
+            onToggleVoter={toggleVoterSelection}
+            onInvalidateVoterSelection={clearVoterSelection}
+          />
+          <Activity mode={settings.showVoterVotes && selectedVoterId ? "visible" : "hidden"}>
+            <div
+              className="border-t border-border/20 pt-3"
+              inert={!(settings.showVoterVotes && selectedVoterId) ? true : undefined}
+            >
+              {settings.showVoterVotes && selectedVoterId ? (
+                <VoterRankingPanel
+                  voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
+                  ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
+                  optionById={optionById}
+                />
+              ) : null}
+            </div>
+          </Activity>
         </section>
       ) : null}
 
     </main>
   );
+}
+
+function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
+  const len = text.length;
+  if (len <= minChars) return maxPx;
+  if (len >= maxChars) return minPx;
+  const t = (len - minChars) / (maxChars - minChars);
+  return maxPx + (minPx - maxPx) * t;
 }
 
 function sameRanking(a: string[], b: string[]): boolean {
@@ -718,18 +709,4 @@ function shuffleIds(ids: string[]): string[] {
     out[j] = tmp;
   }
   return out;
-}
-
-function HomeIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-      <path
-        d="M2.5 7.25L8 2.75l5.5 4.5M4.25 6.75v6.5h7.5v-6.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
 }

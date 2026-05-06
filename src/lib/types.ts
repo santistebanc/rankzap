@@ -92,7 +92,7 @@ export const DEFAULT_SETTINGS = (): Settings => ({
   allowRevote: true,
   allowAdd: true,
   showUsers: true,
-  showVoterVotes: true,
+  showVoterVotes: false,
 });
 
 export function clampTitle(s: string): string {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { RoomClient } from "room-server/client";
 import {
@@ -129,7 +130,7 @@ async function fetchRecentPollInfo(
       settingsValue.allowRevote === true &&
       settingsValue.allowAdd === true &&
       settingsValue.showUsers === true &&
-      settingsValue.showVoterVotes === true &&
+      settingsValue.showVoterVotes === false &&
       optionEntries.length === 0 &&
       voteEntries.length === 0 &&
       userEntries.length === 0;
@@ -458,7 +459,7 @@ export function Home() {
                           title="Delete poll"
                           aria-label={`Delete poll ${p.roomId}`}
                         >
-                          <TrashIcon />
+                          <Trash2 className="size-4 shrink-0" strokeWidth={2} aria-hidden />
                         </button>
                       )}
                       <button
@@ -490,28 +491,3 @@ export function Home() {
   );
 }
 
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4 shrink-0" fill="none" aria-hidden="true">
-      <path
-        d="M2 4.5h12M5.5 4.5V3.25a1 1 0 011-1h3a1 1 0 011 1V4.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M5.25 4.5h5.5l-.65 7.35A1.1 1.1 0 019 13H7a1.1 1.1 0 01-1.1-1.15L5.25 4.5z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6.5 7v3.5M9.5 7v3.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}

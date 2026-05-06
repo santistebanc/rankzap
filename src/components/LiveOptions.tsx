@@ -6,6 +6,7 @@ import {
   type TallyMode,
   type Vote,
 } from "../lib/types";
+import { X } from "lucide-react";
 import { computeTally } from "../lib/tally";
 
 interface LiveOptionsProps {
@@ -121,7 +122,7 @@ function OptionRow({
 
   return (
     <li
-      className="group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-2.5 first:border-t-0 hover:bg-surface-2/50"
+      className="group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 hover:bg-surface-2/50"
       aria-label={ariaLabel}
     >
       {showResults ? (
@@ -151,17 +152,13 @@ function OptionRow({
               else if (e.key === "Escape") { setDraft(option.text); inputRef.current?.blur(); }
             }}
             aria-label={`Edit option: ${option.text}`}
-            className="-mx-1 min-h-0 flex-1 min-w-0 rounded bg-transparent px-1 py-0.5 text-sm outline-none focus:bg-surface-2/60"
+            style={{ fontSize: adaptiveSize(draft, 14, 18, 20, 80) }}
+            className="-mx-1 min-h-0 flex-1 min-w-0 rounded bg-transparent px-1 py-0.5 outline-none transition-[font-size] duration-150 focus:bg-surface-2/60"
           />
         ) : (
-          <span className="flex-1 min-w-0 text-sm leading-5 wrap-break-word">{option.text}</span>
+          <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150">{option.text}</span>
         )}
 
-        {showResults ? (
-          <span className="shrink-0 text-xs font-semibold tabular-nums text-muted">
-            {formatScore(score)}
-          </span>
-        ) : null}
 
         {removable ? (
           <button
@@ -170,14 +167,19 @@ function OptionRow({
             aria-label={`Remove ${option.text}`}
             className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted/40 transition-opacity hover:bg-danger-soft hover:text-danger group-hover:text-muted group-focus-within:text-muted focus-visible:text-danger focus-visible:opacity-100"
           >
-            <svg viewBox="0 0 16 16" className="size-3.5" fill="none" aria-hidden="true">
-              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <X className="size-3.5" strokeWidth={2} aria-hidden />
           </button>
         ) : null}
       </div>
     </li>
   );
+}
+
+function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
+  const len = text.length;
+  if (len <= minChars) return maxPx;
+  if (len >= maxChars) return minPx;
+  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
 }
 
 function formatScore(n: number): string {

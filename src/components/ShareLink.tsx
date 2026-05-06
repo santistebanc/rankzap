@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Check, Copy, QrCode, X } from "lucide-react";
 import QRCode from "qrcode";
 import { buildVoterUrl } from "../lib/url";
 
@@ -94,7 +95,11 @@ export function ShareBar({ roomId }: ShareBarProps) {
           aria-label={copied ? "Copied" : "Copy link"}
           className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l bg-surface-2 px-2 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
-          {copied ? <CheckIcon /> : <CopyIcon />}
+          {copied ? (
+            <Check className="size-4" strokeWidth={2} aria-hidden />
+          ) : (
+            <Copy className="size-4" strokeWidth={2} aria-hidden />
+          )}
         </button>
         <button
           ref={qrTriggerRef}
@@ -104,7 +109,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
           aria-label="Show QR code"
           className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l bg-surface-2 px-2 text-text transition-colors hover:bg-surface focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
-          <QrIcon />
+          <QrCode className="size-4" strokeWidth={2} aria-hidden />
         </button>
       </div>
       {isQrOpen ? (
@@ -129,7 +134,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
                 aria-label="Close QR code modal"
                 title="Close"
               >
-                <CloseIcon />
+                <X className="size-4" strokeWidth={2} aria-hidden />
               </button>
             </div>
             {qrDataUrl ? (
@@ -152,57 +157,3 @@ export function ShareBar({ roomId }: ShareBarProps) {
   );
 }
 
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-      <path
-        d="M5.25 5.25h7v8h-7zM3.75 10.75h-1V2.75h7v1"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-      <path
-        d="M3.75 8.75l3 3 5.5-5.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function QrIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-      <path
-        d="M2.75 2.75h4v4h-4zM9.25 2.75h4v4h-4zM2.75 9.25h4v4h-4zM9.25 9.25h1.5v1.5h-1.5zM11.75 11.75h1.5v1.5h-1.5zM11.75 9.25h1.5v1.5h-1.5zM9.25 11.75h1.5v1.5h-1.5z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg viewBox="0 0 16 16" className="size-4" fill="none" aria-hidden="true">
-      <path
-        d="M4 4l8 8M12 4l-8 8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
