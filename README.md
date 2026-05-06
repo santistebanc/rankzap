@@ -1,4 +1,10 @@
-# rankzap
+<p align="left">
+  <img src="./public/rankzap-logo.svg" alt="Rankzap" width="280" />
+</p>
+
+[Live app](https://rankzap.site)
+
+![Rankzap app screenshot](./public/rankzap-screenshot.png)
 
 Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies.
 
