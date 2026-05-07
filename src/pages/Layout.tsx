@@ -182,6 +182,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   );
 
   const hasVoted = Boolean(myVote?.ranking?.length);
+  const hasSubmittedAnyVote = Boolean(myVote?.submittedAt);
   const hasPendingOptionAdds = pendingAddedOptions.length > 0;
   const rankingChanged = hasVoted
     ? !sameRanking(ranking, myVote?.ranking ?? [])
@@ -344,7 +345,30 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   }, [committedPollTitle, isPollTitleFocused, isAdmin]);
 
   useEffect(() => {
-    if (isAdmin || hasVoted || !shouldRandomizeFirstVote) return;
+    if (isAdmin || !hasSubmittedAnyVote || !shouldRandomizeFirstVote) return;
+    const submittedRanking = myVote?.ranking ?? [];
+    if (submittedRanking.length === 0) {
+      setShouldRandomizeFirstVote(false);
+      return;
+    }
+    const known = new Set(voterVisibleOptions.map((o) => o.id));
+    const cleaned = submittedRanking.filter((id) => known.has(id));
+    const missing = voterVisibleOptions
+      .map((o) => o.id)
+      .filter((id) => !cleaned.includes(id));
+    updateRanking([...cleaned, ...missing]);
+    setShouldRandomizeFirstVote(false);
+  }, [
+    hasSubmittedAnyVote,
+    isAdmin,
+    myVote?.ranking,
+    shouldRandomizeFirstVote,
+    updateRanking,
+    voterVisibleOptions,
+  ]);
+
+  useEffect(() => {
+    if (isAdmin || hasSubmittedAnyVote || !shouldRandomizeFirstVote) return;
     if (options.length === 0) return;
     const canonicalIds = options.map((o) => o.id);
     const rankingLooksUntouched =
@@ -357,7 +381,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     updateRanking(shuffleIds(canonicalIds));
     setShouldRandomizeFirstVote(false);
   }, [
-    hasVoted,
+    hasSubmittedAnyVote,
     isAdmin,
     options,
     ranking,
