@@ -4,12 +4,14 @@ import { ChevronDown } from "lucide-react";
 interface AccordionSectionProps {
   title: string;
   defaultOpen?: boolean;
+  noPadding?: boolean;
   children: ReactNode;
 }
 
 export function AccordionSection({
   title,
   defaultOpen = false,
+  noPadding = false,
   children,
 }: AccordionSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
@@ -47,7 +49,7 @@ export function AccordionSection({
       >
         <div className="min-h-0 overflow-hidden">
           <div
-            className="border-t border-border px-4 pb-4 pt-3 sm:px-4"
+            className={`border-t border-border ${noPadding ? "" : "px-4 pb-4 pt-3 sm:px-4"}`}
             inert={!open ? true : undefined}
           >
             {children}

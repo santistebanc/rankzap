@@ -35,6 +35,7 @@ import { LiveOptions } from "../components/LiveOptions";
 import { Settings as SettingsPanel } from "../components/Settings";
 import { VoterRankingPanel } from "../components/VoterRankingPanel";
 import { Tabs } from "../components/Tabs";
+import { AccordionSection } from "../components/AccordionSection";
 
 interface LayoutProps {
   isAdmin: boolean;
@@ -525,7 +526,11 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
 
   const shareSection = isAdmin ? <ShareBar roomId={roomId} /> : null;
 
-  const settingsSection = isAdmin ? <SettingsPanel /> : null;
+  const settingsSection = isAdmin ? (
+    <AccordionSection title="Settings" noPadding>
+      <SettingsPanel />
+    </AccordionSection>
+  ) : null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
@@ -541,33 +546,37 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             <House className="size-4" aria-hidden />
           </button>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {meta.state === "open" && confirmingAction === "close" ? (
-              <div className="inline-flex items-center gap-1.5">
-                <span className="text-xs text-muted">Close poll?</span>
-                <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
-                <button type="button" onClick={() => { setConfirmingAction(null); void togglePollState(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
-                className={`inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full px-4 text-sm font-semibold ${
-                  meta.state === "open" ? "border border-border bg-surface text-text shadow-card hover:bg-surface-2" : "bg-success text-white"
-                }`}
-              >
-                {meta.state === "open" ? "Close poll" : "Reopen poll"}
-              </button>
+            {(votedUserIds.size > 0 || meta.state === "closed") && (
+              meta.state === "open" && confirmingAction === "close" ? (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="text-xs text-muted">Close poll?</span>
+                  <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
+                  <button type="button" onClick={() => { setConfirmingAction(null); void togglePollState(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
+                  className={`inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full px-4 text-sm font-semibold ${
+                    meta.state === "open" ? "border border-border bg-surface text-text shadow-card hover:bg-surface-2" : "bg-success text-white"
+                  }`}
+                >
+                  {meta.state === "open" ? "Close poll" : "Reopen poll"}
+                </button>
+              )
             )}
-            {confirmingAction === "reset" ? (
-              <div className="inline-flex items-center gap-1.5">
-                <span className="text-xs text-muted">Reset all votes?</span>
-                <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
-                <button type="button" onClick={() => { setConfirmingAction(null); void resetVotes(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setConfirmingAction("reset")} className="inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98">
-                Reset votes
-              </button>
+            {votedUserIds.size > 0 && (
+              confirmingAction === "reset" ? (
+                <div className="inline-flex items-center gap-1.5">
+                  <span className="text-xs text-muted">Reset all votes?</span>
+                  <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
+                  <button type="button" onClick={() => { setConfirmingAction(null); void resetVotes(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setConfirmingAction("reset")} className="inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98">
+                  Reset votes
+                </button>
+              )
             )}
           </div>
         </div>
