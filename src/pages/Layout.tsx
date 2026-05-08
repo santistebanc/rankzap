@@ -690,7 +690,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                         <p className="mt-0.5 text-xs text-muted">Final results — the poll is closed.</p>
                       ) : null}
                     </div>
-                    <LiveOptions removable={false} showResults tallyMode={settings.tallyMode} editable={false} />
+                    <LiveOptions removable={false} showResults tallyMode={settings.tallyMode} editable={false} optionsMap={optionsMap} votesMap={votesMap} usersMap={usersMap} />
                   </div>
                 ) : (
                   <p className="text-sm text-muted">

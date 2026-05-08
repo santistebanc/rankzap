@@ -4,6 +4,7 @@ import {
   clampOption,
   type Option,
   type TallyMode,
+  type UserRecord,
   type Vote,
 } from "../lib/types";
 import { X } from "lucide-react";
@@ -14,6 +15,9 @@ interface LiveOptionsProps {
   showResults: boolean;
   tallyMode: TallyMode;
   editable?: boolean;
+  optionsMap?: Map<string, Option>;
+  votesMap?: Map<string, Vote>;
+  usersMap?: Map<string, UserRecord>;
 }
 
 export function LiveOptions({
@@ -21,10 +25,17 @@ export function LiveOptions({
   showResults,
   tallyMode,
   editable = false,
+  optionsMap: optionsMapProp,
+  votesMap: votesMapProp,
+  usersMap: usersMapProp,
 }: LiveOptionsProps) {
-  const optionsMap = useRoomList("options/");
-  const votesMap = useRoomList("votes/");
-  const usersMap = useRoomList("users/");
+  const ownOptionsMap = useRoomList("options/");
+  const ownVotesMap = useRoomList("votes/");
+  const ownUsersMap = useRoomList("users/");
+
+  const optionsMap = optionsMapProp ?? ownOptionsMap;
+  const votesMap = votesMapProp ?? ownVotesMap;
+  const usersMap = usersMapProp ?? ownUsersMap;
 
   const options = useMemo<Option[]>(
     () => [...optionsMap.values()].sort((a, b) => a.addedAt - b.addedAt),
