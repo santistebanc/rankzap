@@ -20,8 +20,8 @@
   --shadow-card: 0 1px 2px color-mix(in oklch, var(--text) 12%, transparent), 0 2px 8px color-mix(in oklch, var(--text) 8%, transparent);
   --shadow-page: 0 4px 20px color-mix(in oklch, var(--text) 10%, transparent);
 
-  --font-sans:
-    "Inter", "Segoe UI Variable", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Patrick Hand", cursive;
+  --font-sans: "Patrick Hand", cursive;
 }
 
 :root {
@@ -44,6 +44,51 @@
   --overlay:      oklch(0.12 0.012 80);
 }
 
+/* Dark vars — system preference (unless forced light) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+    --bg:           oklch(0.13 0.010 88);
+    --surface:      oklch(0.18 0.008 85);
+    --surface-2:    oklch(0.24 0.012 86);
+    --border:       oklch(0.32 0.010 84);
+    --text:         oklch(0.93 0.010 85);
+    --muted:        oklch(0.58 0.012 82);
+    --accent:       oklch(0.55 0.13 222);
+    --accent-soft:  oklch(0.22 0.05 222);
+    --success:      oklch(0.53 0.13 152);
+    --success-soft: oklch(0.20 0.05 152);
+    --danger:       oklch(0.54 0.16 22);
+    --danger-soft:  oklch(0.20 0.06 22);
+    --warn:         oklch(0.72 0.12 72);
+    --overlay:      oklch(0.04 0.005 80);
+  }
+}
+
+/* Dark vars — forced via .dark class (toggle override) */
+:root.dark {
+  color-scheme: dark;
+  --bg:           oklch(0.13 0.010 88);
+  --surface:      oklch(0.18 0.008 85);
+  --surface-2:    oklch(0.24 0.012 86);
+  --border:       oklch(0.32 0.010 84);
+  --text:         oklch(0.93 0.010 85);
+  --muted:        oklch(0.58 0.012 82);
+  --accent:       oklch(0.55 0.13 222);
+  --accent-soft:  oklch(0.22 0.05 222);
+  --success:      oklch(0.53 0.13 152);
+  --success-soft: oklch(0.20 0.05 152);
+  --danger:       oklch(0.54 0.16 22);
+  --danger-soft:  oklch(0.20 0.06 22);
+  --warn:         oklch(0.72 0.12 72);
+  --overlay:      oklch(0.04 0.005 80);
+}
+
+/* Force light mode explicitly (defensive pin for native controls) */
+:root.light {
+  color-scheme: light;
+}
+
 html,
 body,
 #root {
@@ -59,8 +104,26 @@ body {
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
   background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 31px,
+      color-mix(in oklch, var(--border) 40%, transparent) 31px,
+      color-mix(in oklch, var(--border) 40%, transparent) 31.75px
+    ),
     radial-gradient(ellipse 60% 40% at 100% 0%, color-mix(in oklch, var(--surface) 80%, transparent), transparent),
     radial-gradient(ellipse 50% 35% at 0% 100%, color-mix(in oklch, var(--surface-2) 55%, transparent), transparent);
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
 }
 
 button:not(:disabled),
@@ -85,6 +148,18 @@ textarea:focus-visible {
   background: color-mix(in oklch, var(--accent) 22%, transparent);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .shadow-card,
+  :root:not(.light) .shadow-page {
+    box-shadow: none;
+  }
+}
+
+:root.dark .shadow-card,
+:root.dark .shadow-page {
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -98,4 +173,71 @@ textarea:focus-visible {
 
 .drag-handle {
   touch-action: none;
+}
+
+
+/* Paper card — the primary page container in pen & paper aesthetic */
+.paper-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  background-color: var(--surface);
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 31px,
+      color-mix(in oklch, var(--border) 38%, transparent) 31px,
+      color-mix(in oklch, var(--border) 38%, transparent) 31.75px
+    );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, var(--text) 5%, transparent) inset,
+    0 2px 4px color-mix(in oklch, var(--text) 3%, transparent),
+    0 20px 44px -16px color-mix(in oklch, var(--text) 16%, transparent);
+}
+
+/* Red margin line */
+.paper-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 1.75rem;
+  width: 1px;
+  background: color-mix(in oklch, var(--danger) 30%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (min-width: 640px) {
+  .paper-card {
+    border-radius: 3px;
+  }
+
+  .paper-card::before {
+    left: 3.5rem;
+  }
+}
+
+/* Content sits after the margin line */
+.paper-content {
+  position: relative;
+  z-index: 1;
+  padding: 2rem 1.5rem 2.5rem 3.25rem;
+}
+
+@media (min-width: 640px) {
+  .paper-content {
+    padding: 3rem 3.5rem 3.5rem 5.25rem;
+  }
+}
+
+/* Suppress shadows in dark mode for paper cards */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) .paper-card {
+    box-shadow: none;
+  }
+}
+:root.dark .paper-card {
+  box-shadow: none;
 }

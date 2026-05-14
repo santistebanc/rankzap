@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { nanoid } from "nanoid";
 import { SET_OPTS, useRoom } from "../lib/room";
 import { clampOption, OPTION_MAX, PASTE_THROTTLE_MS } from "../lib/types";
+import { adaptiveSize } from "../lib/adaptiveSize";
 
 interface AddOptionProps {
   addedBy: string;
@@ -71,7 +72,8 @@ export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
         placeholder={batchMessage ?? "Add an item…"}
         aria-label="Add an option"
         disabled={busy}
-        className="min-h-0 flex-1 bg-transparent py-1 text-sm text-text outline-none placeholder:text-muted/50 disabled:opacity-50"
+        style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80), transition: "font-size 150ms" }}
+        className="min-h-0 flex-1 bg-transparent py-1 text-text outline-none placeholder:text-muted/70 disabled:opacity-50"
       />
     </form>
   );

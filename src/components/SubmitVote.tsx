@@ -73,7 +73,7 @@ export function SubmitVote({
       ? "bg-danger text-white hover:brightness-95"
       : state === "success"
         ? "bg-success text-white hover:brightness-95"
-        : "border border-accent/30 bg-accent-soft text-accent hover:brightness-98";
+        : "bg-accent text-white hover:brightness-95";
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -87,7 +87,8 @@ export function SubmitVote({
             onClick={submit}
             disabled={disabled || state === "submitting" || ranking.length === 0}
             title={disabled ? disabledReason : undefined}
-            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-colors disabled:opacity-50 ${tone}`}
+            style={state === "idle" && !disabled ? { boxShadow: "3px 3px 0 var(--text)" } : undefined}
+            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-[colors,box-shadow] disabled:opacity-50 ${tone}`}
           >
             {label}
           </button>

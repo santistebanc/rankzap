@@ -21,7 +21,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
       errorCorrectionLevel: "M",
       width: 280,
       margin: 1,
-      color: { dark: "#111827", light: "#ffffff" },
+      color: { dark: "#000000", light: "#ffffff" },
     })
       .then((data) => {
         if (alive) setQrDataUrl(data);
@@ -75,16 +75,13 @@ export function ShareBar({ roomId }: ShareBarProps) {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted">Share this link with voters.</span>
-      </div>
       <div
         className="flex min-h-11 w-full min-w-0 items-stretch overflow-hidden rounded-xl border border-border bg-surface-2"
         role="region"
         aria-label="Poll link for voters"
       >
         <div className="flex min-h-11 min-w-0 flex-1 items-center px-3 py-2">
-          <p className="m-0 min-w-0 flex-1 cursor-text select-text font-mono text-sm leading-snug break-all text-text">
+          <p className="m-0 min-w-0 flex-1 cursor-text select-text text-sm leading-snug break-all text-text">
             {url}
           </p>
         </div>
@@ -138,7 +135,7 @@ export function ShareBar({ roomId }: ShareBarProps) {
               </button>
             </div>
             {qrDataUrl ? (
-              <div className="mx-auto inline-block border border-border bg-white p-2">
+              <div className="mx-auto inline-block overflow-hidden rounded border border-border">
                 <img
                   src={qrDataUrl}
                   alt="QR code for the voter link to this poll"

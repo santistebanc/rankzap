@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
-import { nanoid } from "nanoid";
+import { Scribble } from "../components/Scribble";
+import { customAlphabet } from "nanoid";
+
+const roomIdAlphabet = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
 import { RoomClient } from "room-server/client";
 import {
   DEFAULT_META,
@@ -20,6 +23,7 @@ import {
   type RecentPollEntry,
 } from "../lib/storage";
 import { RankzapLogo } from "../components/RankzapLogo";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 const HOST = import.meta.env.VITE_HOST;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -207,8 +211,7 @@ async function deletePollOnServer(roomId: string): Promise<{ ok: true } | { ok: 
 
 async function createRoom(): Promise<string> {
   for (let attempt = 0; attempt < 22; attempt++) {
-    const length = attempt < 20 ? 6 : 8;
-    const candidate = nanoid(length);
+    const candidate = roomIdAlphabet();
     const c = newRoomClient(candidate);
     try {
       await c.ready(5_000);
@@ -379,114 +382,211 @@ export function Home() {
 
   const busy = creatingPoll || openingRoomId !== null || deletingRoomId !== null;
   const formatOptionsPreview = (items: string[]) =>
-    items.length === 0 ? "No options yet" : items.join(", ");
+    items.length === 0 ? "" : items.join(", ");
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl items-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-8">
-      <section className="w-full overflow-hidden rounded-2xl bg-surface p-6 shadow-page sm:p-8">
-        <RankzapLogo />
-        <h1 className="mt-6 max-w-prose text-4xl font-semibold tracking-tight text-text sm:mt-7 sm:text-5xl">
-          Create a poll and share it.
-        </h1>
-        <p className="mt-3 max-w-[42ch] text-base leading-7 text-muted sm:text-lg">
-          Quick ranked voting for small groups.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={startPoll}
-            disabled={busy}
-            className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {creatingPoll ? "Creating…" : "Create poll"}
-          </button>
+    <main
+      className="mx-auto flex min-h-dvh w-full max-w-2xl sm:items-center sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+    >
+      <div className="paper-card w-full min-h-dvh sm:min-h-0">
+        <div style={CORNER_TOOLBAR}>
+          <ThemeToggle style={CORNER_BTN} />
         </div>
+        <div className="paper-content">
 
-        <div className="mt-7">
-          <h2 className="text-sm font-semibold text-text">Recent polls</h2>
-          <div
-            className="mt-2 max-h-[min(50vh,20rem)] overflow-y-auto overflow-x-hidden rounded-xl bg-surface-2/50 px-2 py-2"
-            aria-busy={loadingRecents}
-          >
-            {loadingRecents ? (
-              <p className="px-1 text-sm text-muted">Checking recent polls…</p>
-            ) : recentPolls.length === 0 ? (
-              <p className="px-1 text-sm text-muted">No recent polls found.</p>
-            ) : (
-              <ul className="flex flex-col gap-1.5">
-                {recentPolls.map((p) => (
-                  <li key={p.roomId} className="flex items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2.5 shadow-card">
-                    <div className="min-w-0 flex-1">
-                      {p.title ? (
-                        <div className="truncate text-sm font-semibold tracking-tight text-text">{p.title}</div>
-                      ) : null}
-                      <div className="truncate text-xs font-medium text-accent/90">
-                        {formatOptionsPreview(p.optionsPreview)}
+          {/* Top bar */}
+          <div className="flex items-center justify-between gap-2" style={{ marginBottom: "clamp(2rem, 5vw, 3.5rem)" }}>
+            <RankzapLogo />
+          </div>
+
+          {/* Hero */}
+          <div>
+            <p style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
+              ranked voting · for small groups
+            </p>
+            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.6rem, 9vw, 4.5rem)", lineHeight: 0.98, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px", color: "var(--text)" }}>
+              make a poll.<br />
+              <span style={{ color: "var(--accent)", position: "relative", display: "inline-block" }}>
+                share the link.
+                <Scribble
+                  width={340}
+                  color="var(--accent)"
+                  style={{ position: "absolute", left: 0, bottom: -6, width: "100%", height: 14 }}
+                />
+              </span><br />
+              rank together.
+            </h1>
+            <p style={{ marginTop: "1.1rem", fontSize: "1rem", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch" }}>
+              Drop in your options, send the link to friends, watch the ranking come together. No accounts, no fuss.
+            </p>
+          </div>
+
+          {/* CTAs */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: "clamp(1.5rem, 4vw, 2.5rem)" }}>
+            <button
+              type="button"
+              onClick={startPoll}
+              disabled={busy}
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: "1rem",
+                fontWeight: 600,
+                padding: "14px 30px",
+                background: "var(--text)",
+                color: "var(--bg)",
+                border: "none",
+                borderRadius: 999,
+                cursor: busy ? "not-allowed" : "pointer",
+                opacity: busy ? 0.6 : 1,
+                boxShadow: busy ? undefined : "3px 3px 0 var(--accent)",
+                transition: "box-shadow 0.15s, opacity 0.15s",
+              }}
+            >
+              {creatingPoll ? "Creating…" : "+ start a poll"}
+            </button>
+
+          </div>
+
+          {/* Recent polls */}
+          <div style={{ marginTop: "clamp(2.5rem, 7vw, 4rem)" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.85rem", fontWeight: 700, color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
+                recent polls
+              </h2>
+              <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "var(--muted)", letterSpacing: "0.06em" }}>
+                on this device
+              </span>
+            </div>
+
+            <div aria-busy={loadingRecents}>
+              {loadingRecents ? (
+                <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>Checking recent polls…</p>
+              ) : recentPolls.length === 0 ? (
+                <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>No recent polls on this device.</p>
+              ) : (
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: "min(50vh,22rem)", overflowY: "auto", overflowX: "hidden" }}>
+                  {recentPolls.map((p, i) => (
+                    <li
+                      key={p.roomId}
+                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "11px 0", borderBottom: "1px dashed var(--border)" }}
+                    >
+                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: "var(--muted)", width: 28, textAlign: "right", flexShrink: 0, opacity: 0.7 }}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "0.95rem" }}>
+                          {p.title || p.roomId}
+                        </div>
+                        {p.optionsPreview.length > 0 && (
+                          <div style={{ fontSize: "0.78rem", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+                            {formatOptionsPreview(p.optionsPreview)}
+                          </div>
+                        )}
+                        <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "var(--muted)", marginTop: 2, letterSpacing: "0.04em" }}>
+                          {p.roomId} · {formatLastOpened(p.savedAt)}
+                        </div>
                       </div>
-                      <div className="truncate text-[11px] text-muted">
-                        <span className="font-mono text-muted/95">{p.roomId}</span>
-                        <span className="text-muted/75"> · {formatLastOpened(p.savedAt)}</span>
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {confirmingDeleteRoomId === p.roomId ? (
-                        <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                        {confirmingDeleteRoomId === p.roomId ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmingDeleteRoomId(null)}
+                              disabled={busy}
+                              style={btnStyle("secondary")}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
+                              disabled={busy}
+                              style={btnStyle("danger")}
+                            >
+                              {deletingRoomId === p.roomId ? "Deleting…" : "Delete"}
+                            </button>
+                          </>
+                        ) : (
                           <button
                             type="button"
-                            onClick={() => setConfirmingDeleteRoomId(null)}
+                            onClick={() => setConfirmingDeleteRoomId(p.roomId)}
                             disabled={busy}
-                            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-border bg-surface-2 px-3 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-60"
+                            aria-label={`Delete poll ${p.roomId}`}
+                            title="Delete poll"
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", border: "1.5px solid color-mix(in oklch, var(--danger) 35%, transparent)", background: "transparent", color: "var(--danger)", cursor: "pointer", opacity: busy ? 0.5 : 1, flexShrink: 0 }}
                           >
-                            Cancel
+                            <Trash2 size={14} strokeWidth={2} aria-hidden />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
-                            disabled={busy}
-                            className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-danger px-3 text-sm font-semibold text-white transition-colors hover:brightness-95 disabled:opacity-60"
-                          >
-                            {deletingRoomId === p.roomId ? "Deleting…" : "Confirm"}
-                          </button>
-                        </>
-                      ) : (
+                        )}
                         <button
                           type="button"
-                          onClick={() => setConfirmingDeleteRoomId(p.roomId)}
+                          onClick={() => void openExisting(p.roomId)}
                           disabled={busy}
-                          className="inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-danger/25 bg-danger-soft text-danger transition-colors hover:brightness-98 disabled:cursor-not-allowed disabled:opacity-60"
-                          title="Delete poll"
-                          aria-label={`Delete poll ${p.roomId}`}
+                          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", border: "1.5px solid color-mix(in oklch, var(--accent) 35%, transparent)", background: "transparent", color: "var(--accent)", cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1, fontFamily: "var(--font-display)", fontSize: 24, paddingBottom: 2, flexShrink: 0 }}
+                          aria-label={`Open poll ${p.roomId}`}
                         >
-                          <Trash2 className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+                          {openingRoomId === p.roomId ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--muted)" }}>…</span> : "→"}
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void openExisting(p.roomId)}
-                        disabled={busy}
-                        className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text transition-colors hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {openingRoomId === p.roomId ? "Opening…" : "Open"}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
 
-        {error ? (
-          <div
-            role="alert"
-            className="mt-4 rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger"
-          >
-            {error}
-          </div>
-        ) : null}
-      </section>
+          {error ? (
+            <div
+              role="alert"
+              style={{ marginTop: "1rem", borderRadius: 10, border: "1px solid color-mix(in oklch, var(--danger) 30%, transparent)", background: "var(--danger-soft)", padding: "12px 16px", fontSize: "0.875rem", color: "var(--danger)" }}
+            >
+              {error}
+            </div>
+          ) : null}
+
+        </div>
+      </div>
     </main>
   );
+}
+
+const CORNER_TOOLBAR: React.CSSProperties = {
+  position: "absolute",
+  top: 6,
+  right: 6,
+  zIndex: 2,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 2,
+};
+
+const CORNER_BTN: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 32,
+  height: 32,
+  background: "none",
+  border: "none",
+  color: "var(--muted)",
+  cursor: "pointer",
+  padding: 4,
+  borderRadius: 6,
+};
+
+function btnStyle(variant: "secondary" | "danger"): React.CSSProperties {
+  const base: React.CSSProperties = {
+    fontFamily: "var(--font-sans)",
+    fontSize: "0.825rem",
+    fontWeight: 600,
+    padding: "8px 14px",
+    borderRadius: 999,
+    cursor: "pointer",
+    minHeight: 36,
+  };
+  if (variant === "danger") {
+    return { ...base, background: "var(--danger-soft)", color: "var(--danger)", border: "1.5px solid color-mix(in oklch, var(--danger) 35%, transparent)" };
+  }
+  return { ...base, background: "transparent", color: "var(--text)", border: "1.5px solid var(--border)" };
 }
 

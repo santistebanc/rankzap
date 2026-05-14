@@ -61,7 +61,7 @@ export interface Option {
   addedAt: number;
 }
 
-export type UserMode = "idle" | "voting";
+export type UserMode = "idle" | "voting" | "editing";
 
 // `lastSeen` is gone in v3.1: presence/{connId} answers "is this socket alive?".
 // users/{userId} records the persistent identity (name + current mode).

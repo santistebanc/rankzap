@@ -21,7 +21,7 @@
 import type { JsonSchema, PresenceInfo } from "room-server/types";
 import type { Meta, Option, Settings, UserRecord, Vote } from "./types";
 
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 const metaSchema: JsonSchema = {
   type: "object",
@@ -73,7 +73,7 @@ const userSchema: JsonSchema = {
   properties: {
     id: { type: "string", minLength: 1, maxLength: 32 },
     name: { type: "string", minLength: 1, maxLength: 32 },
-    mode: { type: "string", enum: ["idle", "voting"] },
+    mode: { type: "string", enum: ["idle", "voting", "editing"] },
     ignored: { type: "boolean" },
   },
 };

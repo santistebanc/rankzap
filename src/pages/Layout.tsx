@@ -1,5 +1,6 @@
 import { Activity, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { House } from "lucide-react";
 import {
   RoomProvider,
   SET_OPTS,
@@ -14,17 +15,18 @@ import {
   DEFAULT_SETTINGS,
   clampOption,
   type Option,
-
   type UserMode,
 } from "../lib/types";
-import { House } from "lucide-react";
+import { adaptiveSize } from "../lib/adaptiveSize";
 import { nanoid } from "nanoid";
 import { fallbackVoterName, getOrCreateVoterIdentity } from "../lib/identity";
 import {
   getVoterRank,
   setVoterRank,
 } from "../lib/storage";
+import { computeTally } from "../lib/tally";
 import { ShareBar } from "../components/ShareLink";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { ConnectionStatus } from "../components/ConnectionStatus";
 import { Username } from "../components/Username";
 import { UsersList } from "../components/UsersList";
@@ -34,8 +36,8 @@ import { SubmitVote } from "../components/SubmitVote";
 import { LiveOptions } from "../components/LiveOptions";
 import { Settings as SettingsPanel } from "../components/Settings";
 import { VoterRankingPanel } from "../components/VoterRankingPanel";
-import { Tabs } from "../components/Tabs";
 import { AccordionSection } from "../components/AccordionSection";
+import { Scribble } from "../components/Scribble";
 
 interface LayoutProps {
   isAdmin: boolean;
@@ -43,10 +45,16 @@ interface LayoutProps {
 
 export function Layout({ isAdmin }: LayoutProps) {
   const { roomId = "" } = useParams<{ roomId: string }>();
-  
-  // For voter, get identity before RoomProvider
+  const upperId = roomId.toUpperCase();
+
+  // For voter, get identity before RoomProvider (must be before any conditional return)
   const identity = useMemo(() => isAdmin ? null : getOrCreateVoterIdentity(), [isAdmin]);
-  
+
+  // Redirect lowercase/mixed-case URLs to canonical uppercase form
+  if (roomId !== upperId) {
+    return <Navigate to={isAdmin ? `/${upperId}/admin` : `/${upperId}`} replace />;
+  }
+
   if (!roomId) return null;
 
   return (
@@ -70,9 +78,8 @@ interface LayoutContentProps {
 type VoterView = "compose" | "results";
 
 function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
-  const { client, status } = useRoom();
   const navigate = useNavigate();
-  
+  const { client, status } = useRoom();
   // Shared state hooks (always called)
   const { value: storedMeta } = useRoomValue("meta");
   const { value: storedSettings } = useRoomValue("settings");
@@ -272,11 +279,15 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     void touchKey(client, "settings");
   }, [client, status]);
 
-  // Write user record when name/view changes.
-  // "voting" means actively editing in compose view while poll is open.
-  // After submit (results view), mode becomes "idle" so voted users show as voted.
-  const mode: UserMode =
-    meta.state === "open" && voterView === "compose" ? "voting" : "idle";
+  // "voting"  = first-time voter on compose tab (no prior submission)
+  // "editing" = re-editing after submit with actual changes (submit button re-enabled)
+  // "idle"    = everything else (results tab, or compose tab but nothing changed)
+  const mode: UserMode = (() => {
+    if (meta.state !== "open" || voterView !== "compose") return "idle";
+    if (!hasSubmittedAnyVote) return "voting";
+    if (canSubmitVote) return "editing";
+    return "idle";
+  })();
   useEffect(() => {
     if (!identity) return;
     if (status !== "ready") return;
@@ -396,353 +407,500 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     document.title = fromSettings || fromMeta || "Rankzap";
   }, [settings.ballotTitle, meta.title]);
 
+  // Tally for voter results winner announcement
+  const tally = useMemo(() => {
+    const activeVotes = [...votesMap.values()].filter((v) => {
+      const u = usersMap.get(`users/${v.userId}`);
+      return !u?.ignored && !v.ignored;
+    });
+    return computeTally({ options, votes: activeVotes, mode: settings.tallyMode });
+  }, [options, votesMap, usersMap, settings.tallyMode]);
+  const winner = tally.length > 0 ? optionById.get(tally[0].optionId) : undefined;
+
   // Skeleton until meta loads
   if (!ready) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
-        <p className="py-12 text-center text-sm text-muted">Loading poll…</p>
+      <main className="mx-auto flex min-h-dvh w-full max-w-3xl items-center sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
+        <div className="paper-card w-full min-h-dvh sm:min-h-0">
+          <div className="paper-content">
+            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>Loading poll…</p>
+          </div>
+        </div>
       </main>
     );
   }
 
-  const scoreboardSection = (
-    <section className="flex flex-col gap-4" aria-label="Poll">
-      <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-        <input
-          ref={pollTitleInputRef}
-          id="poll-title"
-          type="text"
-          maxLength={100}
-          value={pollTitleDraft}
-          placeholder="Poll title"
-          onChange={(e) => setPollTitleDraft(e.target.value)}
-          onFocus={() => setIsPollTitleFocused(true)}
-          onBlur={() => { setIsPollTitleFocused(false); commitPollTitle(); }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { e.preventDefault(); pollTitleInputRef.current?.blur(); }
-            if (e.key === "Escape") {
-              pendingPollTitleRef.current = null;
-              setPollTitleDraft(committedPollTitle);
-              pollTitleInputRef.current?.blur();
-            }
-          }}
-          aria-label="Poll title"
-          style={{ fontSize: adaptiveSize(pollTitleDraft, 15, 24, 8, 70) }}
-          className="w-full border-b border-border/20 bg-transparent px-4 py-3 font-semibold outline-none placeholder:text-muted/40 transition-[font-size,colors] duration-150 hover:bg-surface-2/30 focus:bg-surface-2/30"
-        />
-        <LiveOptions removable showResults tallyMode={settings.tallyMode} editable />
-        <AddOption addedBy="admin" />
-      </div>
+  const votedCount = votedUserIds.size;
 
-      {hasAnyVotersForAdmin ? (
-        <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold text-muted">Voters</span>
-          <UsersList
-            selfUserId={identity?.userId}
-            showIgnoredBadge
-            variant="tabStrip"
-            selectedVoterId={selectedVoterId}
-            onToggleVoter={toggleVoterSelection}
-            onInvalidateVoterSelection={clearVoterSelection}
-          />
-          <Activity mode={selectedVoterId ? "visible" : "hidden"}>
-            <div
-              className="px-1 py-2"
-              inert={!selectedVoterId ? true : undefined}
-            >
-                {(() => {
-                  if (!selectedVoterId) return null;
-                  const selectedVote = votesMap.get(`votes/${selectedVoterId}`);
-                  const hasSelectedVote = Boolean(selectedVote?.ranking?.length);
-                  const selectedUser = usersMap.get(`users/${selectedVoterId}`);
-                  const isIgnored = Boolean(selectedUser?.ignored || selectedVote?.ignored);
-                  return (
-                    <>
-                      <VoterRankingPanel
-                        voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
-                        ranking={selectedVote?.ranking}
-                        optionById={optionById}
-                      />
-                      <div className="mt-3 flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!selectedUser) return;
-                            const nextIgnored = !isIgnored;
-                            const writes = [
-                              client.set(`users/${selectedVoterId}`, { ...selectedUser, ignored: nextIgnored }, SET_OPTS),
-                            ];
-                            if (selectedVote) {
-                              writes.push(client.set(`votes/${selectedVoterId}`, { ...selectedVote, ignored: nextIgnored }, SET_OPTS));
-                            }
-                            void Promise.all(writes).catch((e) => console.warn("[rankzap] failed to toggle ignored:", e));
-                          }}
-                          className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2"
-                        >
-                          {isIgnored ? "Unignore vote" : "Ignore vote"}
-                        </button>
-                        {hasSelectedVote ? (
-                          confirmingAction === "deleteVote" ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmingAction(null)}
-                                className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setConfirmingAction(null);
-                                  void client.delete(`votes/${selectedVoterId}`)
-                                    .catch((e) => console.warn("[rankzap] failed to delete voter's vote:", e));
-                                }}
-                                className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95"
-                              >
-                                Confirm delete
-                              </button>
-                            </>
-                          ) : (
+  // ─── ADMIN VIEW ───────────────────────────────────────────────
+  if (isAdmin) {
+    return (
+      <main className="mx-auto w-full max-w-3xl sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
+        <div className="paper-card w-full min-h-dvh sm:min-h-0">
+          <div style={CORNER_TOOLBAR}>
+            <button type="button" onClick={() => navigate("/")} aria-label="Go to home" title="Home" style={CORNER_BTN} className="transition-colors hover:bg-surface-2 hover:text-text">
+              <House className="size-4" strokeWidth={2} aria-hidden />
+            </button>
+            <ThemeToggle style={CORNER_BTN} />
+          </div>
+          <div className="paper-content">
+
+
+            {/* Poll question */}
+            <div style={{ marginBottom: "1rem" }}>
+              <input
+                ref={pollTitleInputRef}
+                id="poll-title"
+                type="text"
+                maxLength={100}
+                value={pollTitleDraft}
+                placeholder="Poll title"
+                onChange={(e) => setPollTitleDraft(e.target.value)}
+                onFocus={() => setIsPollTitleFocused(true)}
+                onBlur={() => { setIsPollTitleFocused(false); commitPollTitle(); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); pollTitleInputRef.current?.blur(); }
+                  if (e.key === "Escape") {
+                    pendingPollTitleRef.current = null;
+                    setPollTitleDraft(committedPollTitle);
+                    pollTitleInputRef.current?.blur();
+                  }
+                }}
+                aria-label="Poll title"
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: adaptiveSize(pollTitleDraft, 22, 44, 8, 70),
+                  fontWeight: 700,
+                  color: "var(--text)",
+                  background: "transparent",
+                  border: "none",
+                  outline: "none",
+                  width: "100%",
+                  padding: "6px 0",
+                  lineHeight: 1.05,
+                  display: "block",
+                  caretColor: "var(--accent)",
+                }}
+              />
+              <p style={{ fontSize: "0.83rem", color: "var(--muted)", marginTop: 2 }}>
+                drag to reorder · click ✕ to remove
+              </p>
+            </div>
+
+            {/* Live options */}
+            <div style={{ border: "1.5px solid var(--border)", borderRadius: 8, overflow: "hidden", marginBottom: "clamp(0.5rem,1.5vw,0.75rem)" }}>
+              <LiveOptions removable showResults tallyMode={settings.tallyMode} editable />
+              <AddOption addedBy="admin" />
+            </div>
+
+            {/* Voters */}
+            {hasAnyVotersForAdmin && (
+              <div style={{ marginBottom: "clamp(0.75rem,2vw,1.25rem)" }}>
+                <UsersList
+                  selfUserId={identity?.userId}
+                  showIgnoredBadge
+                  variant="tabStrip"
+                  selectedVoterId={selectedVoterId}
+                  onToggleVoter={toggleVoterSelection}
+                  onInvalidateVoterSelection={clearVoterSelection}
+                />
+                <Activity mode={selectedVoterId ? "visible" : "hidden"}>
+                  <div style={{ marginTop: 8 }} inert={!selectedVoterId ? true : undefined}>
+                    {(() => {
+                      if (!selectedVoterId) return null;
+                      const selectedVote = votesMap.get(`votes/${selectedVoterId}`);
+                      const hasSelectedVote = Boolean(selectedVote?.ranking?.length);
+                      const selectedUser = usersMap.get(`users/${selectedVoterId}`);
+                      const isIgnored = Boolean(selectedUser?.ignored || selectedVote?.ignored);
+                      return (
+                        <>
+                          <VoterRankingPanel
+                            voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
+                            ranking={selectedVote?.ranking}
+                            optionById={optionById}
+                          />
+                          <div style={{ marginTop: 12, display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
                             <button
                               type="button"
-                              onClick={() => setConfirmingAction("deleteVote")}
-                              className="inline-flex min-h-11 items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98"
+                              onClick={() => {
+                                if (!selectedUser) return;
+                                const nextIgnored = !isIgnored;
+                                const writes: Promise<unknown>[] = [
+                                  client.set(`users/${selectedVoterId}`, { ...selectedUser, ignored: nextIgnored }, SET_OPTS),
+                                ];
+                                if (selectedVote) {
+                                  writes.push(client.set(`votes/${selectedVoterId}`, { ...selectedVote, ignored: nextIgnored }, SET_OPTS));
+                                }
+                                void Promise.all(writes).catch((e) => console.warn("[rankzap] failed to toggle ignored:", e));
+                              }}
+                              style={pill("secondary")}
                             >
-                              Delete vote
+                              {isIgnored ? "Unignore vote" : "Ignore vote"}
                             </button>
-                          )
-                        ) : null}
+                            {hasSelectedVote && (
+                              confirmingAction === "deleteVote" ? (
+                                <>
+                                  <button type="button" onClick={() => setConfirmingAction(null)} style={pill("secondary")}>Cancel</button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setConfirmingAction(null);
+                                      void client.delete(`votes/${selectedVoterId}`)
+                                        .catch((e) => console.warn("[rankzap] failed to delete voter's vote:", e));
+                                    }}
+                                    style={pill("danger")}
+                                  >
+                                    Confirm delete
+                                  </button>
+                                </>
+                              ) : (
+                                <button type="button" onClick={() => setConfirmingAction("deleteVote")} style={pill("danger-soft")}>
+                                  Delete vote
+                                </button>
+                              )
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </Activity>
+              </div>
+            )}
+
+            {/* Share link */}
+            <div style={{ marginBottom: "clamp(1.5rem,4vw,2.5rem)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                <MonoLabel>share this link</MonoLabel>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                  {(votedCount > 0 || meta.state === "closed") && (
+                    confirmingAction === "close" ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Close poll?</span>
+                        <button type="button" onClick={() => setConfirmingAction(null)} style={pill("secondary")}>Cancel</button>
+                        <button type="button" onClick={() => { setConfirmingAction(null); void togglePollState(); }} style={pill("danger")}>Yes, close</button>
                       </div>
-                    </>
-                  );
-                })()}
-            </div>
-          </Activity>
-        </div>
-      ) : null}
-    </section>
-  );
-
-  const shareSection = isAdmin ? <ShareBar roomId={roomId} /> : null;
-
-  const settingsSection = isAdmin ? (
-    <AccordionSection title="Settings" noPadding>
-      <SettingsPanel />
-    </AccordionSection>
-  ) : null;
-
-  return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-4 px-3 py-3 pb-[max(3rem,env(safe-area-inset-bottom,0px))] sm:gap-5 sm:px-4 sm:py-6">
-      {isAdmin ? (
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text shadow-card hover:bg-surface-2"
-            aria-label="Go to home"
-            title="Home"
-          >
-            <House className="size-4" aria-hidden />
-          </button>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {(votedUserIds.size > 0 || meta.state === "closed") && (
-              meta.state === "open" && confirmingAction === "close" ? (
-                <div className="inline-flex items-center gap-1.5">
-                  <span className="text-xs text-muted">Close poll?</span>
-                  <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
-                  <button type="button" onClick={() => { setConfirmingAction(null); void togglePollState(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
-                  className={`inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full px-4 text-sm font-semibold ${
-                    meta.state === "open" ? "border border-border bg-surface text-text shadow-card hover:bg-surface-2" : "bg-success text-white"
-                  }`}
-                >
-                  {meta.state === "open" ? "Close poll" : "Reopen poll"}
-                </button>
-              )
-            )}
-            {votedUserIds.size > 0 && (
-              confirmingAction === "reset" ? (
-                <div className="inline-flex items-center gap-1.5">
-                  <span className="text-xs text-muted">Reset all votes?</span>
-                  <button type="button" onClick={() => setConfirmingAction(null)} className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-semibold text-text hover:bg-surface-2">Cancel</button>
-                  <button type="button" onClick={() => { setConfirmingAction(null); void resetVotes(); }} className="inline-flex min-h-11 items-center justify-center rounded-full bg-danger px-4 text-sm font-semibold text-white hover:brightness-95">Confirm</button>
-                </div>
-              ) : (
-                <button type="button" onClick={() => setConfirmingAction("reset")} className="inline-flex min-h-11 min-w-[100px] items-center justify-center rounded-full border border-danger/25 bg-danger-soft px-4 text-sm font-semibold text-danger hover:brightness-98">
-                  Reset votes
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      ) : null}
-
-      {isAdmin ? scoreboardSection : null}
-      {shareSection}
-      {settingsSection}
-
-      {!isAdmin ? (
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-text shadow-card hover:bg-surface-2"
-              aria-label="Go to home"
-              title="Home"
-            >
-              <House className="size-4" aria-hidden />
-            </button>
-            <div className="flex min-w-0 justify-end">
-              <Tabs<VoterView>
-                tabs={[
-                  {
-                    id: "compose",
-                    label: "Your Vote",
-                    disabled: meta.state === "closed",
-                    hint: meta.state === "closed" ? "Poll is closed." : undefined,
-                  },
-                  { id: "results", label: "Results" },
-                ]}
-                active={voterView}
-                onChange={setVoterView}
-              />
-            </div>
-          </div>
-          <div>
-            <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
-              <div className="flex flex-col gap-4" inert={voterView !== "compose" ? true : undefined}>
-                {meta.state === "closed" ? (
-                  <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
-                    Poll is closed.
-                  </div>
-                ) : null}
-                <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-                  <div className="border-b border-border/20 px-4 py-3">
-                    <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {!settings.allowRevote && hasVoted
-                        ? "Your ranking can't be changed — vote updates aren't allowed."
-                        : "Drag items to rank by preference."}
-                    </p>
-                  </div>
-                  <ArrangeOptions
-                    options={voterVisibleOptions}
-                    ranking={ranking}
-                    onChange={updateRanking}
-                    reorderingDisabled={!settings.allowRevote && hasVoted}
-                  />
-                  {settings.allowAdd ? (
-                    <AddOption addedBy={identity?.userId ?? ""} onAddOption={stageVoterOptions} />
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  {identity ? (
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <span className="text-xs font-semibold text-muted">Your name</span>
-                      <Username name={name} onCommit={setName} />
-                    </div>
-                  ) : null}
-                  <SubmitVote
-                    userId={identity?.userId ?? ""}
-                    ranking={ranking}
-                    hasVoted={hasVoted}
-                    disabled={
-                      meta.state === "closed" ||
-                      (!settings.allowRevote && hasVoted) ||
-                      !canSubmitVote
-                    }
-                    disabledReason={
-                      meta.state === "closed"
-                        ? "Poll is closed."
-                        : !settings.allowRevote && hasVoted
-                          ? "Revoting is disabled."
-                          : !canSubmitVote
-                            ? "No changes to submit yet."
-                            : undefined
-                    }
-                    beforeSubmit={persistPendingAddedOptions}
-                    onSubmitted={() => {
-                      setPendingAddedOptions([]);
-                      setVoterView("results");
-                    }}
-                  />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={meta.state === "open" ? () => setConfirmingAction("close") : () => void togglePollState()}
+                        style={pill(meta.state === "open" ? "default" : "success")}
+                      >
+                        {meta.state === "open" ? "Close poll" : "Reopen poll"}
+                      </button>
+                    )
+                  )}
+                  {votedCount > 0 && (
+                    confirmingAction === "reset" ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Reset all votes?</span>
+                        <button type="button" onClick={() => setConfirmingAction(null)} style={pill("secondary")}>Cancel</button>
+                        <button type="button" onClick={() => { setConfirmingAction(null); void resetVotes(); }} style={pill("danger")}>Yes, reset</button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => setConfirmingAction("reset")} style={pill("danger-soft")}>Reset votes</button>
+                    )
+                  )}
                 </div>
               </div>
-            </Activity>
-            <Activity mode={voterView === "results" ? "visible" : "hidden"}>
-              <div className="flex flex-col gap-4" inert={voterView !== "results" ? true : undefined}>
-                {meta.state === "closed" ? (
-                  <div className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted shadow-card">
-                    Poll is closed.
-                  </div>
-                ) : null}
-                {settings.showLiveResults || meta.state === "closed" ? (
-                  <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-                    <div className="border-b border-border/20 px-4 py-3">
-                      <h3 style={{ fontSize: adaptiveSize(pollHeading, 15, 24, 8, 70) }} className="font-semibold tracking-tight">{pollHeading}</h3>
-                      {meta.state === "closed" && !settings.showLiveResults ? (
-                        <p className="mt-0.5 text-xs text-muted">Final results — the poll is closed.</p>
-                      ) : null}
-                    </div>
-                    <LiveOptions removable={false} showResults tallyMode={settings.tallyMode} editable={false} optionsMap={optionsMap} votesMap={votesMap} usersMap={usersMap} />
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted">
-                    {hasVoted
-                      ? "Live rankings stay hidden until this poll closes. Your vote counts — full results will appear here then."
-                      : "Live rankings stay hidden until this poll closes. Use the Your Vote tab to rank; full results will show here when it's over."}
-                  </p>
+              <ShareBar roomId={roomId} />
+            </div>
+
+            {/* Settings */}
+            <AccordionSection title="Settings" noPadding>
+              <SettingsPanel />
+            </AccordionSection>
+
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── VOTER VIEW ───────────────────────────────────────────────
+  return (
+    <main className="mx-auto w-full max-w-2xl sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
+      <div className="paper-card w-full min-h-dvh sm:min-h-0">
+        <div style={CORNER_TOOLBAR}>
+          <button type="button" onClick={() => navigate("/")} aria-label="Go to home" title="Home" style={CORNER_BTN} className="transition-colors hover:bg-surface-2 hover:text-text">
+            <House className="size-4" strokeWidth={2} aria-hidden />
+          </button>
+          <ThemeToggle style={CORNER_BTN} />
+        </div>
+        <div className="paper-content">
+
+          {/* TopBar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: "clamp(1.5rem,4vw,2.5rem)", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {/* Inline your-vote / results toggle */}
+              <div role="tablist" aria-label="Poll view" style={{ display: "flex", border: "1.5px solid var(--border)", borderRadius: 999, overflow: "hidden" }}>
+                <button
+                  role="tab"
+                  aria-selected={voterView === "compose"}
+                  type="button"
+                  onClick={() => meta.state !== "closed" && setVoterView("compose")}
+                  disabled={meta.state === "closed"}
+                  title={meta.state === "closed" ? "Poll is closed" : undefined}
+                  style={{
+                    padding: "8px 14px",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "0.83rem",
+                    fontWeight: 600,
+                    background: voterView === "compose" ? "var(--text)" : "transparent",
+                    color: voterView === "compose" ? "var(--bg)" : "var(--muted)",
+                    border: "none",
+                    cursor: meta.state === "closed" ? "not-allowed" : "pointer",
+                    opacity: meta.state === "closed" ? 0.5 : 1,
+                    transition: "background 0.15s, color 0.15s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  your vote
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={voterView === "results"}
+                  type="button"
+                  onClick={() => setVoterView("results")}
+                  style={{
+                    padding: "8px 14px",
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "0.83rem",
+                    fontWeight: voterView === "results" ? 600 : 400,
+                    background: voterView === "results" ? "var(--text)" : "transparent",
+                    color: voterView === "results" ? "var(--bg)" : "var(--muted)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "background 0.15s, color 0.15s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  results
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Poll heading */}
+          <div style={{ marginBottom: "clamp(1rem,3vw,1.5rem)" }}>
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: adaptiveSize(pollHeading, 24, 48, 8, 70),
+                fontWeight: 700,
+                color: "var(--text)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.01em",
+                margin: "6px 0 0",
+              }}
+            >
+              {pollHeading}
+            </h1>
+          </div>
+
+          {/* Compose tab */}
+          <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
+            <div
+              role="tabpanel"
+              aria-label="Your vote"
+              inert={voterView !== "compose" ? true : undefined}
+            >
+              {meta.state === "closed" && (
+                <div style={{ marginBottom: "1rem", display: "inline-block", borderRadius: 999, border: "1.5px solid var(--border)", padding: "6px 14px", fontSize: "0.83rem", color: "var(--muted)", fontWeight: 600 }}>
+                  Poll is closed.
+                </div>
+              )}
+              <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "1rem" }}>
+                drag items so your{" "}
+                <strong style={{ color: "var(--accent)", fontWeight: 700 }}>favorite</strong>{" "}
+                is on top.
+              </p>
+              <div style={{ border: "1.5px solid var(--border)", borderRadius: 8, overflow: "hidden", marginBottom: "clamp(1rem,3vw,1.5rem)" }}>
+                <ArrangeOptions
+                  options={voterVisibleOptions}
+                  ranking={ranking}
+                  onChange={updateRanking}
+                  reorderingDisabled={!settings.allowRevote && hasVoted}
+                />
+                {settings.allowAdd && (
+                  <AddOption addedBy={identity?.userId ?? ""} onAddOption={stageVoterOptions} />
                 )}
               </div>
-            </Activity>
-          </div>
-        </section>
-      ) : null}
-      {!isAdmin && settings.showUsers && hasAnyOtherVoters ? (
-        <section className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-muted">Other voters</span>
-          <UsersList
-            selfUserId={identity?.userId}
-            includeSelf={false}
-            variant="tabStrip"
-            selectedVoterId={selectedVoterId}
-            onToggleVoter={toggleVoterSelection}
-            onInvalidateVoterSelection={clearVoterSelection}
-          />
-          <Activity mode={settings.showVoterVotes && selectedVoterId ? "visible" : "hidden"}>
-            <div
-              className="border-t border-border/20 pt-3"
-              inert={!(settings.showVoterVotes && selectedVoterId) ? true : undefined}
-            >
-              {settings.showVoterVotes && selectedVoterId ? (
-                <VoterRankingPanel
-                  voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
-                  ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
-                  optionById={optionById}
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
+                {identity && (
+                  <div>
+                    <MonoLabel style={{ marginBottom: 6 }}>your name</MonoLabel>
+                    <Username name={name} onCommit={setName} placeholder={fallbackVoterName(identity.userId)} />
+                  </div>
+                )}
+                <SubmitVote
+                  userId={identity?.userId ?? ""}
+                  ranking={ranking}
+                  hasVoted={hasVoted}
+                  disabled={
+                    meta.state === "closed" ||
+                    (!settings.allowRevote && hasVoted) ||
+                    !canSubmitVote
+                  }
+                  disabledReason={
+                    meta.state === "closed"
+                      ? "Poll is closed."
+                      : !settings.allowRevote && hasVoted
+                        ? "Revoting is disabled."
+                        : !canSubmitVote
+                          ? "No changes to submit yet."
+                          : undefined
+                  }
+                  beforeSubmit={persistPendingAddedOptions}
+                  onSubmitted={() => {
+                    setPendingAddedOptions([]);
+                    setVoterView("results");
+                  }}
                 />
-              ) : null}
+              </div>
             </div>
           </Activity>
-        </section>
-      ) : null}
 
+          {/* Results tab */}
+          <Activity mode={voterView === "results" ? "visible" : "hidden"}>
+            <div
+              role="tabpanel"
+              aria-label="Results"
+              inert={voterView !== "results" ? true : undefined}
+            >
+              {(settings.showLiveResults || meta.state === "closed") && winner && (
+                <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.2rem,4vw,1.6rem)", color: "var(--text)", marginBottom: "clamp(1rem,3vw,1.5rem)", lineHeight: 1.2 }}>
+                  the group says:{" "}
+                  <span style={{ color: "var(--accent)", fontWeight: 700, position: "relative", display: "inline-block" }}>
+                    {winner.text}
+                    <Scribble
+                      color="var(--accent)"
+                      width={Math.max(80, winner.text.length * 9)}
+                      style={{ position: "absolute", left: 0, bottom: -10, width: "100%", height: 14 }}
+                    />
+                  </span>
+                  {" "}wins.
+                </div>
+              )}
+              {settings.showLiveResults || meta.state === "closed" ? (
+                <div style={{ border: "1.5px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+                  <LiveOptions
+                    removable={false}
+                    showResults
+                    tallyMode={settings.tallyMode}
+                    editable={false}
+                    optionsMap={optionsMap}
+                    votesMap={votesMap}
+                    usersMap={usersMap}
+                  />
+                </div>
+              ) : (
+                <p style={{ fontSize: "0.9rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                  {hasVoted
+                    ? "Live rankings are hidden until the poll closes. Your vote counts — full results will appear here then."
+                    : "Live rankings are hidden until the poll closes. Use Your Vote tab to rank; results will show here when it's over."}
+                </p>
+              )}
+            </div>
+          </Activity>
+
+          {/* Other voters */}
+          {settings.showUsers && hasAnyOtherVoters && (
+            <div style={{ marginTop: "clamp(0.75rem,2vw,1.25rem)" }}>
+              <MonoLabel style={{ marginBottom: 8 }}>others have voted</MonoLabel>
+              <UsersList
+                selfUserId={identity?.userId}
+                includeSelf={false}
+                variant="tabStrip"
+                selectedVoterId={selectedVoterId}
+                onToggleVoter={toggleVoterSelection}
+                onInvalidateVoterSelection={clearVoterSelection}
+              />
+              <Activity mode={settings.showVoterVotes && selectedVoterId ? "visible" : "hidden"}>
+                <div
+                  style={{ borderTop: "1px dashed var(--border)", paddingTop: 12, marginTop: 8 }}
+                  inert={!(settings.showVoterVotes && selectedVoterId) ? true : undefined}
+                >
+                  {settings.showVoterVotes && selectedVoterId ? (
+                    <VoterRankingPanel
+                      voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
+                      ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
+                      optionById={optionById}
+                    />
+                  ) : null}
+                </div>
+              </Activity>
+            </div>
+          )}
+
+        </div>
+      </div>
     </main>
   );
 }
 
-function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
-  const len = text.length;
-  if (len <= minChars) return maxPx;
-  if (len >= maxChars) return minPx;
-  const t = (len - minChars) / (maxChars - minChars);
-  return maxPx + (minPx - maxPx) * t;
+// ─── Shared style helpers ──────────────────────────────────────────────────
+
+
+const CORNER_TOOLBAR: React.CSSProperties = {
+  position: "absolute",
+  top: 6,
+  right: 6,
+  zIndex: 2,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 2,
+};
+
+const CORNER_BTN: React.CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 32,
+  height: 32,
+  background: "none",
+  border: "none",
+  color: "var(--muted)",
+  cursor: "pointer",
+  padding: 4,
+  borderRadius: 6,
+};
+
+type PillVariant = "default" | "success" | "danger" | "danger-soft" | "secondary";
+
+function pill(variant: PillVariant): React.CSSProperties {
+  const base: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 36,
+    padding: "0 14px",
+    borderRadius: 999,
+    fontSize: "0.83rem",
+    fontWeight: 600,
+    fontFamily: "var(--font-sans)",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    border: "1.5px solid transparent",
+    transition: "opacity 0.15s",
+  };
+  switch (variant) {
+    case "success":    return { ...base, background: "var(--success)", color: "#fff", border: "none" };
+    case "danger":     return { ...base, background: "var(--danger)", color: "#fff", border: "none" };
+    case "danger-soft":return { ...base, background: "var(--danger-soft)", color: "var(--danger)", borderColor: "color-mix(in oklch, var(--danger) 30%, transparent)" };
+    case "secondary":  return { ...base, background: "transparent", color: "var(--text)", borderColor: "var(--border)" };
+    default:           return { ...base, background: "transparent", color: "var(--text)", borderColor: "var(--border)" };
+  }
 }
+
+function MonoLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <p style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", margin: "0 0 6px", ...style }}>
+      {children}
+    </p>
+  );
+}
+
 
 function sameRanking(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;

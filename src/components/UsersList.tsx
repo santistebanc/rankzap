@@ -116,7 +116,7 @@ export function UsersList({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => onToggleVoter?.(u.id)}
-                  className={`shrink-0 rounded-full outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                  className={`inline-flex min-h-11 shrink-0 items-center rounded-full outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                     selected ? "ring-2 ring-accent" : ""
                   }`}
                 >
@@ -169,8 +169,9 @@ function pillStateFor(
   online: boolean,
   hasVoted: boolean,
 ): PillState {
+  if (!online && hasVoted) return "voted-offline";
   if (!online) return "offline";
-  if (user.mode === "voting" && hasVoted) return "changing";
+  if (user.mode === "editing") return "changing";
   if (user.mode === "voting") return "voting";
   if (hasVoted) return "voted";
   return "online";

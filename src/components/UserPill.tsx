@@ -1,13 +1,15 @@
-import { Check, Circle, Pencil } from "lucide-react";
+import { Check, Circle, Pencil, PenLine } from "lucide-react";
 import { memo } from "react";
 import type { UserRecord } from "../lib/types";
+import { adaptiveSize } from "../lib/adaptiveSize";
 
 export type PillState =
   | "changing"
   | "voting"
   | "voted"
   | "online"
-  | "offline";
+  | "offline"
+  | "voted-offline";
 
 interface UserPillProps {
   user: UserRecord;
@@ -30,8 +32,8 @@ const STATE_CONFIG: Record<
   voting: {
     pillClassName: "bg-accent-soft text-accent border-accent",
     tabClassName: "bg-accent-soft text-accent",
-    icon: <Circle className="size-3" aria-hidden />,
-    label: "Not voted yet",
+    icon: <PenLine className="size-3" aria-hidden />,
+    label: "Voting for first time",
   },
   voted: {
     pillClassName: "bg-success-soft text-success border-success",
@@ -51,6 +53,12 @@ const STATE_CONFIG: Record<
     icon: <Circle className="size-3" aria-hidden />,
     label: "Not voted yet (offline)",
   },
+  "voted-offline": {
+    pillClassName: "bg-transparent text-muted border-border opacity-60",
+    tabClassName: "bg-transparent text-muted opacity-60",
+    icon: <Check className="size-3" aria-hidden />,
+    label: "Voted (offline)",
+  },
 };
 
 function UserPillRaw({
@@ -63,7 +71,7 @@ function UserPillRaw({
   const cfg = STATE_CONFIG[state];
   const isTab = variant === "tab";
   const shape = isTab
-    ? "inline-flex min-h-9 items-center gap-2 px-3 py-2 text-sm font-semibold whitespace-nowrap"
+    ? "inline-flex min-h-11 items-center gap-2 px-3 py-2 text-sm font-semibold whitespace-nowrap"
     : "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium";
   const tone = isTab ? cfg.tabClassName : cfg.pillClassName;
   return (
@@ -99,9 +107,3 @@ export const UserPill = memo(UserPillRaw, (a, b) => {
   );
 });
 
-function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
-  const len = text.length;
-  if (len <= minChars) return maxPx;
-  if (len >= maxChars) return minPx;
-  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
-}

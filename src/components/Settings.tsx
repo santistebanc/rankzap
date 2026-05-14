@@ -17,7 +17,7 @@ export function Settings() {
     <section aria-label="Settings" className="w-full">
       <div className="flex flex-col">
         <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 sm:min-h-12 sm:px-4">
-          <div className="text-sm font-semibold">Scoring method</div>
+          <div className="text-base font-medium">Scoring method</div>
           <div role="group" aria-label="Scoring method" className="flex gap-1 rounded-full bg-surface-2 p-1">
             {TALLY_MODES.map((m) => (
               <button
@@ -25,9 +25,9 @@ export function Settings() {
                 type="button"
                 aria-pressed={settings.tallyMode === m}
                 onClick={() => update({ tallyMode: m })}
-                className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors ${
+                className={`min-h-11 rounded-full px-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   settings.tallyMode === m
-                    ? "bg-accent text-white"
+                    ? "bg-text/90 text-bg"
                     : "text-muted hover:text-text"
                 }`}
               >
@@ -78,7 +78,7 @@ function Toggle({
   return (
     <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 last:border-b-0 sm:min-h-12 sm:px-4">
       <div className="min-w-0">
-        <div className="text-sm font-semibold">{label}</div>
+        <div className="text-base font-medium">{label}</div>
       </div>
       <button
         type="button"

@@ -31,9 +31,9 @@ export function AccordionSection({
         onClick={() => setOpen((o) => !o)}
         className="flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left outline-none transition-colors hover:bg-surface-2 focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent sm:px-4"
       >
-        <span className="text-base font-semibold tracking-tight text-text">{title}</span>
+        <span className="font-semibold tracking-tight text-text" style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", lineHeight: 1.1 }}>{title}</span>
         <span
-          className={`flex size-8 shrink-0 items-center justify-center rounded-full border border-border/60 bg-surface-2 text-muted transition-[transform,color] duration-200 ${
+          className={`flex size-11 shrink-0 items-center justify-center rounded-full border border-border/60 bg-surface-2 text-muted transition-[transform,color] duration-200 ${
             open ? "rotate-180 text-text" : ""
           }`}
           aria-hidden

@@ -7,8 +7,19 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4f0e6" />
+    <meta name="theme-color" content="#f4f0e6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1c1a17" media="(prefers-color-scheme: dark)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=optional" rel="stylesheet" />
     <title>Rankzap</title>
+    <script>
+      (function () {
+        // Apply stored theme before first paint to avoid flash.
+        var t = localStorage.getItem("rankzap:theme");
+        if (t === "dark" || t === "light") document.documentElement.classList.add(t);
+      })();
+    </script>
     <script>
       (function () {
         // GitHub Pages SPA fallback: restore redirected deep links from 404.html.

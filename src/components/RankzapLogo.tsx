@@ -1,15 +1,51 @@
-import { Zap } from "lucide-react";
-
-/** Brand lockup: icon mark + “rankzap” wordmark. */
-export function RankzapLogo({ className }: { className?: string }) {
+export function RankzapLogo({ className, onClick }: { className?: string; onClick?: () => void }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className={`flex items-center gap-2.5 ${className ?? ""}`} role="img" aria-label="Rankzap">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent shadow-card">
-        <Zap className="size-[22px]" strokeWidth={2.25} aria-hidden />
+    <Tag
+      type={onClick ? "button" : undefined}
+      onClick={onClick}
+      aria-label="Rankzap"
+      className={`flex items-center gap-2.5 ${onClick ? "cursor-pointer" : ""} ${className ?? ""}`}
+      {...(!onClick && { role: "img" })}
+    >
+      <svg
+        width="26"
+        height="30"
+        viewBox="0 0 28 32"
+        aria-hidden
+        style={{ transform: "rotate(-6deg)", flexShrink: 0 }}
+      >
+        {/* filled bolt */}
+        <path
+          d="M14.5 1.5 L4 18 L12 18 L9.5 30.5 L23.5 12 L15.5 12 Z"
+          fill="var(--accent)"
+          stroke="var(--text)"
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+        {/* inner dashed stroke for hand-drawn feel */}
+        <path
+          d="M14.5 1.5 L4 18 L12 18 L9.5 30.5 L23.5 12 L15.5 12 Z"
+          fill="none"
+          stroke="var(--text)"
+          strokeWidth="0.6"
+          strokeLinejoin="round"
+          strokeDasharray="0.5 1.8"
+          opacity="0.6"
+        />
+      </svg>
+      <span
+        className="select-none leading-none"
+        style={{
+          fontFamily: "var(--font-display, 'Caveat', cursive)",
+          fontSize: "2rem",
+          fontWeight: 700,
+          color: "var(--text)",
+          letterSpacing: "-0.01em",
+        }}
+      >
+        rank<span style={{ color: "var(--accent)" }}>zap</span>
       </span>
-      <span className="select-none text-2xl font-bold tracking-tight lowercase leading-none text-text sm:text-[1.75rem]">
-        rank<span className="text-accent">zap</span>
-      </span>
-    </div>
+    </Tag>
   );
 }

@@ -149,12 +149,13 @@ export function useRoom(): RoomContextValue {
 export function useRoomValue<K extends string>(
   key: K,
 ): {
-  value: ResolveKey<RoomSchema, K> | undefined;
-  setLocal: (next: ResolveKey<RoomSchema, K> | undefined) => void;
+  // undefined = still loading; null = loaded but key doesn't exist; V = loaded with value
+  value: ResolveKey<RoomSchema, K> | null | undefined;
+  setLocal: (next: ResolveKey<RoomSchema, K> | null | undefined) => void;
 } {
   type V = ResolveKey<RoomSchema, K>;
   const { client, status } = useRoom();
-  const [value, setValue] = useState<V | undefined>(undefined);
+  const [value, setValue] = useState<V | null | undefined>(undefined);
 
   useEffect(() => {
     if (status !== "ready") return;
@@ -166,7 +167,7 @@ export function useRoomValue<K extends string>(
         key,
         (e) => {
           if (!alive) return;
-          if (e.type === "delete") setValue(undefined);
+          if (e.type === "delete") setValue(null);
           else setValue(e.value);
         },
         { includeSelf: true },
@@ -178,7 +179,8 @@ export function useRoomValue<K extends string>(
         }
         unsubscribe = res.unsubscribe;
         const v = res.initial.value;
-        if (v !== null && v !== undefined) setValue(v);
+        // null means key doesn't exist — signal "loaded" so consumers don't wait forever
+        setValue(v !== null && v !== undefined ? v : null);
       })
       .catch((e) => console.warn("[rankzap] subscribeWithSnapshotKey failed:", e));
 
@@ -188,7 +190,7 @@ export function useRoomValue<K extends string>(
     };
   }, [client, status, key]);
 
-  const setLocal = useCallback((next: V | undefined) => setValue(next), []);
+  const setLocal = useCallback((next: V | null | undefined) => setValue(next), []);
 
   return { value, setLocal };
 }

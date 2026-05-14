@@ -5,9 +5,10 @@ import { persistVoterName } from "../lib/identity";
 interface UsernameProps {
   name: string;
   onCommit: (next: string) => void;
+  placeholder?: string;
 }
 
-export function Username({ name, onCommit }: UsernameProps) {
+export function Username({ name, onCommit, placeholder = "your name…" }: UsernameProps) {
   const [draft, setDraft] = useState(name);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -26,32 +27,34 @@ export function Username({ name, onCommit }: UsernameProps) {
   };
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex min-h-12 w-full min-w-0 items-center gap-2">
-        <input
-          ref={inputRef}
-          value={draft}
-          maxLength={NAME_MAX}
-          placeholder="Your name"
-          autoComplete="name"
-          onChange={(e) => {
-            setDraft(e.target.value);
-          }}
-          onFocus={() => setFocused(true)}
-          onBlur={(e) => {
-            setFocused(false);
-            commit(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              inputRef.current?.blur();
-            }
-          }}
-          aria-label="Your name"
-          className="h-12 min-w-0 w-full max-w-full rounded-full border border-border bg-surface px-4 py-2.5 text-sm outline-none sm:max-w-72"
-        />
-      </div>
-    </div>
+    <input
+      ref={inputRef}
+      value={draft}
+      maxLength={NAME_MAX}
+      placeholder={placeholder}
+      autoComplete="name"
+      onChange={(e) => setDraft(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => { setFocused(false); commit(e.target.value); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") { e.preventDefault(); inputRef.current?.blur(); }
+      }}
+      aria-label="Your name"
+      style={{
+        fontFamily: "var(--font-sans)",
+        fontSize: "1rem",
+        color: "var(--text)",
+        background: "transparent",
+        border: "none",
+        borderBottom: `1.5px ${focused ? "solid" : "dashed"} ${focused ? "var(--accent)" : "var(--border)"}`,
+        borderRadius: 0,
+        outline: "none",
+        padding: "4px 2px 6px",
+        width: "100%",
+        maxWidth: 240,
+        transition: "border-color 0.15s",
+        caretColor: "var(--accent)",
+      }}
+    />
   );
 }

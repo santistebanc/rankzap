@@ -8,7 +8,9 @@ import {
   type Vote,
 } from "../lib/types";
 import { X } from "lucide-react";
+import { adaptiveSize } from "../lib/adaptiveSize";
 import { computeTally } from "../lib/tally";
+import { RankCircle } from "./RankCircle";
 
 interface LiveOptionsProps {
   removable: boolean;
@@ -133,21 +135,19 @@ function OptionRow({
 
   return (
     <li
-      className="group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 hover:bg-surface-2/50"
+      className="group relative flex items-center gap-2 overflow-hidden border-b border-dashed border-border/50 px-4 py-3 last:border-b-0 hover:bg-surface-2/40"
       aria-label={ariaLabel}
     >
       {showResults ? (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-full origin-left bg-accent-soft/60 transition-transform duration-300"
+          className="absolute inset-y-0 left-0 w-full origin-left bg-accent-soft/60 transition-transform duration-300 will-change-transform"
           style={{ transform: `scaleX(${pct / 100})` }}
         />
       ) : null}
       <div className="relative flex w-full items-center gap-2">
         {showResults ? (
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent">
-            {rank}
-          </span>
+          <RankCircle n={rank} size={28} />
         ) : null}
 
         {editable ? (
@@ -164,7 +164,7 @@ function OptionRow({
             }}
             aria-label={`Edit option: ${option.text}`}
             style={{ fontSize: adaptiveSize(draft, 14, 18, 20, 80) }}
-            className="-mx-1 min-h-0 flex-1 min-w-0 rounded bg-transparent px-1 py-0.5 outline-none transition-[font-size] duration-150 focus:bg-surface-2/60"
+            className="-mx-1 min-h-0 flex-1 min-w-0 bg-transparent px-1 py-0.5 outline-none transition-[font-size] duration-150"
           />
         ) : (
           <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150">{option.text}</span>
@@ -176,7 +176,7 @@ function OptionRow({
             type="button"
             onClick={remove}
             aria-label={`Remove ${option.text}`}
-            className="inline-flex size-7 shrink-0 items-center justify-center rounded-full text-muted/40 transition-opacity hover:bg-danger-soft hover:text-danger group-hover:text-muted group-focus-within:text-muted focus-visible:text-danger focus-visible:opacity-100"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted/40 transition-colors hover:bg-danger-soft hover:text-danger group-hover:text-muted group-focus-within:text-muted focus-visible:text-danger focus-visible:opacity-100"
           >
             <X className="size-3.5" strokeWidth={2} aria-hidden />
           </button>
@@ -184,13 +184,6 @@ function OptionRow({
       </div>
     </li>
   );
-}
-
-function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
-  const len = text.length;
-  if (len <= minChars) return maxPx;
-  if (len >= maxChars) return minPx;
-  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
 }
 
 function formatScore(n: number): string {

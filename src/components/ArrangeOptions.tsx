@@ -21,6 +21,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { Option } from "../lib/types";
+import { adaptiveSize } from "../lib/adaptiveSize";
+import { RankCircle } from "./RankCircle";
 
 interface ArrangeOptionsProps {
   options: Option[];
@@ -137,13 +139,6 @@ export function ArrangeOptions({
   );
 }
 
-function adaptiveSize(text: string, minPx: number, maxPx: number, minChars: number, maxChars: number): number {
-  const len = text.length;
-  if (len <= minChars) return maxPx;
-  if (len >= maxChars) return minPx;
-  return maxPx + (minPx - maxPx) * ((len - minChars) / (maxChars - minChars));
-}
-
 function SortableRow({
   option,
   displayRank,
@@ -158,9 +153,15 @@ function SortableRow({
     disabled: reorderingDisabled,
   });
 
+  const dragTransform = CSS.Transform.toString(transform);
   const style: React.CSSProperties = reorderingDisabled
     ? {}
-    : { transform: CSS.Transform.toString(transform), transition };
+    : {
+        transform: isDragging
+          ? `${dragTransform ?? ""} rotate(-1.5deg)`.trim()
+          : dragTransform ?? undefined,
+        transition,
+      };
 
   return (
     <li
@@ -168,22 +169,17 @@ function SortableRow({
       style={style}
       {...attributes}
       {...(reorderingDisabled ? {} : listeners)}
-      className={`group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 ${
+      className={`group relative flex items-center gap-2 overflow-hidden border-b border-dashed border-border/50 px-4 py-3 last:border-b-0 ${
         reorderingDisabled
           ? ""
           : "touch-none select-none cursor-grab active:cursor-grabbing"
-      } ${isDragging ? "z-20 bg-surface-2 opacity-80 shadow-lg ring-1 ring-accent/40" : "hover:bg-surface-2/50"}`}
+      } ${isDragging ? "z-20 rounded-lg ring-2 ring-inset ring-accent bg-surface shadow-lg" : "hover:bg-surface-2/40"}`}
       aria-label={`${option.text}, rank ${displayRank}`}
     >
       <div
         className={`relative flex w-full min-w-0 items-center gap-2 ${reorderingDisabled ? "" : "*:pointer-events-none"}`}
       >
-        <span
-          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent"
-          aria-hidden="true"
-        >
-          {displayRank}
-        </span>
+        <RankCircle n={displayRank} size={28} />
         <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="min-w-0 flex-1 leading-5 wrap-break-word">{option.text}</span>
         {reorderingDisabled ? (
           <span aria-hidden="true" className="size-6 shrink-0 p-1" />
