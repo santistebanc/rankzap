@@ -6,11 +6,12 @@
 
 ![Rankzap app screenshot](./public/rankzap-screenshot.png)
 
-Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies.
+Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. Pen-and-paper aesthetic — warm parchment palette, ruled-line background, Patrick Hand typeface.
 
 - Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
-- Three tally modes: **Borda Count**, **Dowdall**, **Copeland**. Voters can locally override the global default for their own view.
-- Real-time sync, presence (online + voting / changing-vote / voted indicators), and persistence via [`santistebanc/room-server`](https://github.com/santistebanc/room-server).
+- Three tally modes: **Borda Count**, **Dowdall**, **Copeland**.
+- Real-time sync, presence (online / voting / editing / voted indicators), and persistence via [`santistebanc/room-server`](https://github.com/santistebanc/room-server).
+- Poll IDs are 4-character uppercase alphanumeric (e.g. `A3ZK`). URLs are normalised to uppercase on load.
 - Static SPA — deploys to GitHub Pages with BrowserRouter + SPA 404 fallback.
 
 ## Stack
@@ -18,8 +19,8 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - Vite 8 + React 19 + TypeScript 6
 - `react-router-dom` 7 (`BrowserRouter`)
 - `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
-- `tailwindcss` v4 with CSS-variable palette (auto light/dark)
-- `nanoid` for short room ids
+- `tailwindcss` v4 with CSS-variable palette (auto light/dark, manual toggle)
+- `nanoid` (`customAlphabet`) for room IDs
 - `qrcode` for the admin's share QR
 - [`room-server`](https://github.com/santistebanc/room-server) **v3.2.0** (typed `RoomClient`, schema version at `ready()`, delete events include `priorValue`)
 
@@ -33,8 +34,6 @@ npm run dev
 
 Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will skip the Rolldown native bindings and `npm run dev` may fail.
 
-Vite 8 uses Rolldown with platform-specific native addons. Nested optional bindings can fail to install; this repo declares **`optionalDependencies`** for **`@rolldown/binding-linux-{x64,arm64}-gnu`** (version-matched to Rolldown) so **Linux amd64** (GitHub Actions) and **Linux arm64** (many WSL images) both get the right native module without forcing the wrong CPU in `npm ci`. If you still see a missing-binding error, delete `node_modules` and run `npm install` again.
-
 `.env`:
 
 ```
@@ -43,8 +42,6 @@ VITE_API_KEY=voting-app
 ```
 
 Both vars must also be set as GitHub repository **secrets** (or **variables**) so the deploy workflow can inject them at build time.
-
-Build:
 
 ```bash
 npm run build      # → dist/
@@ -66,49 +63,52 @@ npm run preview    # serve the built bundle locally
 
 | Path | Page |
 |---|---|
-| `/` | **Home** — auto-resume your last admin poll if it still exists, else generate a fresh `nanoid(6)` and atomically reserve it via `room.setIf("meta", default, null)`. Falls back to `nanoid(8)` after 20 collisions. 8s overall timeout with retry. |
-| `/:roomId/admin` | Admin controls — title, options, settings, poll state, share link with QR. |
+| `/` | **Home** — start a new poll or reopen a recent one from this device. |
+| `/:roomId/admin` | Admin — title, options, settings, poll state, share link with QR. |
 | `/:roomId` | Voter — name, drag-to-rank, submit, results. |
 
-Anything else 404s back to `/`.
+Anything else redirects to `/`. Lowercase room IDs in the URL are silently redirected to their uppercase canonical form.
 
 ### Room data model (PartyKit KV)
 
 ```
 meta                  { title, state: "open" | "closed", createdAt }
-settings              { tallyMode, showLiveResults, allowRevote, allowAdd, showUsers }
+settings              { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes }
 options/{optionId}    { id, text, addedBy, addedAt }
-users/{userId}        { id, name, lastSeen, mode: "idle" | "voting" }   # 10s heartbeat
-votes/{userId}        { userId, ranking: string[], submittedAt }
+users/{userId}        { id, name, mode: "idle" | "voting" | "editing", ignored? }
+votes/{userId}        { userId, ranking: string[], submittedAt, ignored? }
+presence/{connId}     managed by server — { userId } — tracks live sockets
 ```
 
-Every write uses a 30-day TTL. Heartbeats refresh `users/*`; admin/voter actions refresh whatever they touch; an explicit `touchKey` on connect refreshes `meta`. Abandoned polls auto-clean after 30 days of no activity.
+`mode` semantics:
+- `"voting"` — voter is on the compose tab and has never submitted a vote
+- `"editing"` — voter is on the compose tab, has submitted before, and their current ranking differs from the submitted one (submit button re-enabled)
+- `"idle"` — everything else
+
+Every write uses a 30-day TTL. An explicit `touchKey` on connect refreshes `meta`. Abandoned polls auto-clean after 30 days of no activity.
 
 ### localStorage layout (admin/voter strictly isolated)
 
 ```
-rankzap:admin:lastRoomId             # last poll this browser CREATED — only Home reads/writes
+rankzap:admin:lastRoomId             # last poll this browser created — only Home reads/writes
 rankzap:vote:userId                  # global voter identity
 rankzap:vote:name                    # last entered display name
 rankzap:room:{roomId}:vote:rank      # voter's local drag order (saved on every drag-end)
-rankzap:room:{roomId}:vote:tally     # voter's local tally-mode override
 ```
-
-A user voting in someone else's poll never leaves any "admin" footprint — visiting `/` afterwards generates a brand-new poll, not a redirect into the one they just voted in.
 
 ### Tally
 
-All three modes filter votes against the current option set on read (so deleted options don't pollute results). Results are sorted by score desc, with ties broken deterministically by `addedAt` ascending so re-renders never jitter.
+All three modes filter votes against the current option set on read. Results are sorted by score desc, ties broken by `addedAt` ascending.
 
 | Mode | Score |
 |---|---|
 | Borda | 1st = `N-1`, 2nd = `N-2`, …; unranked = 0 |
 | Dowdall | 1st = 1, 2nd = ½, 3rd = ⅓, …; unranked = 0 |
-| Copeland | Per pair (A,B): +1 to the option more voters preferred, +0.5 each on tie. Unranked options sit below all ranked. |
+| Copeland | Per pair (A,B): +1 to the option more voters preferred, +0.5 each on tie. |
 
 ### Privacy / trust model
 
-This is a **trust-based** app. There is **no auth gate** between admin and voter views — anyone with the admin URL can edit settings, anyone with the voter URL can vote. Anyone with the public API key (which ships in the client bundle) and a roomId can read all room data, including the link from `users/{userId}.name` to that user's submitted ranking. Don't use this for sensitive or anonymous ballots.
+**No auth gate.** Anyone with the admin URL can edit settings; anyone with the voter URL can vote. The API key ships in the client bundle. Don't use this for sensitive or anonymous ballots.
 
 ## Project layout
 
@@ -116,34 +116,39 @@ This is a **trust-based** app. There is **no auth gate** between admin and voter
 src/
   main.tsx
   App.tsx                       # Router setup
-  env.d.ts
-  styles/index.css              # Tailwind import + CSS-variable palette + reduced-motion
+  styles/index.css              # Tailwind + CSS-variable palette + paper-card styles
   lib/
     room.tsx                    # RoomProvider + useRoom / useRoomValue / useRoomList
-    storage.ts                  # admin/voter-namespaced localStorage helpers (try/catch wrapped)
-    identity.ts                 # voter userId/name (admin has no identity)
-    types.ts                    # Settings, Meta, Option, Vote + parsers + length caps
+    adaptiveSize.ts             # font-size curve: big text for short strings, shrinks as length grows
+    storage.ts                  # localStorage helpers (try/catch wrapped)
+    identity.ts                 # voter userId/name
+    types.ts                    # Settings, Meta, Option, Vote, UserRecord + length caps
     tally.ts                    # borda / dowdall / copeland
-    url.ts                      # buildVoterUrl / buildAdminUrl (clean URLs)
+    schemas.ts                  # JSON schemas + SCHEMA_VERSION for room-server
+    url.ts                      # buildVoterUrl / buildAdminUrl
   pages/
-    Home.tsx                    # Resume-or-create flow
+    Home.tsx                    # Start poll or reopen recent
+    Layout.tsx                  # Shared admin + voter shell (RoomProvider, all live state)
     AdminPage.tsx
-    RankzapPage.tsx             # Tabs + heartbeat + ranking persistence + fallback panels
+    RankzapPage.tsx
   components/
     ConnectionStatus.tsx        # Top-of-screen pill: connecting / reconnecting / fatal
-    ShareLink.tsx               # voter URL + Copy + Open-in-new-tab + collapsible QR
-    PollTitle.tsx               # editable prop; focus-guarded sync; mirrors document.title
-    UsersList.tsx               # Participants (online + offline-but-voted) with progress summary
-    UserPill.tsx                # React.memo'd state pill
+    ThemeToggle.tsx             # Light/dark toggle (top-right corner on all pages)
+    ShareLink.tsx               # Voter URL + Copy + QR code
+    RankzapLogo.tsx
+    Scribble.tsx                # SVG squiggle underline accent
+    RankCircle.tsx              # Rank number badge
+    UsersList.tsx               # Participants with presence + vote status
+    UserPill.tsx                # React.memo'd state pill (voting / editing / voted / offline …)
     LiveOptions.tsx             # Score bars + inline-edit + remove (admin)
-    ArrangeOptions.tsx          # @dnd-kit sortable; PointerSensor + KeyboardSensor; deferred-switch hook
-    AddOption.tsx               # Single-add + multi-line paste batch (throttled)
+    ArrangeOptions.tsx          # @dnd-kit sortable drag-to-rank
+    AddOption.tsx               # Single-add + multi-line paste (throttled); adaptive font size
+    AccordionSection.tsx        # Collapsible section wrapper
     Settings.tsx
-    PollState.tsx               # Open/Close toggle + Reset votes (both confirm before destructive ops)
+    VoterRankingPanel.tsx       # Admin: inspect individual voter's ranking
     Username.tsx
-    Tabs.tsx
-    SubmitVote.tsx              # 10s timeout + retry on failure
-    TallyModeSelector.tsx       # voter-side local override
+    SubmitVote.tsx
+    TallyModeSelector.tsx
 ```
 
 ## License
