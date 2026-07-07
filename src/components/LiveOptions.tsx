@@ -135,13 +135,13 @@ function OptionRow({
 
   return (
     <li
-      className="group relative flex items-center gap-2 overflow-hidden border-b border-dashed border-border/50 px-4 py-3 last:border-b-0 hover:bg-surface-2/40"
+      className="group relative flex items-center gap-2 overflow-hidden border-b border-border px-4 py-3 last:border-b-0 hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)]"
       aria-label={ariaLabel}
     >
       {showResults ? (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-full origin-left bg-accent-soft/60 transition-transform duration-300 will-change-transform"
+          className="absolute inset-y-0 left-0 w-full origin-left bg-[color-mix(in_oklab,var(--text)_9%,transparent)] transition-transform duration-300 will-change-transform"
           style={{ transform: `scaleX(${pct / 100})` }}
         />
       ) : null}
@@ -164,7 +164,7 @@ function OptionRow({
             }}
             aria-label={`Edit option: ${option.text}`}
             style={{ fontSize: adaptiveSize(draft, 14, 18, 20, 80) }}
-            className="-mx-1 min-h-0 flex-1 min-w-0 bg-transparent px-1 py-0.5 outline-none transition-[font-size] duration-150"
+            className="-mx-1 min-h-0 flex-1 min-w-0 rounded-md bg-transparent px-1 py-0.5 outline-none transition-[font-size,background-color] duration-150 focus:bg-surface-2"
           />
         ) : (
           <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150">{option.text}</span>

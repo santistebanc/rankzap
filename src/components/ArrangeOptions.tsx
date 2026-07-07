@@ -18,7 +18,6 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import type { Option } from "../lib/types";
 import { adaptiveSize } from "../lib/adaptiveSize";
@@ -153,7 +152,9 @@ function SortableRow({
     disabled: reorderingDisabled,
   });
 
-  const dragTransform = CSS.Transform.toString(transform);
+  const dragTransform = transform
+    ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
+    : undefined;
   const style: React.CSSProperties = reorderingDisabled
     ? {}
     : {
@@ -169,11 +170,11 @@ function SortableRow({
       style={style}
       {...attributes}
       {...(reorderingDisabled ? {} : listeners)}
-      className={`group relative flex items-center gap-2 overflow-hidden border-b border-dashed border-border/50 px-4 py-3 last:border-b-0 ${
+      className={`group relative flex items-center gap-2 overflow-hidden border-b border-border px-4 py-3 last:border-b-0 ${
         reorderingDisabled
           ? ""
           : "touch-none select-none cursor-grab active:cursor-grabbing"
-      } ${isDragging ? "z-20 rounded-lg ring-2 ring-inset ring-accent bg-surface shadow-lg" : "hover:bg-surface-2/40"}`}
+      } ${isDragging ? "z-20 rounded-lg ring-2 ring-inset ring-accent bg-surface shadow-lg" : "hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)]"}`}
       aria-label={`${option.text}, rank ${displayRank}`}
     >
       <div

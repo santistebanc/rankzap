@@ -8,24 +8,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  RoomClient,
-  type ResolveKey,
-  type Status,
-} from "room-server/client";
+import { type ResolveKey, type Status } from "room-server/client";
 import { ROOM_TTL_SEC } from "./types";
-import { ROOM_SCHEMAS, SCHEMA_VERSION, type RoomSchema } from "./schemas";
+import { type RoomSchema } from "./schemas";
+import { createRoomClient, type TypedRoomClient } from "./roomClient";
 
-const HOST = import.meta.env.VITE_HOST;
-const API_KEY = import.meta.env.VITE_API_KEY;
-
-if (!HOST || !API_KEY) {
-  console.error(
-    "[rankzap] Missing VITE_HOST or VITE_API_KEY — set them in .env or repo secrets.",
-  );
-}
-
-export type TypedRoomClient = RoomClient<RoomSchema>;
+export type { TypedRoomClient } from "./roomClient";
+export { createRoomClient, isRoomServerConfigured, ROOM_CONFIG_ERROR } from "./roomClient";
 
 // ── Module-level RoomClient cache ───────────────────────────────────────────
 // Reference-counted, cached by roomId. Survives React strict-mode double-mount
@@ -44,12 +33,7 @@ const clientCache = new Map<string, CacheEntry>();
 function acquireEntry(roomId: string, userId?: string): CacheEntry {
   let entry = clientCache.get(roomId);
   if (!entry) {
-    const client = new RoomClient<RoomSchema>({
-      host: HOST,
-      roomId,
-      config: { apiKey: API_KEY, persistence: "durable", userId },
-      schemas: { server: ROOM_SCHEMAS, version: SCHEMA_VERSION },
-    });
+    const client = createRoomClient(roomId, { userId });
     entry = { client, refcount: 0, disposeTimer: null };
     clientCache.set(roomId, entry);
   }

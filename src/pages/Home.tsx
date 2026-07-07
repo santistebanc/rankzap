@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
-import { Scribble } from "../components/Scribble";
 import { customAlphabet } from "nanoid";
 
 const roomIdAlphabet = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
-import { RoomClient } from "room-server/client";
+import {
+  createRoomClient,
+  isRoomServerConfigured,
+  ROOM_CONFIG_ERROR,
+} from "../lib/roomClient";
 import {
   DEFAULT_META,
   DEFAULT_SETTINGS,
   HOME_TIMEOUT_MS,
   ROOM_TTL_SEC,
 } from "../lib/types";
-import { ROOM_SCHEMAS, SCHEMA_VERSION, type RoomSchema } from "../lib/schemas";
 import {
   addRecentPoll,
   clearPollLocalStorage,
@@ -23,25 +25,35 @@ import {
   type RecentPollEntry,
 } from "../lib/storage";
 import { RankzapLogo } from "../components/RankzapLogo";
-import { ThemeToggle } from "../components/ThemeToggle";
-
-const HOST = import.meta.env.VITE_HOST;
-const API_KEY = import.meta.env.VITE_API_KEY;
 
 interface RecentPollView extends RecentPollEntry {
   title: string;
   optionsPreview: string[];
 }
 
-const newRoomClient = (roomId: string) =>
-  new RoomClient<RoomSchema>({
-    host: HOST,
-    roomId,
-    config: { apiKey: API_KEY, persistence: "durable" },
-    schemas: { server: ROOM_SCHEMAS, version: SCHEMA_VERSION },
-  });
+let recentPollsSessionCache: { key: string; polls: RecentPollView[] } | null = null;
+
+const newRoomClient = (roomId: string) => createRoomClient(roomId);
 
 const SET_OPTS = { ttl: ROOM_TTL_SEC } as const;
+
+function recentPollStorageKey(entries: RecentPollEntry[]): string {
+  return entries.map((entry) => `${entry.roomId}:${entry.savedAt}`).join("|");
+}
+
+function getCachedRecentPolls(): RecentPollView[] | null {
+  const stored = getRecentPolls();
+  const key = recentPollStorageKey(stored);
+  if (recentPollsSessionCache?.key !== key) return null;
+  return recentPollsSessionCache.polls;
+}
+
+function setCachedRecentPolls(entries: RecentPollEntry[], polls: RecentPollView[]): void {
+  recentPollsSessionCache = {
+    key: recentPollStorageKey(entries),
+    polls,
+  };
+}
 
 function formatLastOpened(ts: number): string {
   const diffMs = Date.now() - ts;
@@ -238,8 +250,13 @@ async function createRoom(): Promise<string> {
 export function Home() {
   const navigate = useNavigate();
   const aliveRef = useRef(true);
-  const [recentPolls, setRecentPollsState] = useState<RecentPollView[]>([]);
-  const [loadingRecents, setLoadingRecents] = useState(true);
+  const initialCachedRecentPolls = getCachedRecentPolls();
+  const [recentPolls, setRecentPollsState] = useState<RecentPollView[]>(
+    () => initialCachedRecentPolls ?? [],
+  );
+  const [loadingRecents, setLoadingRecents] = useState(
+    () => initialCachedRecentPolls === null,
+  );
   const [creatingPoll, setCreatingPoll] = useState(false);
   const [openingRoomId, setOpeningRoomId] = useState<string | null>(null);
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
@@ -250,11 +267,25 @@ export function Home() {
     aliveRef.current = true;
     setError(null);
 
+    if (!isRoomServerConfigured()) {
+      setRecentPollsState([]);
+      setLoadingRecents(false);
+      setError(ROOM_CONFIG_ERROR);
+      return;
+    }
+
     void (async () => {
       const stored = getRecentPolls();
+      const storedKey = recentPollStorageKey(stored);
+      if (recentPollsSessionCache?.key === storedKey) {
+        setRecentPollsState(recentPollsSessionCache.polls);
+        setLoadingRecents(false);
+        return;
+      }
       if (stored.length === 0) {
         if (aliveRef.current) {
           setRecentPollsState([]);
+          setCachedRecentPolls(stored, []);
           setLoadingRecents(false);
         }
         return;
@@ -275,7 +306,11 @@ export function Home() {
         }));
       setRecentPollsState(valid);
       if (valid.length !== stored.length) {
-        setRecentPolls(valid.map(({ roomId, savedAt }) => ({ roomId, savedAt })));
+        const nextStored = valid.map(({ roomId, savedAt }) => ({ roomId, savedAt }));
+        setRecentPolls(nextStored);
+        setCachedRecentPolls(nextStored, valid);
+      } else {
+        setCachedRecentPolls(stored, valid);
       }
       setLoadingRecents(false);
     })();
@@ -286,6 +321,10 @@ export function Home() {
   }, []);
 
   const openExisting = async (roomId: string) => {
+    if (!isRoomServerConfigured()) {
+      setError(ROOM_CONFIG_ERROR);
+      return;
+    }
     setOpeningRoomId(roomId);
     setError(null);
     let timedOut = false;
@@ -302,7 +341,9 @@ export function Home() {
       if (!ok) {
         setOpeningRoomId(null);
         const next = recentPolls.filter((x) => x.roomId !== roomId);
-        setRecentPolls(next.map(({ roomId: id, savedAt }) => ({ roomId: id, savedAt })));
+        const nextStored = next.map(({ roomId: id, savedAt }) => ({ roomId: id, savedAt }));
+        setRecentPolls(nextStored);
+        setCachedRecentPolls(nextStored, next);
         setRecentPollsState(next);
         setError("This poll is no longer available.");
         return;
@@ -320,6 +361,10 @@ export function Home() {
   };
 
   const deletePoll = async (roomId: string) => {
+    if (!isRoomServerConfigured()) {
+      setError(ROOM_CONFIG_ERROR);
+      return;
+    }
     setDeletingRoomId(roomId);
     setError(null);
     let timedOut = false;
@@ -340,7 +385,14 @@ export function Home() {
       }
       removeRecentPoll(roomId);
       clearPollLocalStorage(roomId);
-      setRecentPollsState((prev) => prev.filter((p) => p.roomId !== roomId));
+      setRecentPollsState((prev) => {
+        const next = prev.filter((p) => p.roomId !== roomId);
+        setCachedRecentPolls(
+          next.map(({ roomId: id, savedAt }) => ({ roomId: id, savedAt })),
+          next,
+        );
+        return next;
+      });
     } catch (e) {
       if (!timedOut) {
         setError(e instanceof Error ? e.message : "Couldn't delete this poll.");
@@ -354,6 +406,10 @@ export function Home() {
   };
 
   const startPoll = async () => {
+    if (!isRoomServerConfigured()) {
+      setError(ROOM_CONFIG_ERROR);
+      return;
+    }
     setCreatingPoll(true);
     setError(null);
     let timedOut = false;
@@ -381,158 +437,155 @@ export function Home() {
   };
 
   const busy = creatingPoll || openingRoomId !== null || deletingRoomId !== null;
+  const showRecentPolls = recentPolls.length > 0;
   const formatOptionsPreview = (items: string[]) =>
     items.length === 0 ? "" : items.join(", ");
 
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-2xl sm:items-center sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]"
+      className="mx-auto flex min-h-dvh w-full max-w-2xl sm:items-center sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] lg:max-w-[1180px]"
     >
-      <div className="paper-card w-full min-h-dvh sm:min-h-0">
-        <div style={CORNER_TOOLBAR}>
-          <ThemeToggle style={CORNER_BTN} />
-        </div>
-        <div className="paper-content">
+      <div className="card w-full min-h-dvh sm:min-h-0">
+        <div className="card-content">
 
           {/* Top bar */}
-          <div className="flex items-center justify-between gap-2" style={{ marginBottom: "clamp(2rem, 5vw, 3.5rem)" }}>
+          <div
+            className="flex items-center gap-2"
+            style={{
+              justifyContent: showRecentPolls ? "space-between" : "center",
+              marginBottom: "clamp(2rem, 5vw, 3.5rem)",
+              maxWidth: showRecentPolls ? undefined : 680,
+              marginLeft: showRecentPolls ? undefined : "auto",
+              marginRight: showRecentPolls ? undefined : "auto",
+            }}
+          >
             <RankzapLogo />
           </div>
 
-          {/* Hero */}
-          <div>
-            <p style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", marginBottom: 10 }}>
-              ranked voting · for small groups
-            </p>
-            <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.6rem, 9vw, 4.5rem)", lineHeight: 0.98, fontWeight: 700, letterSpacing: "-0.01em", margin: "0 0 8px", color: "var(--text)" }}>
-              make a poll.<br />
-              <span style={{ color: "var(--accent)", position: "relative", display: "inline-block" }}>
-                share the link.
-                <Scribble
-                  width={340}
-                  color="var(--accent)"
-                  style={{ position: "absolute", left: 0, bottom: -6, width: "100%", height: 14 }}
-                />
-              </span><br />
-              rank together.
-            </h1>
-            <p style={{ marginTop: "1.1rem", fontSize: "1rem", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch" }}>
-              Drop in your options, send the link to friends, watch the ranking come together. No accounts, no fuss.
-            </p>
-          </div>
+          <div className={showRecentPolls ? "lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:gap-[72px] lg:items-start" : "flex justify-center"}>
+            {/* Hero + CTA */}
+            <div style={showRecentPolls ? undefined : { width: "100%", maxWidth: 680, textAlign: "center" }}>
+              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.6rem, 9vw, 4.5rem)", lineHeight: 1.02, fontWeight: 700, letterSpacing: "-0.03em", margin: "0 0 8px", color: "var(--text)", textTransform: "lowercase" }}>
+                make a poll,<br />
+                <span style={{ background: "var(--surface)", padding: "0 10px", borderRadius: 7 }}>
+                  rank it
+                </span><br />
+                together.
+              </h1>
+              <p style={{ marginTop: "1.1rem", fontSize: "1rem", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch", marginLeft: showRecentPolls ? undefined : "auto", marginRight: showRecentPolls ? undefined : "auto" }}>
+                Share a link. Watch the ranking land.
+              </p>
 
-          {/* CTAs */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginTop: "clamp(1.5rem, 4vw, 2.5rem)" }}>
-            <button
-              type="button"
-              onClick={startPoll}
-              disabled={busy}
-              style={{
-                fontFamily: "var(--font-sans)",
-                fontSize: "1rem",
-                fontWeight: 600,
-                padding: "14px 30px",
-                background: "var(--text)",
-                color: "var(--bg)",
-                border: "none",
-                borderRadius: 999,
-                cursor: busy ? "not-allowed" : "pointer",
-                opacity: busy ? 0.6 : 1,
-                boxShadow: busy ? undefined : "3px 3px 0 var(--accent)",
-                transition: "box-shadow 0.15s, opacity 0.15s",
-              }}
-            >
-              {creatingPoll ? "Creating…" : "+ start a poll"}
-            </button>
-
-          </div>
-
-          {/* Recent polls */}
-          <div style={{ marginTop: "clamp(2.5rem, 7vw, 4rem)" }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-              <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.85rem", fontWeight: 700, color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
-                recent polls
-              </h2>
-              <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "var(--muted)", letterSpacing: "0.06em" }}>
-                on this device
-              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: showRecentPolls ? undefined : "center", marginTop: "clamp(1.5rem, 4vw, 2.5rem)" }}>
+                <button
+                  type="button"
+                  onClick={startPoll}
+                  disabled={busy}
+                  style={{
+                    fontFamily: "var(--font-sans)",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    padding: "14px 30px",
+                    background: "var(--text)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 14,
+                    cursor: busy ? "not-allowed" : "pointer",
+                    opacity: busy ? 0.6 : 1,
+                    transition: "opacity 0.15s",
+                  }}
+                >
+                  {creatingPoll ? "Creating…" : "+ Start a poll"}
+                </button>
+              </div>
             </div>
 
-            <div aria-busy={loadingRecents}>
-              {loadingRecents ? (
-                <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>Checking recent polls…</p>
-              ) : recentPolls.length === 0 ? (
-                <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>No recent polls on this device.</p>
-              ) : (
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: "min(50vh,22rem)", overflowY: "auto", overflowX: "hidden" }}>
-                  {recentPolls.map((p, i) => (
-                    <li
-                      key={p.roomId}
-                      style={{ display: "flex", alignItems: "center", gap: 14, padding: "11px 0", borderBottom: "1px dashed var(--border)" }}
-                    >
-                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 11, color: "var(--muted)", width: 28, textAlign: "right", flexShrink: 0, opacity: 0.7 }}>
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "0.95rem" }}>
-                          {p.title || p.roomId}
-                        </div>
-                        {p.optionsPreview.length > 0 && (
-                          <div style={{ fontSize: "0.78rem", color: "var(--accent)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
-                            {formatOptionsPreview(p.optionsPreview)}
+            {/* Recent polls */}
+            {showRecentPolls && (
+            <div className="mt-[clamp(2.5rem,7vw,4rem)] lg:mt-0">
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+                <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
+                  Recent polls
+                </h2>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  this device
+                </span>
+              </div>
+
+              <div aria-busy={loadingRecents}>
+                {loadingRecents ? (
+                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>Checking recent polls…</p>
+                ) : recentPolls.length === 0 ? (
+                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>No recent polls on this device.</p>
+                ) : (
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: "min(50vh,22rem)", overflowY: "auto", overflowX: "hidden" }}>
+                    {recentPolls.map((p, i) => (
+                      <li
+                        key={p.roomId}
+                        style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 0", borderTop: i === 0 ? "2px solid var(--text)" : "1px solid color-mix(in oklab, var(--text) 16%, transparent)" }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "1rem", letterSpacing: "-0.01em" }}>
+                            {p.title || p.roomId}
                           </div>
-                        )}
-                        <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, color: "var(--muted)", marginTop: 2, letterSpacing: "0.04em" }}>
-                          {p.roomId} · {formatLastOpened(p.savedAt)}
+                          {p.optionsPreview.length > 0 && (
+                            <div style={{ fontSize: "0.82rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>
+                              {formatOptionsPreview(p.optionsPreview)}
+                            </div>
+                          )}
+                          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--muted)", marginTop: 5 }}>
+                            {p.roomId} · {formatLastOpened(p.savedAt)}
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                        {confirmingDeleteRoomId === p.roomId ? (
-                          <>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                          {confirmingDeleteRoomId === p.roomId ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmingDeleteRoomId(null)}
+                                disabled={busy}
+                                style={btnStyle("secondary")}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
+                                disabled={busy}
+                                style={btnStyle("danger")}
+                              >
+                                {deletingRoomId === p.roomId ? "Deleting…" : "Delete"}
+                              </button>
+                            </>
+                          ) : (
                             <button
                               type="button"
-                              onClick={() => setConfirmingDeleteRoomId(null)}
+                              onClick={() => setConfirmingDeleteRoomId(p.roomId)}
                               disabled={busy}
-                              style={btnStyle("secondary")}
+                              aria-label={`Delete poll ${p.roomId}`}
+                              title="Delete poll"
+                              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", border: "none", background: "transparent", color: "var(--danger)", cursor: "pointer", opacity: busy ? 0.5 : 1, flexShrink: 0 }}
                             >
-                              Cancel
+                              <Trash2 size={15} strokeWidth={2} aria-hidden />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
-                              disabled={busy}
-                              style={btnStyle("danger")}
-                            >
-                              {deletingRoomId === p.roomId ? "Deleting…" : "Delete"}
-                            </button>
-                          </>
-                        ) : (
+                          )}
                           <button
                             type="button"
-                            onClick={() => setConfirmingDeleteRoomId(p.roomId)}
+                            onClick={() => void openExisting(p.roomId)}
                             disabled={busy}
-                            aria-label={`Delete poll ${p.roomId}`}
-                            title="Delete poll"
-                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", border: "1.5px solid color-mix(in oklch, var(--danger) 35%, transparent)", background: "transparent", color: "var(--danger)", cursor: "pointer", opacity: busy ? 0.5 : 1, flexShrink: 0 }}
+                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, background: "transparent", border: "none", color: "var(--text)", cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1, fontSize: 20, flexShrink: 0 }}
+                            aria-label={`Open poll ${p.roomId}`}
                           >
-                            <Trash2 size={14} strokeWidth={2} aria-hidden />
+                            {openingRoomId === p.roomId ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--muted)" }}>…</span> : "→"}
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => void openExisting(p.roomId)}
-                          disabled={busy}
-                          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: "50%", border: "1.5px solid color-mix(in oklch, var(--accent) 35%, transparent)", background: "transparent", color: "var(--accent)", cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1, fontFamily: "var(--font-display)", fontSize: 24, paddingBottom: 2, flexShrink: 0 }}
-                          aria-label={`Open poll ${p.roomId}`}
-                        >
-                          {openingRoomId === p.roomId ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--muted)" }}>…</span> : "→"}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
+            )}
           </div>
 
           {error ? (
@@ -550,30 +603,6 @@ export function Home() {
   );
 }
 
-const CORNER_TOOLBAR: React.CSSProperties = {
-  position: "absolute",
-  top: 6,
-  right: 6,
-  zIndex: 2,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 2,
-};
-
-const CORNER_BTN: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: 32,
-  height: 32,
-  background: "none",
-  border: "none",
-  color: "var(--muted)",
-  cursor: "pointer",
-  padding: 4,
-  borderRadius: 6,
-};
-
 function btnStyle(variant: "secondary" | "danger"): React.CSSProperties {
   const base: React.CSSProperties = {
     fontFamily: "var(--font-sans)",
@@ -589,4 +618,3 @@ function btnStyle(variant: "secondary" | "danger"): React.CSSProperties {
   }
   return { ...base, background: "transparent", color: "var(--text)", border: "1.5px solid var(--border)" };
 }
-
