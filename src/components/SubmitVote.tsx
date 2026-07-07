@@ -76,7 +76,7 @@ export function SubmitVote({
         : "bg-accent text-white hover:brightness-95";
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-none flex-col gap-2">
       <div className="flex min-w-0 flex-col gap-1">
         {disabled && disabledReason ? (
           <span className="block w-full text-right text-xs text-muted">{disabledReason}</span>
@@ -87,8 +87,7 @@ export function SubmitVote({
             onClick={submit}
             disabled={disabled || state === "submitting" || ranking.length === 0}
             title={disabled ? disabledReason : undefined}
-            style={state === "idle" && !disabled ? { boxShadow: "3px 3px 0 var(--text)" } : undefined}
-            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-[colors,box-shadow] disabled:opacity-50 ${tone}`}
+            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-colors disabled:opacity-50 ${tone}`}
           >
             {label}
           </button>

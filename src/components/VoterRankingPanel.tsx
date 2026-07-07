@@ -21,33 +21,31 @@ export function VoterRankingPanel({
       {!hasRanking ? (
         <p className="text-sm text-muted">No vote submitted yet.</p>
       ) : (
-        <div className="overflow-hidden rounded-xl bg-surface shadow-card">
-          <ul className="flex flex-col" aria-label="Voter's ranked options">
-            {rows.map((id, index) => {
-              const text = optionById.get(id)?.text ?? "Removed option";
-              const rank = index + 1;
-              return (
-                <li
-                  key={`${id}-${index}`}
-                  className="group relative flex items-center gap-2 overflow-hidden border-t border-border/20 px-4 py-3 first:border-t-0 hover:bg-surface-2/50"
-                  aria-label={`${text}, rank ${rank}`}
-                >
-                  <div className="relative flex w-full min-w-0 items-center gap-2">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-xs font-semibold tabular-nums text-accent">
-                      {rank}
-                    </span>
-                    <span
-                      style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80) }}
-                      className="min-w-0 flex-1 leading-5 wrap-break-word transition-[font-size] duration-150"
-                    >
-                      {text}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <ul className="flex flex-col border-t border-border" aria-label="Voter's ranked options">
+          {rows.map((id, index) => {
+            const text = optionById.get(id)?.text ?? "Removed option";
+            const rank = index + 1;
+            return (
+              <li
+                key={`${id}-${index}`}
+                className="group relative flex items-center gap-2 overflow-hidden border-b border-border px-1 py-3"
+                aria-label={`${text}, rank ${rank}`}
+              >
+                <div className="relative flex w-full min-w-0 items-center gap-2">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-xs font-semibold tabular-nums text-text">
+                    {rank}
+                  </span>
+                  <span
+                    style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80) }}
+                    className="min-w-0 flex-1 leading-5 wrap-break-word transition-[font-size] duration-150"
+                  >
+                    {text}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );

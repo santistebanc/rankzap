@@ -8,43 +8,23 @@ export function RankzapLogo({ className, onClick }: { className?: string; onClic
       className={`flex items-center gap-2.5 ${onClick ? "cursor-pointer" : ""} ${className ?? ""}`}
       {...(!onClick && { role: "img" })}
     >
-      <svg
-        width="26"
-        height="30"
-        viewBox="0 0 28 32"
-        aria-hidden
-        style={{ transform: "rotate(-6deg)", flexShrink: 0 }}
-      >
-        {/* filled bolt */}
+      <svg width="19" height="22" viewBox="0 0 19 22" aria-hidden style={{ flexShrink: 0 }}>
         <path
-          d="M14.5 1.5 L4 18 L12 18 L9.5 30.5 L23.5 12 L15.5 12 Z"
-          fill="var(--accent)"
-          stroke="var(--text)"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        {/* inner dashed stroke for hand-drawn feel */}
-        <path
-          d="M14.5 1.5 L4 18 L12 18 L9.5 30.5 L23.5 12 L15.5 12 Z"
-          fill="none"
-          stroke="var(--text)"
-          strokeWidth="0.6"
-          strokeLinejoin="round"
-          strokeDasharray="0.5 1.8"
-          opacity="0.6"
+          d="M11 1 L2 12.5 L8.5 12.5 L7.5 21 L17 8.5 L10.5 8.5 Z"
+          fill="var(--text)"
         />
       </svg>
       <span
         className="select-none leading-none"
         style={{
-          fontFamily: "var(--font-display, 'Caveat', cursive)",
-          fontSize: "2rem",
+          fontFamily: "var(--font-display)",
+          fontSize: "1.4rem",
           fontWeight: 700,
           color: "var(--text)",
-          letterSpacing: "-0.01em",
+          letterSpacing: "-0.03em",
         }}
       >
-        rank<span style={{ color: "var(--accent)" }}>zap</span>
+        rankzap
       </span>
     </Tag>
   );

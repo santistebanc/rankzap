@@ -72,8 +72,8 @@ export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
         placeholder={batchMessage ?? "Add an item…"}
         aria-label="Add an option"
         disabled={busy}
-        style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80), transition: "font-size 150ms" }}
-        className="min-h-0 flex-1 bg-transparent py-1 text-text outline-none placeholder:text-muted/70 disabled:opacity-50"
+        style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80), transition: "font-size 150ms, background-color 150ms" }}
+        className="-mx-2 min-h-0 flex-1 rounded-md bg-transparent px-2 py-1 text-text outline-none placeholder:text-muted/70 focus:bg-surface-2 disabled:opacity-50"
       />
     </form>
   );

@@ -24,26 +24,26 @@ const STATE_CONFIG: Record<
   { pillClassName: string; tabClassName: string; icon: React.ReactNode; label: string }
 > = {
   changing: {
-    pillClassName: "bg-accent-soft text-accent border-accent",
-    tabClassName: "bg-accent-soft text-accent",
+    pillClassName: "bg-surface text-text border-transparent",
+    tabClassName: "bg-surface text-text",
     icon: <Pencil className="size-3 animate-pulse" aria-hidden />,
     label: "Changing vote",
   },
   voting: {
-    pillClassName: "bg-accent-soft text-accent border-accent",
-    tabClassName: "bg-accent-soft text-accent",
+    pillClassName: "bg-surface text-text border-transparent",
+    tabClassName: "bg-surface text-text",
     icon: <PenLine className="size-3" aria-hidden />,
     label: "Voting for first time",
   },
   voted: {
-    pillClassName: "bg-success-soft text-success border-success",
-    tabClassName: "bg-success-soft text-success",
+    pillClassName: "bg-[var(--text)] text-white border-transparent",
+    tabClassName: "bg-[var(--text)] text-white",
     icon: <Check className="size-3" aria-hidden />,
     label: "Voted",
   },
   online: {
-    pillClassName: "bg-surface-2 text-text border-border",
-    tabClassName: "bg-surface-2 text-text",
+    pillClassName: "bg-transparent text-muted border-[var(--text)]/28",
+    tabClassName: "bg-transparent text-muted",
     icon: <Circle className="size-3" aria-hidden />,
     label: "Not voted yet (online)",
   },
