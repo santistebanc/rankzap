@@ -17,6 +17,7 @@ interface LiveOptionsProps {
   showResults: boolean;
   tallyMode: TallyMode;
   editable?: boolean;
+  highlightWinner?: boolean;
   optionsMap?: Map<string, Option>;
   votesMap?: Map<string, Vote>;
   usersMap?: Map<string, UserRecord>;
@@ -27,6 +28,7 @@ export function LiveOptions({
   showResults,
   tallyMode,
   editable = false,
+  highlightWinner = false,
   optionsMap: optionsMapProp,
   votesMap: votesMapProp,
   usersMap: usersMapProp,
@@ -69,6 +71,7 @@ export function LiveOptions({
         const option = optionById.get(id);
         if (!option) return null;
         const t = tallyByOption.get(id);
+        const isWinner = highlightWinner && (t?.rank ?? 0) === 1;
         return (
           <OptionRow
             key={id}
@@ -77,6 +80,7 @@ export function LiveOptions({
             rank={t?.rank ?? 0}
             maxScore={maxScore}
             showResults={showResults}
+            isWinner={isWinner}
             removable={removable}
             editable={editable}
           />
@@ -92,6 +96,7 @@ interface OptionRowProps {
   rank: number;
   maxScore: number;
   showResults: boolean;
+  isWinner: boolean;
   removable: boolean;
   editable: boolean;
 }
@@ -102,6 +107,7 @@ function OptionRow({
   rank,
   maxScore,
   showResults,
+  isWinner,
   removable,
   editable,
 }: OptionRowProps) {
@@ -137,17 +143,37 @@ function OptionRow({
     <li
       className="group relative flex items-center gap-2 overflow-hidden border-b border-border px-4 py-3 last:border-b-0 hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)]"
       aria-label={ariaLabel}
+      style={
+        isWinner
+          ? {
+              background:
+                "linear-gradient(90deg, color-mix(in oklab, var(--success) 18%, transparent), color-mix(in oklab, var(--surface) 72%, transparent))",
+              boxShadow: "inset 4px 0 0 var(--success)",
+            }
+          : undefined
+      }
     >
       {showResults ? (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-full origin-left bg-[color-mix(in_oklab,var(--text)_9%,transparent)] transition-transform duration-300 will-change-transform"
-          style={{ transform: `scaleX(${pct / 100})` }}
+          className="absolute inset-y-0 left-0 w-full origin-left transition-transform duration-300 will-change-transform"
+          style={{
+            transform: `scaleX(${pct / 100})`,
+            background: isWinner
+              ? "color-mix(in oklab, var(--success) 18%, transparent)"
+              : "color-mix(in oklab, var(--text) 9%, transparent)",
+          }}
+        />
+      ) : null}
+      {isWinner ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-y-0 right-0 w-24 bg-[radial-gradient(circle_at_75%_50%,color-mix(in_oklab,var(--surface)_86%,transparent),transparent_68%)]"
         />
       ) : null}
       <div className="relative flex w-full items-center gap-2">
         {showResults ? (
-          <RankCircle n={rank} size={28} />
+          <RankCircle n={rank} size={isWinner ? 34 : 28} color={isWinner ? "var(--success)" : "var(--text)"} />
         ) : null}
 
         {editable ? (
@@ -163,12 +189,26 @@ function OptionRow({
               else if (e.key === "Escape") { setDraft(option.text); inputRef.current?.blur(); }
             }}
             aria-label={`Edit option: ${option.text}`}
-            style={{ fontSize: adaptiveSize(draft, 14, 18, 20, 80) }}
+            style={{ fontSize: adaptiveSize(draft, 14, isWinner ? 21 : 18, 20, 80), fontWeight: isWinner ? 700 : undefined }}
             className="-mx-1 min-h-0 flex-1 min-w-0 rounded-md bg-transparent px-1 py-0.5 outline-none transition-[font-size,background-color] duration-150 focus:bg-surface-2"
           />
         ) : (
-          <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150">{option.text}</span>
+          <span
+            style={{
+              fontSize: adaptiveSize(option.text, 14, isWinner ? 21 : 18, 20, 80),
+              fontWeight: isWinner ? 700 : undefined,
+              color: isWinner ? "var(--text)" : undefined,
+            }}
+            className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150"
+          >
+            {option.text}
+          </span>
         )}
+        {isWinner ? (
+          <span className="hidden shrink-0 rounded-full bg-surface px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-success sm:inline-flex">
+            winner
+          </span>
+        ) : null}
 
 
         {removable ? (

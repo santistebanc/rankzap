@@ -443,40 +443,40 @@ export function Home() {
 
   return (
     <main
-      className="mx-auto flex min-h-dvh w-full max-w-2xl sm:items-center sm:px-4 sm:py-10 sm:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] lg:max-w-[1180px]"
+      className="mx-auto flex min-h-dvh w-full max-w-full px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-10 sm:pb-[max(2rem,env(safe-area-inset-bottom,0px))] lg:max-w-[1180px]"
     >
-      <div className="card w-full min-h-dvh sm:min-h-0">
-        <div className="card-content">
+      <div className="card flex w-full min-h-dvh sm:min-h-0">
+        <div className={`card-content home-card-content flex w-full flex-col ${showRecentPolls ? "justify-start" : "justify-center"}`}>
 
           {/* Top bar */}
           <div
-            className="flex items-center gap-2"
+            className="mx-auto flex w-full max-w-[760px] justify-center"
             style={{
-              justifyContent: showRecentPolls ? "space-between" : "center",
-              marginBottom: "clamp(2rem, 5vw, 3.5rem)",
-              maxWidth: showRecentPolls ? undefined : 680,
-              marginLeft: showRecentPolls ? undefined : "auto",
-              marginRight: showRecentPolls ? undefined : "auto",
+              marginBottom: "clamp(2rem, 6vw, 3.25rem)",
             }}
           >
             <RankzapLogo />
           </div>
 
-          <div className={showRecentPolls ? "lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:gap-[72px] lg:items-start" : "flex justify-center"}>
+          <div>
             {/* Hero + CTA */}
-            <div style={showRecentPolls ? undefined : { width: "100%", maxWidth: 680, textAlign: "center" }}>
-              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(2.6rem, 9vw, 4.5rem)", lineHeight: 1.02, fontWeight: 700, letterSpacing: "-0.03em", margin: "0 0 8px", color: "var(--text)", textTransform: "lowercase" }}>
+            <div className="mx-auto w-full max-w-[760px] text-center">
+              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(3rem, 10vw, 5.75rem)", lineHeight: 0.98, fontWeight: 700, letterSpacing: 0, margin: "0 0 8px", color: "var(--text)", textTransform: "lowercase" }}>
                 make a poll,<br />
-                <span style={{ background: "var(--surface)", padding: "0 10px", borderRadius: 7 }}>
+                <span style={{ background: "var(--surface)", padding: "0 0.14em", borderRadius: 8, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
                   rank it
                 </span><br />
                 together.
               </h1>
-              <p style={{ marginTop: "1.1rem", fontSize: "1rem", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch", marginLeft: showRecentPolls ? undefined : "auto", marginRight: showRecentPolls ? undefined : "auto" }}>
+              <p
+                style={{ margin: "clamp(1rem, 3vw, 1.35rem) auto 0", fontSize: "clamp(1rem, 2.4vw, 1.2rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch" }}
+              >
                 Share a link. Watch the ranking land.
               </p>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: showRecentPolls ? undefined : "center", marginTop: "clamp(1.5rem, 4vw, 2.5rem)" }}>
+              <div
+                style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "center", marginTop: "clamp(1.75rem, 4vw, 2.75rem)" }}
+              >
                 <button
                   type="button"
                   onClick={startPoll}
@@ -485,14 +485,15 @@ export function Home() {
                     fontFamily: "var(--font-sans)",
                     fontSize: "1rem",
                     fontWeight: 600,
-                    padding: "14px 30px",
+                    padding: "15px 32px",
                     background: "var(--text)",
                     color: "#fff",
                     border: "none",
-                    borderRadius: 14,
+                    borderRadius: 999,
                     cursor: busy ? "not-allowed" : "pointer",
                     opacity: busy ? 0.6 : 1,
-                    transition: "opacity 0.15s",
+                    boxShadow: "0 14px 26px -18px rgba(25, 29, 34, 0.65)",
+                    transition: "opacity 0.15s, transform 0.15s",
                   }}
                 >
                   {creatingPoll ? "Creating…" : "+ Start a poll"}
@@ -502,7 +503,7 @@ export function Home() {
 
             {/* Recent polls */}
             {showRecentPolls && (
-            <div className="mt-[clamp(2.5rem,7vw,4rem)] lg:mt-0">
+            <div className="mx-auto mt-[clamp(3rem,8vw,5rem)] w-full max-w-[760px]">
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
                 <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
                   Recent polls

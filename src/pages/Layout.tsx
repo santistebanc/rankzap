@@ -24,7 +24,6 @@ import {
   getVoterRank,
   setVoterRank,
 } from "../lib/storage";
-import { computeTally } from "../lib/tally";
 import { ShareBar } from "../components/ShareLink";
 import { Username } from "../components/Username";
 import { UsersList } from "../components/UsersList";
@@ -436,16 +435,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     document.title = fromSettings || fromMeta || "Rankzap";
   }, [settings.ballotTitle, meta.title]);
 
-  // Tally for voter results winner announcement
-  const tally = useMemo(() => {
-    const activeVotes = [...votesMap.values()].filter((v) => {
-      const u = usersMap.get(`users/${v.userId}`);
-      return !u?.ignored && !v.ignored;
-    });
-    return computeTally({ options, votes: activeVotes, mode: settings.tallyMode });
-  }, [options, votesMap, usersMap, settings.tallyMode]);
-  const winner = tally.length > 0 ? optionById.get(tally[0].optionId) : undefined;
-
   // Skeleton until meta loads
   if (!ready) {
     const loadingLabel =
@@ -590,7 +579,13 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             </div>
 
             <div style={{ borderTop: "2px solid var(--text)", marginBottom: "clamp(0.5rem,1.5vw,0.75rem)" }}>
-              <LiveOptions removable showResults tallyMode={settings.tallyMode} editable />
+              <LiveOptions
+                removable
+                showResults
+                tallyMode={settings.tallyMode}
+                editable
+                highlightWinner={meta.state === "closed"}
+              />
               <AddOption addedBy="admin" />
             </div>
 
@@ -798,15 +793,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
               >
                 {canShowVoterResults ? (
                   <>
-                    {meta.state === "closed" && winner ? (
-                      <div className="content-inset" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.2rem,4vw,1.4rem)", color: "var(--text)", marginBottom: "clamp(1rem,3vw,1.5rem)", lineHeight: 1.4, letterSpacing: "-0.01em" }}>
-                        the group says{" "}
-                        <span style={{ background: "var(--surface)", padding: "1px 8px", borderRadius: 6, fontWeight: 700 }}>
-                          {winner.text}
-                        </span>
-                        {" "}wins.
-                      </div>
-                    ) : meta.state === "open" ? (
+                    {meta.state === "open" ? (
                       <div className="content-inset" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.2rem,4vw,1.4rem)", color: "var(--muted)", marginBottom: "clamp(1rem,3vw,1.5rem)", lineHeight: 1.4, letterSpacing: "-0.01em", opacity: 0.78 }}>
                         Poll is still open.
                       </div>
@@ -820,6 +807,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                         optionsMap={optionsMap}
                         votesMap={votesMap}
                         usersMap={usersMap}
+                        highlightWinner={meta.state === "closed"}
                       />
                     </div>
                   </>
@@ -931,15 +919,6 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             {/* Right: live results */}
             <div>
               <MonoLabel style={{ marginBottom: 12 }}>live results</MonoLabel>
-              {(settings.showLiveResults || meta.state === "closed") && winner && (
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.4rem", color: "var(--text)", marginBottom: "1rem", lineHeight: 1.4, letterSpacing: "-0.01em" }}>
-                  the group says{" "}
-                  <span style={{ background: "var(--surface)", padding: "1px 8px", borderRadius: 6, fontWeight: 700 }}>
-                    {winner?.text}
-                  </span>
-                  {" "}wins.
-                </div>
-              )}
               {settings.showLiveResults || meta.state === "closed" ? (
                 <div style={{ borderTop: "2px solid var(--text)" }}>
                   <LiveOptions
@@ -950,6 +929,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                     optionsMap={optionsMap}
                     votesMap={votesMap}
                     usersMap={usersMap}
+                    highlightWinner={meta.state === "closed"}
                   />
                 </div>
               ) : (
