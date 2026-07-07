@@ -251,6 +251,7 @@ export function Home() {
   const navigate = useNavigate();
   const aliveRef = useRef(true);
   const initialCachedRecentPolls = getCachedRecentPolls();
+  const initialStoredRecentPollCountRef = useRef(getRecentPolls().length);
   const [recentPolls, setRecentPollsState] = useState<RecentPollView[]>(
     () => initialCachedRecentPolls ?? [],
   );
@@ -438,6 +439,8 @@ export function Home() {
 
   const busy = creatingPoll || openingRoomId !== null || deletingRoomId !== null;
   const showRecentPolls = recentPolls.length > 0;
+  const showRecentPollRegion =
+    showRecentPolls || (loadingRecents && initialStoredRecentPollCountRef.current > 0);
   const formatOptionsPreview = (items: string[]) =>
     items.length === 0 ? "" : items.join(", ");
 
@@ -446,7 +449,7 @@ export function Home() {
       className="mx-auto flex min-h-dvh w-full max-w-full px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-10 sm:pb-[max(2rem,env(safe-area-inset-bottom,0px))] lg:max-w-[1180px]"
     >
       <div className="card flex w-full min-h-dvh sm:min-h-0">
-        <div className={`card-content home-card-content flex w-full flex-col ${showRecentPolls ? "justify-start" : "justify-center"}`}>
+        <div className={`card-content home-card-content flex w-full flex-col ${showRecentPollRegion ? "justify-start" : "justify-center"}`}>
 
           {/* Top bar */}
           <div
@@ -502,8 +505,8 @@ export function Home() {
             </div>
 
             {/* Recent polls */}
-            {showRecentPolls && (
-            <div className="mx-auto mt-[clamp(3rem,8vw,5rem)] w-full max-w-[760px]">
+            {showRecentPollRegion && (
+            <div className="mx-auto mt-[clamp(3rem,8vw,5rem)] w-full max-w-[760px] transition-[opacity,transform] duration-300 ease-out">
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
                 <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
                   Recent polls
@@ -515,9 +518,25 @@ export function Home() {
 
               <div aria-busy={loadingRecents}>
                 {loadingRecents ? (
-                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>Checking recent polls…</p>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                    {Array.from({ length: Math.min(Math.max(initialStoredRecentPollCountRef.current, 1), 3) }).map((_, i) => (
+                      <li
+                        key={i}
+                        className="animate-pulse"
+                        style={{
+                          padding: "18px 0",
+                          borderTop: i === 0 ? "2px solid var(--text)" : "1px solid color-mix(in oklab, var(--text) 16%, transparent)",
+                          opacity: 0.46,
+                        }}
+                      >
+                        <div style={{ width: "min(72%, 24rem)", height: 18, borderRadius: 999, background: "color-mix(in oklab, var(--text) 13%, transparent)" }} />
+                        <div style={{ width: "min(56%, 18rem)", height: 13, borderRadius: 999, background: "color-mix(in oklab, var(--text) 9%, transparent)", marginTop: 10 }} />
+                        <div style={{ width: 120, height: 11, borderRadius: 999, background: "color-mix(in oklab, var(--text) 8%, transparent)", marginTop: 10 }} />
+                      </li>
+                    ))}
+                  </ul>
                 ) : recentPolls.length === 0 ? (
-                  <p style={{ color: "var(--muted)", fontSize: "0.9rem", padding: "8px 0" }}>No recent polls on this device.</p>
+                  null
                 ) : (
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: "min(50vh,22rem)", overflowY: "auto", overflowX: "hidden" }}>
                     {recentPolls.map((p, i) => (

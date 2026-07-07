@@ -1,6 +1,6 @@
 import { Activity, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { Settings, Share2, X } from "lucide-react";
+import { ArrowLeft, Settings, Share2, X } from "lucide-react";
 import {
   RoomProvider,
   SET_OPTS,
@@ -120,6 +120,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const pollWasClosedRef = useRef(false);
+  const voterOpenedEditRef = useRef(false);
   const [pendingAddedOptions, setPendingAddedOptions] = useState<Option[]>([]);
   const [confirmingAction, setConfirmingAction] = useState<"close" | "reset" | "deleteVote" | null>(null);
 
@@ -277,6 +278,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
       .filter((id) => !cleaned.includes(id));
     updateRanking([...cleaned, ...missing]);
     setPendingAddedOptions([]);
+    voterOpenedEditRef.current = false;
     setVoterView("results");
   }, [myVote?.ranking, updateRanking, voterVisibleOptions]);
 
@@ -333,6 +335,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
   useEffect(() => {
     if (isAdmin) return;
     if (meta.state === "closed") {
+      voterOpenedEditRef.current = false;
       setVoterView("results");
       pollWasClosedRef.current = true;
       return;
@@ -342,6 +345,13 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     if (wasClosed && !hasVoted) {
       return;
     }
+    if (hasVoted) {
+      if (!voterOpenedEditRef.current) {
+        setVoterView("results");
+      }
+      return;
+    }
+    voterOpenedEditRef.current = false;
     if (!hasVoted) {
       setVoterView("compose");
     }
@@ -468,7 +478,16 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
         <div className="card flex w-full min-h-dvh flex-col sm:min-h-0">
           <div className="card-content flex-1">
 
-            <div className="content-inset" style={{ marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
+            <div className="content-inset" style={{ marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                aria-label="Back to homepage"
+                title="Back"
+                style={iconButton()}
+              >
+                <ArrowLeft size={18} strokeWidth={2} aria-hidden />
+              </button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button
                   type="button"
@@ -681,7 +700,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
             </Modal>
 
           </div>
-          <PoweredByFooter onCreatePoll={() => navigate("/")} />
+          <PoweredByFooter onCreatePoll={() => navigate("/")} showCreateLink={false} />
         </div>
       </main>
     );
@@ -778,6 +797,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                     beforeSubmit={persistPendingAddedOptions}
                     onSubmitted={() => {
                       setPendingAddedOptions([]);
+                      voterOpenedEditRef.current = false;
                       setVoterView("results");
                     }}
                   />
@@ -793,9 +813,9 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
               >
                 {canShowVoterResults ? (
                   <>
-                    {meta.state === "open" ? (
+                    {meta.state === "open" || meta.state === "closed" ? (
                       <div className="content-inset" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.2rem,4vw,1.4rem)", color: "var(--muted)", marginBottom: "clamp(1rem,3vw,1.5rem)", lineHeight: 1.4, letterSpacing: "-0.01em", opacity: 0.78 }}>
-                        Poll is still open.
+                        {meta.state === "closed" ? "Poll closed. Results:" : "Results so far:"}
                       </div>
                     ) : null}
                     <div style={{ borderTop: "2px solid var(--text)" }}>
@@ -823,7 +843,14 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
                 )}
                 {canChangeVote && (
                   <div className="content-inset" style={{ display: "flex", justifyContent: "flex-end", marginTop: "clamp(1rem,3vw,1.5rem)" }}>
-                    <button type="button" onClick={() => setVoterView("compose")} style={pill("default")}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        voterOpenedEditRef.current = true;
+                        setVoterView("compose");
+                      }}
+                      style={pill("default")}
+                    >
                       Change vote
                     </button>
                   </div>
@@ -982,7 +1009,13 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
 
 type PillVariant = "default" | "primary" | "secondary";
 
-function PoweredByFooter({ onCreatePoll }: { onCreatePoll: () => void }) {
+function PoweredByFooter({
+  onCreatePoll,
+  showCreateLink = true,
+}: {
+  onCreatePoll: () => void;
+  showCreateLink?: boolean;
+}) {
   return (
     <footer className="sticky bottom-0 z-20 border-t border-border bg-bg/95 px-5 py-3 backdrop-blur sm:px-8">
       <div className="mx-auto flex max-w-full items-center justify-between gap-3 text-xs text-muted lg:max-w-5xl">
@@ -998,13 +1031,15 @@ function PoweredByFooter({ onCreatePoll }: { onCreatePoll: () => void }) {
             rankzap
           </span>
         </div>
-        <button
-          type="button"
-          onClick={onCreatePoll}
-          className="shrink-0 border-0 bg-transparent p-0 text-xs font-semibold text-text underline decoration-border underline-offset-4 transition-opacity hover:opacity-65"
-        >
-          create your own poll
-        </button>
+        {showCreateLink ? (
+          <button
+            type="button"
+            onClick={onCreatePoll}
+            className="shrink-0 border-0 bg-transparent p-0 text-xs font-semibold text-text underline decoration-border underline-offset-4 transition-opacity hover:opacity-65"
+          >
+            create your own poll
+          </button>
+        ) : null}
       </div>
     </footer>
   );
