@@ -112,9 +112,17 @@ textarea:focus-visible {
   padding-right: 1rem;
 }
 
+.home-card-content {
+  padding: 0;
+}
+
 @media (min-width: 640px) {
   .card-content {
     padding: 2.5rem 2.25rem 3rem;
+  }
+
+  .home-card-content {
+    padding: 0;
   }
 
   .content-inset {
@@ -125,6 +133,10 @@ textarea:focus-visible {
 
 @media (min-width: 1024px) {
   .card-content {
+    padding: 48px 64px 56px;
+  }
+
+  .home-card-content {
     padding: 48px 64px 56px;
   }
 }
