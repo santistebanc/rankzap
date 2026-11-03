@@ -6,7 +6,7 @@
 
 ![Rankzap app screenshot](./public/rankzap-screenshot.png)
 
-Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. Pen-and-paper aesthetic — warm parchment palette, ruled-line background, Patrick Hand typeface.
+Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. Clean, bold look: cool grey palette with Space Grotesk and Space Mono, and automatic light and dark themes.
 
 - Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
 - Three tally modes: **Borda Count**, **Dowdall**, **Copeland**.
