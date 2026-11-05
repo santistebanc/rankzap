@@ -61,7 +61,7 @@ From GitHub: `.github/workflows/deploy.yml` deploys on every push to `main`. Add
 
 The workflow skips the deploy until `CLOUDFLARE_API_TOKEN` is set.
 
-The Worker answers at `rankzap.santistebanc94.workers.dev`. To serve it on your own domain, the domain must be a zone in the same Cloudflare account, with its nameservers pointing at Cloudflare. Then add it to `wrangler.jsonc` as `"routes": [{ "pattern": "rankzap.site", "custom_domain": true }]` and deploy again.
+The Worker answers on `rankzap.site` and `www.rankzap.site` (the `routes` in `wrangler.jsonc`) and at `rankzap.santistebanc94.workers.dev`. A custom domain must be a zone in the same Cloudflare account, with its nameservers pointing at Cloudflare.
 
 ## How it works
 

@@ -16,5 +16,10 @@
     "bindings": [{ "name": "POLLS", "class_name": "PollRoom" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PollRoom"] }],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // rankzap.site is a zone in the same Cloudflare account.
+  "routes": [
+    { "pattern": "rankzap.site", "custom_domain": true },
+    { "pattern": "www.rankzap.site", "custom_domain": true }
+  ]
 }
