@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RoomError } from "room-server/client";
 import { SET_OPTS, useRoom } from "../lib/room";
 import { SUBMIT_TIMEOUT_MS } from "../lib/types";
+import { Arrow } from "./Arrow";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -63,44 +64,36 @@ export function SubmitVote({
   };
 
   let label: string;
-  if (state === "submitting") label = "Submitting…";
-  else if (state === "success") label = "Submitted!";
+  if (state === "submitting") label = "Locking in…";
+  else if (state === "success") label = "Locked in!";
   else if (state === "error") label = "Failed, try again";
-  else label = hasVoted ? "Update vote" : "Submit vote";
+  else label = hasVoted ? "Update my vote" : "Lock it in";
 
-  const tone =
-    state === "error"
-      ? "bg-danger text-white hover:brightness-95"
-      : state === "success"
-        ? "bg-success text-white hover:brightness-95"
-        : "bg-accent text-white hover:brightness-95";
+  const tone = state === "error" ? "bg-danger text-white" : "bg-hi text-hi-ink";
 
   return (
-    <div className="flex min-w-0 flex-none flex-col gap-2">
-      <div className="flex min-w-0 flex-col gap-1">
-        {disabled && disabledReason ? (
-          <span className="block w-full text-right text-xs text-muted">{disabledReason}</span>
-        ) : null}
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={submit}
-            disabled={disabled || state === "submitting" || ranking.length === 0}
-            title={disabled ? disabledReason : undefined}
-            className={`inline-flex min-h-12 shrink-0 items-center justify-center rounded-full whitespace-nowrap px-10 text-lg font-semibold transition-colors disabled:opacity-50 ${tone}`}
-          >
-            {label}
-          </button>
-        </div>
-      </div>
+    <div className="grid gap-2">
+      {disabled && disabledReason ? (
+        <p className="text-sm font-semibold">{disabledReason}</p>
+      ) : null}
+      <button
+        type="button"
+        onClick={submit}
+        disabled={disabled || state === "submitting" || ranking.length === 0}
+        className={`flex min-h-16 w-full items-center justify-between px-5 transition-[transform,opacity] duration-150 ease-(--ease-spring) enabled:active:scale-[0.97] disabled:opacity-40 ${tone}`}
+      >
+        <span className="display text-[26px]">{label}</span>
+        <Arrow />
+      </button>
       {state === "error" && errorMsg ? (
-        <p className="text-xs leading-5 text-danger" role="alert">
+        <p className="text-sm font-semibold" role="alert">
           {errorMsg}
         </p>
       ) : null}
     </div>
   );
 }
+
 
 function describeError(e: unknown): string {
   if (e instanceof RoomError) {
