@@ -190,7 +190,7 @@ export class PollRoom extends DurableObject<Env> {
       if (!viewer.userId) throw new ActionError("Only voters can do that.");
       return action.type === "join"
         ? this.join(p, viewer.userId, action.name, action.mode)
-        : this.vote(p, viewer.userId, action.ranking, action.newOptions);
+        : this.vote(p, viewer.userId, action.ranking, action.newOptions, action.name);
     }
 
     if (!viewer.isHost) throw new ActionError("Only the host can do that.");
@@ -257,7 +257,7 @@ export class PollRoom extends DurableObject<Env> {
     return true;
   }
 
-  private vote(p: StoredPoll, userId: string, rawRanking: unknown, rawNewOptions: unknown): boolean {
+  private vote(p: StoredPoll, userId: string, rawRanking: unknown, rawNewOptions: unknown, rawName: unknown): boolean {
     if (p.state !== "open") throw new ActionError("This poll is closed.");
     if (!p.users[userId]) throw new ActionError("Join the poll before voting.");
     const previous = p.votes[userId];
@@ -282,6 +282,8 @@ export class PollRoom extends DurableObject<Env> {
     const valid = new Set(p.options.map((o) => o.id));
     const ranking = [...new Set(asArray(rawRanking).map(asString))].filter((id) => valid.has(id));
     if (ranking.length === 0) throw new ActionError("Rank at least one option.");
+    const name = clampName(asString(rawName));
+    if (name) p.users[userId].name = name;
     p.votes[userId] = {
       userId,
       ranking,

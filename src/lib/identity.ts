@@ -29,5 +29,5 @@ export function fallbackVoterName(userId: string): string {
   const seed = userId.slice(0, 6);
   const n = Number.parseInt(seed, 36);
   const suffix = Number.isFinite(n) ? (n % 999) + 1 : 1;
-  return `User ${suffix}`;
+  return `Voter ${suffix}`;
 }
