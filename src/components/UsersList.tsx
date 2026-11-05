@@ -116,13 +116,12 @@ export function UsersList({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => onToggleVoter?.(u.id)}
-                  className={`inline-flex min-h-11 shrink-0 items-center rounded-full outline-none transition-shadow focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-                    selected ? "ring-2 ring-accent" : ""
+                  className={`inline-flex min-h-11 shrink-0 items-center outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0b0b0b] ${
+                    selected ? "outline-3 outline-offset-2 outline-[#0b0b0b]" : ""
                   }`}
                 >
                   <UserPill
                     user={u}
-                    variant="pill"
                     showIgnoredBadge={showIgnoredBadge}
                     state={pillStateFor(
                       u,

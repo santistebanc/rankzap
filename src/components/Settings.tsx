@@ -1,21 +1,35 @@
 import { Check } from "lucide-react";
 import { SET_OPTS, useRoom, useRoomValue } from "../lib/room";
-import { DEFAULT_SETTINGS, TALLY_MODES, TALLY_MODE_LABELS, type Settings as SettingsT } from "../lib/types";
+import {
+  DEFAULT_SETTINGS,
+  pollColourOf,
+  TALLY_MODES,
+  TALLY_MODE_LABELS,
+  type Settings as SettingsT,
+} from "../lib/types";
+import { ColourPicker } from "./ColourPicker";
 
 export function Settings() {
   const { client } = useRoom();
   const { value: stored } = useRoomValue("settings");
   const settings: SettingsT = { ...DEFAULT_SETTINGS(), ...(stored ?? {}) };
 
+  const save = (patch: Partial<SettingsT>) =>
+    client.set("settings", { ...settings, ...patch }, SET_OPTS).catch((e) => {
+      console.warn("[rankzap] failed to update settings:", e);
+      throw e;
+    });
   const update = (patch: Partial<SettingsT>) => {
-    void client
-      .set("settings", { ...settings, ...patch }, SET_OPTS)
-      .catch((e) => console.warn("[rankzap] failed to update settings:", e));
+    save(patch).catch(() => {});
   };
 
   return (
     <section aria-label="Settings" className="w-full">
       <div className="flex flex-col">
+        <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-4">
+          <div className="text-base font-medium">Poll colour</div>
+          <ColourPicker value={pollColourOf(settings.colour)} onChange={(colour) => save({ colour })} />
+        </div>
         <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 sm:min-h-12 sm:px-4">
           <div className="text-base font-medium">Scoring method</div>
           <div role="group" aria-label="Scoring method" className="flex gap-1 rounded-full bg-surface-2 p-1">

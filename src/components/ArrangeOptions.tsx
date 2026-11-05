@@ -21,7 +21,7 @@ import {
 import { GripVertical } from "lucide-react";
 import type { Option } from "../lib/types";
 import { adaptiveSize } from "../lib/adaptiveSize";
-import { RankCircle } from "./RankCircle";
+import { Punch } from "./Punch";
 
 interface ArrangeOptionsProps {
   options: Option[];
@@ -102,7 +102,7 @@ export function ArrangeOptions({
 
   if (options.length === 0) {
     return (
-      <p className="px-4 py-3 text-sm text-muted/70">Waiting for options to be added…</p>
+      <p className="bg-low px-4 py-5 text-base font-semibold text-low-ink">Waiting for options to be added…</p>
     );
   }
 
@@ -117,7 +117,7 @@ export function ArrangeOptions({
     >
       <SortableContext items={ranking} strategy={verticalListSortingStrategy}>
         <ul
-          className="flex flex-col"
+          className="grid gap-1"
           aria-label={reorderingDisabled ? "Your ranked options" : "Drag to rank options"}
         >
           {ranking.map((id, index) => {
@@ -127,6 +127,7 @@ export function ArrangeOptions({
               <SortableRow
                 key={id}
                 option={option}
+                slot={index}
                 displayRank={projectedRankById.get(id) ?? index + 1}
                 reorderingDisabled={reorderingDisabled}
               />
@@ -138,12 +139,33 @@ export function ArrangeOptions({
   );
 }
 
+/**
+ * The staircase: rows shrink down the list (108 → 84 → 70 → 58px) and the
+ * top place is filled black. Height follows the row's slot in the saved
+ * ranking, so rows don't resize mid-drag and confuse dnd-kit's measurements;
+ * colour and number follow the projected rank, so they update live.
+ */
+const SLOTS = [
+  { height: 108, label: 34 },
+  { height: 84, label: 28 },
+  { height: 70, label: 25 },
+] as const;
+const BASE_SLOT = { height: 58, label: 22 };
+
+function placeTone(rank: number): string {
+  if (rank === 1) return "bg-hi text-hi-ink";
+  if (rank <= 3) return "bg-step text-step-ink";
+  return "bg-low text-low-ink";
+}
+
 function SortableRow({
   option,
+  slot,
   displayRank,
   reorderingDisabled,
 }: {
   option: Option;
+  slot: number;
   displayRank: number;
   reorderingDisabled: boolean;
 }) {
@@ -152,17 +174,19 @@ function SortableRow({
     disabled: reorderingDisabled,
   });
 
+  const size = SLOTS[slot] ?? BASE_SLOT;
   const dragTransform = transform
     ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
     : undefined;
-  const style: React.CSSProperties = reorderingDisabled
-    ? {}
-    : {
-        transform: isDragging
-          ? `${dragTransform ?? ""} rotate(-1.5deg)`.trim()
-          : dragTransform ?? undefined,
-        transition,
-      };
+  const style: React.CSSProperties = {
+    minHeight: size.height,
+    ...(reorderingDisabled
+      ? {}
+      : {
+          transform: isDragging ? `${dragTransform ?? ""} scale(1.03)`.trim() : dragTransform,
+          transition,
+        }),
+  };
 
   return (
     <li
@@ -170,26 +194,31 @@ function SortableRow({
       style={style}
       {...attributes}
       {...(reorderingDisabled ? {} : listeners)}
-      className={`group relative flex items-center gap-2 overflow-hidden border-b border-border px-4 py-3 last:border-b-0 ${
-        reorderingDisabled
-          ? ""
-          : "touch-none select-none cursor-grab active:cursor-grabbing"
-      } ${isDragging ? "z-20 rounded-lg ring-2 ring-inset ring-accent bg-surface shadow-lg" : "hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)]"}`}
+      className={`relative grid grid-cols-[74px_1fr_auto] items-center outline-offset-[-4px] transition-colors duration-150 ${placeTone(displayRank)} ${
+        reorderingDisabled ? "" : "touch-none select-none cursor-grab active:cursor-grabbing"
+      } ${isDragging ? "z-20 shadow-[8px_8px_0_#0b0b0b]" : ""}`}
       aria-label={`${option.text}, rank ${displayRank}`}
     >
-      <div
-        className={`relative flex w-full min-w-0 items-center gap-2 ${reorderingDisabled ? "" : "*:pointer-events-none"}`}
+      <span
+        aria-hidden="true"
+        className="display text-center leading-none tabular-nums"
+        style={{ fontSize: Math.round(size.height * 0.86) }}
       >
-        <RankCircle n={displayRank} size={28} />
-        <span style={{ fontSize: adaptiveSize(option.text, 14, 18, 20, 80) }} className="min-w-0 flex-1 leading-5 wrap-break-word">{option.text}</span>
-        {reorderingDisabled ? (
-          <span aria-hidden="true" className="size-6 shrink-0 p-1" />
-        ) : (
-          <span aria-hidden="true" className="drag-handle shrink-0 p-1 text-muted/50">
-            <GripVertical className="size-4" strokeWidth={2} aria-hidden />
-          </span>
-        )}
-      </div>
+        <Punch value={displayRank}>{displayRank}</Punch>
+      </span>
+      <span
+        style={{ fontSize: adaptiveSize(option.text, 17, size.label, 20, 80), fontStretch: "75%" }}
+        className="min-w-0 py-2 pr-2 font-extrabold leading-[0.95] uppercase wrap-break-word"
+      >
+        {option.text}
+      </span>
+      {reorderingDisabled ? (
+        <span aria-hidden="true" className="w-3" />
+      ) : (
+        <span aria-hidden="true" className="drag-handle pr-3 opacity-50">
+          <GripVertical className="size-5" strokeWidth={2.5} aria-hidden />
+        </span>
+      )}
     </li>
   );
 }

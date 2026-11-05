@@ -33,6 +33,41 @@ export const TALLY_MODE_INFO: Record<
 
 export type PollState = "open" | "closed";
 
+export type PollColour =
+  | "yellow"
+  | "lime"
+  | "mint"
+  | "sky"
+  | "cobalt"
+  | "pink"
+  | "tomato"
+  | "orange";
+export const DEFAULT_POLL_COLOUR: PollColour = "yellow";
+/**
+ * `sig` fills the page, `ink` is text on `sig`, `fg` is the colour used as
+ * text or fill on black (lighter where `sig` is too dark to read on black).
+ */
+export const POLL_COLOURS: Record<
+  PollColour,
+  { name: string; sig: string; ink: string; fg: string }
+> = {
+  yellow: { name: "Yellow", sig: "#ffdd1f", ink: "#0b0b0b", fg: "#ffdd1f" },
+  lime: { name: "Lime", sig: "#c8f031", ink: "#0b0b0b", fg: "#c8f031" },
+  mint: { name: "Mint", sig: "#2fdc8e", ink: "#0b0b0b", fg: "#2fdc8e" },
+  sky: { name: "Sky", sig: "#4db6ff", ink: "#0b0b0b", fg: "#4db6ff" },
+  cobalt: { name: "Cobalt", sig: "#2d4bff", ink: "#ffffff", fg: "#8b9bff" },
+  pink: { name: "Pink", sig: "#ff6ac1", ink: "#0b0b0b", fg: "#ff6ac1" },
+  tomato: { name: "Tomato", sig: "#ff4a2b", ink: "#0b0b0b", fg: "#ff6a50" },
+  orange: { name: "Orange", sig: "#ff8a1f", ink: "#0b0b0b", fg: "#ff8a1f" },
+};
+export const POLL_COLOUR_IDS = Object.keys(POLL_COLOURS) as PollColour[];
+
+export function pollColourOf(value: unknown): PollColour {
+  return typeof value === "string" && value in POLL_COLOURS
+    ? (value as PollColour)
+    : DEFAULT_POLL_COLOUR;
+}
+
 /** Optional poll title from room bootstrap; prefer `Settings.ballotTitle` for the heading. */
 export interface Meta {
   title: string;
@@ -52,6 +87,8 @@ export interface Settings {
   allowAdd: boolean;
   showUsers: boolean;
   showVoterVotes: boolean;
+  /** Poll colour picked by the host. Missing on older rooms; read it with `pollColourOf`. */
+  colour?: PollColour;
 }
 
 export interface Option {

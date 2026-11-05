@@ -10,7 +10,7 @@ import {
 import { X } from "lucide-react";
 import { adaptiveSize } from "../lib/adaptiveSize";
 import { computeTally } from "../lib/tally";
-import { RankCircle } from "./RankCircle";
+import { Punch } from "./Punch";
 
 interface LiveOptionsProps {
   removable: boolean;
@@ -66,12 +66,13 @@ export function LiveOptions({
   if (options.length === 0) return null;
 
   return (
-    <ul className="flex flex-col" aria-label="Poll options">
+    <ul className="grid gap-1.5" aria-label="Poll options">
       {orderedIds.map((id) => {
         const option = optionById.get(id);
         if (!option) return null;
         const t = tallyByOption.get(id);
-        const isWinner = highlightWinner && (t?.rank ?? 0) === 1;
+        // Nobody leads until someone has scored; ties for first all lead.
+        const isLeader = showResults && maxScore > 0 && (t?.rank ?? 0) === 1;
         return (
           <OptionRow
             key={id}
@@ -80,7 +81,8 @@ export function LiveOptions({
             rank={t?.rank ?? 0}
             maxScore={maxScore}
             showResults={showResults}
-            isWinner={isWinner}
+            isLeader={isLeader}
+            isWinner={highlightWinner && isLeader}
             removable={removable}
             editable={editable}
           />
@@ -96,17 +98,23 @@ interface OptionRowProps {
   rank: number;
   maxScore: number;
   showResults: boolean;
+  isLeader: boolean;
   isWinner: boolean;
   removable: boolean;
   editable: boolean;
 }
 
+/**
+ * A score band: a pale track in the poll colour, filled white in proportion
+ * to the score. The leader's band is black with the poll colour as text.
+ */
 function OptionRow({
   option,
   score,
   rank,
   maxScore,
   showResults,
+  isLeader,
   isWinner,
   removable,
   editable,
@@ -114,7 +122,7 @@ function OptionRow({
   const { client } = useRoom();
   const [draft, setDraft] = useState(option.text);
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (!focused) setDraft(option.text);
@@ -134,54 +142,47 @@ function OptionRow({
       .catch((e) => console.warn("[rankzap] failed to delete option:", e));
   };
 
-  const pct = maxScore > 0 ? Math.max(2, (score / maxScore) * 100) : 0;
+  const share = maxScore > 0 ? Math.max(0.02, score / maxScore) : 0;
   const ariaLabel = showResults
-    ? `${option.text}, ${ordinal(rank)} place, ${formatScore(score)} points`
+    ? `${option.text}, ${ordinal(rank)} place, ${formatScore(score)} points${isWinner ? ", winner" : ""}`
     : option.text;
+  const nameStyle: React.CSSProperties = {
+    fontSize: adaptiveSize(editable ? draft : option.text, 15, 19, 20, 80),
+    fontStretch: "75%",
+  };
 
   return (
     <li
-      className="group relative flex items-center gap-2 overflow-hidden border-b border-border px-4 py-3 last:border-b-0 hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)]"
+      className={`group relative grid min-h-[54px] items-center bg-low text-low-ink ${
+        showResults ? "grid-cols-[44px_1fr_auto]" : "grid-cols-[14px_1fr_auto]"
+      } ${removable ? "pr-0" : "pr-3"}`}
       aria-label={ariaLabel}
-      style={
-        isWinner
-          ? {
-              background:
-                "linear-gradient(90deg, color-mix(in oklab, var(--success) 18%, transparent), color-mix(in oklab, var(--surface) 72%, transparent))",
-              boxShadow: "inset 4px 0 0 var(--success)",
-            }
-          : undefined
-      }
     >
       {showResults ? (
         <div
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 w-full origin-left transition-transform duration-300 will-change-transform"
-          style={{
-            transform: `scaleX(${pct / 100})`,
-            background: isWinner
-              ? "color-mix(in oklab, var(--success) 18%, transparent)"
-              : "color-mix(in oklab, var(--text) 9%, transparent)",
-          }}
+          className={`absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-(--ease-bar) ${isLeader ? "bg-hi" : "bg-step"}`}
+          style={{ transform: `scaleX(${share})` }}
         />
       ) : null}
-      {isWinner ? (
-        <div
-          aria-hidden="true"
-          className="absolute inset-y-0 right-0 w-24 bg-[radial-gradient(circle_at_75%_50%,color-mix(in_oklab,var(--surface)_86%,transparent),transparent_68%)]"
-        />
-      ) : null}
-      <div className="relative flex w-full items-center gap-2">
-        {showResults ? (
-          <RankCircle n={rank} size={isWinner ? 34 : 28} color={isWinner ? "var(--success)" : "var(--text)"} />
-        ) : null}
 
+      {showResults ? (
+        <span aria-hidden="true" className={`display relative text-center text-[34px] tabular-nums ${isLeader ? "text-hi-ink" : ""}`}>
+          <Punch value={rank}>{rank || "–"}</Punch>
+        </span>
+      ) : (
+        <span aria-hidden="true" />
+      )}
+
+      <div className={`relative flex min-w-0 items-center gap-2 py-2 pr-2 ${isLeader ? "text-hi-ink" : ""}`}>
         {editable ? (
-          <input
+          // A one-row textarea that grows with its text (field-sizing), so long options wrap.
+          <textarea
             ref={inputRef}
+            rows={1}
             value={draft}
             maxLength={200}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => setDraft(e.target.value.replace(/\n/g, " "))}
             onFocus={() => setFocused(true)}
             onBlur={(e) => { setFocused(false); commit(e.target.value); }}
             onKeyDown={(e) => {
@@ -189,39 +190,40 @@ function OptionRow({
               else if (e.key === "Escape") { setDraft(option.text); inputRef.current?.blur(); }
             }}
             aria-label={`Edit option: ${option.text}`}
-            style={{ fontSize: adaptiveSize(draft, 14, isWinner ? 21 : 18, 20, 80), fontWeight: isWinner ? 700 : undefined }}
-            className="-mx-1 min-h-0 flex-1 min-w-0 rounded-md bg-transparent px-1 py-0.5 outline-none transition-[font-size,background-color] duration-150 focus:bg-surface-2"
+            style={nameStyle}
+            className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent py-1 leading-none font-extrabold uppercase outline-none focus:shadow-[0_3px_0_currentColor]"
           />
         ) : (
-          <span
-            style={{
-              fontSize: adaptiveSize(option.text, 14, isWinner ? 21 : 18, 20, 80),
-              fontWeight: isWinner ? 700 : undefined,
-              color: isWinner ? "var(--text)" : undefined,
-            }}
-            className="flex-1 min-w-0 leading-5 wrap-break-word transition-[font-size] duration-150"
-          >
+          <span style={nameStyle} className="min-w-0 flex-1 font-extrabold leading-none uppercase wrap-break-word">
             {option.text}
           </span>
         )}
         {isWinner ? (
-          <span className="hidden shrink-0 rounded-full bg-surface px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-success sm:inline-flex">
-            winner
+          <span className="shrink-0 bg-hi-ink px-2 py-1 text-[0.7rem] font-extrabold tracking-[0.06em] text-hi uppercase">
+            Winner
           </span>
         ) : null}
-
-
-        {removable ? (
-          <button
-            type="button"
-            onClick={remove}
-            aria-label={`Remove ${option.text}`}
-            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted/40 transition-colors hover:bg-danger-soft hover:text-danger group-hover:text-muted group-focus-within:text-muted focus-visible:text-danger focus-visible:opacity-100"
-          >
-            <X className="size-3.5" strokeWidth={2} aria-hidden />
-          </button>
-        ) : null}
       </div>
+
+      {showResults || removable ? (
+        <div className={`relative flex items-center ${isLeader ? "text-hi-ink" : ""}`}>
+          {showResults ? (
+            <span className="display text-[28px] tabular-nums" aria-hidden="true">
+              <Punch value={score}>{formatScore(score)}</Punch>
+            </span>
+          ) : null}
+          {removable ? (
+            <button
+              type="button"
+              onClick={remove}
+              aria-label={`Remove ${option.text}`}
+              className="inline-flex size-11 shrink-0 items-center justify-center opacity-45 transition-opacity hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-80"
+            >
+              <X className="size-4" strokeWidth={2.5} aria-hidden />
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </li>
   );
 }
