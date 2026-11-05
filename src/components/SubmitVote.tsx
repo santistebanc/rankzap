@@ -8,6 +8,8 @@ interface SubmitVoteProps {
   ranking: string[];
   /** Options this voter added while ranking. They are saved together with the vote. */
   newOptions: { id: string; text: string }[];
+  /** The voter's name, saved with the vote. Empty keeps whatever name they have. */
+  name?: string;
   hasVoted: boolean;
   disabled: boolean;
   disabledReason?: string;
@@ -17,6 +19,7 @@ interface SubmitVoteProps {
 export function SubmitVote({
   ranking,
   newOptions,
+  name,
   hasVoted,
   disabled,
   disabledReason,
@@ -31,7 +34,7 @@ export function SubmitVote({
     setState("submitting");
     setErrorMsg(null);
     try {
-      await send({ type: "vote", ranking, newOptions });
+      await send({ type: "vote", ranking, newOptions, name });
       setState("success");
       setTimeout(() => setState("idle"), 1500);
       onSubmitted();

@@ -69,7 +69,7 @@ To use your own domain, add it to the Worker under **Workers & Pages → rankzap
 |---|---|
 | `/` | **Home** — create a poll with a colour, join by code, or reopen a recent poll from this device. |
 | `/:roomId/admin` | Admin — edit title/options, inspect voters, change colour/scoring/settings, close/reset, share link and full-screen QR. |
-| `/:roomId` | Voter — enter a name, drag to rank, lock in a vote, watch results, see the final winner. |
+| `/:roomId` | Voter — drag to rank, add your name as you lock in your vote, watch results, see the final winner. |
 
 Anything else redirects to `/`. Lowercase room IDs in the URL are silently redirected to their uppercase canonical form.
 

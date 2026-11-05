@@ -27,7 +27,8 @@ export interface Viewer {
 export type PollAction =
   // Any voter, about themselves.
   | { type: "join"; name: string; mode: UserMode }
-  | { type: "vote"; ranking: string[]; newOptions: { id: string; text: string }[] }
+  // `name`, when given, is saved with the vote (voters name themselves as they lock in).
+  | { type: "vote"; ranking: string[]; newOptions: { id: string; text: string }[]; name?: string }
   // Host only.
   | { type: "addOptions"; texts: string[] }
   | { type: "editOption"; id: string; text: string }
