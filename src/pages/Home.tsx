@@ -88,7 +88,6 @@ const createRoom = createPoll;
 
 export function Home() {
   const navigate = useNavigate();
-  usePollColour("yellow");
   const aliveRef = useRef(true);
   const initialCachedRecentPolls = getCachedRecentPolls();
   const initialStoredRecentPollCountRef = useRef(getRecentPolls().length);
@@ -100,6 +99,8 @@ export function Home() {
   );
   const [creatingPoll, setCreatingPoll] = useState(false);
   const [colour, setColour] = useState<PollColour>("yellow");
+  // The page previews the colour the new poll will get.
+  usePollColour(colour);
   const [joinCode, setJoinCode] = useState("");
   const [joiningPoll, setJoiningPoll] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -327,7 +328,7 @@ export function Home() {
             <fieldset disabled={busy} className="mt-5 min-w-0 disabled:opacity-50">
               <legend className="mb-3 text-sm font-bold">Poll colour · {POLL_COLOURS[colour].name}</legend>
               <div className="@container">
-                <ColourPicker value={colour} onChange={async (next) => setColour(next)} previewPage={false} className="grid-cols-4 @min-[394px]:grid-cols-8 [&>button]:h-11 [&>button]:aspect-auto" />
+                <ColourPicker value={colour} onChange={async (next) => setColour(next)} className="grid-cols-4 @min-[394px]:grid-cols-8 [&>button]:h-11 [&>button]:aspect-auto" />
               </div>
             </fieldset>
             <button type="button" onClick={() => void startPoll()} disabled={busy} className={`${action} mt-5 w-full`}>

@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
-import { applyPollColour } from "../lib/pollColour";
+import { applyPollColour, floodReveal } from "../lib/pollColour";
 import { POLL_COLOUR_IDS, POLL_COLOURS, type PollColour } from "../lib/types";
 
 interface ColourPickerProps {
   value: PollColour;
   className?: string;
-  /** Home picks a future poll's colour without repainting the page. */
-  previewPage?: boolean;
   /** Resolves once saved; a rejection puts the previous colour back. */
   onChange: (next: PollColour) => Promise<unknown>;
 }
@@ -16,7 +14,7 @@ interface ColourPickerProps {
  * colour from the swatch outwards (View Transitions), or switches instantly
  * when the API is missing or reduced motion is on.
  */
-export function ColourPicker({ value, onChange, className = "grid-cols-8", previewPage = true }: ColourPickerProps) {
+export function ColourPicker({ value, onChange, className = "grid-cols-8" }: ColourPickerProps) {
   const refs = useRef(new Map<PollColour, HTMLButtonElement>());
   // The room only reports the new colour after a round trip, so show the pick right away.
   const [pending, setPending] = useState<{ from: PollColour; to: PollColour } | null>(null);
@@ -26,28 +24,19 @@ export function ColourPicker({ value, onChange, className = "grid-cols-8", previ
     if (next === shown) return;
     const button = refs.current.get(next);
     const commit = () => {
-      if (previewPage) applyPollColour(next);
+      applyPollColour(next);
       setPending({ from: value, to: next });
       onChange(next).catch(() => {
         setPending(null);
-        if (previewPage) applyPollColour(value);
+        applyPollColour(value);
       });
     };
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!previewPage || !document.startViewTransition || reduced || !button) {
+    if (!button) {
       commit();
       return;
     }
     const r = button.getBoundingClientRect();
-    const x = r.left + r.width / 2;
-    const y = r.top + r.height / 2;
-    const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-    void document.startViewTransition(commit).ready.then(() => {
-      document.documentElement.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-        { duration: 550, easing: "cubic-bezier(.2,.8,.2,1)", pseudoElement: "::view-transition-new(root)" },
-      );
-    });
+    floodReveal(commit, r.left + r.width / 2, r.top + r.height / 2);
   };
 
   const onKeyDown = (e: React.KeyboardEvent, current: PollColour) => {
