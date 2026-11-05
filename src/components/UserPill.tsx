@@ -20,7 +20,7 @@ interface UserPillProps {
 
 /**
  * Square status tags. Voted is black with the poll colour; ranking and
- * changing a vote blink a small square; offline is outlined and faded.
+ * changing a vote blink a small square; offline is outlined.
  */
 const STATE_CONFIG: Record<PillState, { className: string; marker: "blink" | "check" | null; label: string }> = {
   changing: { className: "bg-low text-low-ink", marker: "blink", label: "Changing vote" },
@@ -28,12 +28,12 @@ const STATE_CONFIG: Record<PillState, { className: string; marker: "blink" | "ch
   voted: { className: "bg-[#0b0b0b] text-sig-fg", marker: "check", label: "Voted" },
   online: { className: "bg-step text-step-ink", marker: null, label: "Not voted yet (online)" },
   offline: {
-    className: "bg-transparent text-ink opacity-55 shadow-[inset_0_0_0_2px_currentColor]",
+    className: "bg-transparent text-ink shadow-[inset_0_0_0_2px_currentColor]",
     marker: null,
     label: "Not voted yet (offline)",
   },
   "voted-offline": {
-    className: "bg-transparent text-ink opacity-55 shadow-[inset_0_0_0_2px_currentColor]",
+    className: "bg-transparent text-ink shadow-[inset_0_0_0_2px_currentColor]",
     marker: "check",
     label: "Voted (offline)",
   },
@@ -58,7 +58,7 @@ function UserPillRaw({ user, state, isYou, showIgnoredBadge = false }: UserPillP
       <span style={{ fontSize: adaptiveSize(user.name, 11, 13, 10, 30) }} className="max-w-40 truncate">
         {user.name}
       </span>
-      {isYou ? <span className="text-[0.68rem] font-semibold opacity-70">you</span> : null}
+      {isYou ? <span className="text-[0.68rem] font-semibold">you</span> : null}
       {showIgnoredBadge && user.ignored ? (
         <span className="bg-danger px-1.5 py-0.5 text-[0.64rem] font-bold tracking-wide text-white uppercase">
           Ignored

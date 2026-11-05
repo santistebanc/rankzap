@@ -20,8 +20,6 @@ export interface PollData {
   votedUserIds: Set<string>;
 }
 
-export type PillVariant = "default" | "primary" | "secondary";
-
 export function PoweredByFooter({
   onCreatePoll,
   showCreateLink = true,
@@ -97,7 +95,7 @@ export function Modal({
             onClick={onClose}
             aria-label={`Close ${title}`}
             title="Close"
-            style={iconButton()}
+            className="inline-flex size-11 shrink-0 items-center justify-center bg-step text-step-ink transition-opacity hover:opacity-75"
           >
             <X size={18} strokeWidth={2} aria-hidden />
           </button>
@@ -107,70 +105,6 @@ export function Modal({
     </div>
   );
 }
-
-export function iconButton(): React.CSSProperties {
-  return {
-    alignItems: "center",
-    background: "var(--step)",
-    border: "none",
-    borderRadius: 0,
-    color: "var(--step-ink)",
-    display: "inline-flex",
-    height: 42,
-    justifyContent: "center",
-    padding: 0,
-    transition: "opacity 0.15s",
-    width: 42,
-  };
-}
-
-export function textButton(): React.CSSProperties {
-  return {
-    alignItems: "center",
-    background: "transparent",
-    border: "none",
-    color: "var(--muted)",
-    display: "inline-flex",
-    fontFamily: "var(--font-sans)",
-    fontSize: "0.95rem",
-    fontWeight: 600,
-    justifyContent: "center",
-    minHeight: 44,
-    padding: "0 4px",
-  };
-}
-
-export function pill(variant: PillVariant): React.CSSProperties {
-  const base: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 36,
-    padding: "0 14px",
-    borderRadius: 999,
-    fontSize: "0.83rem",
-    fontWeight: 600,
-    fontFamily: "var(--font-sans)",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    border: "1.5px solid transparent",
-    transition: "opacity 0.15s",
-  };
-  switch (variant) {
-    case "primary":    return { ...base, background: "var(--text)", color: "#fff", border: "none" };
-    case "secondary":  return { ...base, background: "var(--surface)", color: "var(--text)", border: "none" };
-    default:           return { ...base, background: "transparent", color: "var(--text)", borderColor: "var(--text)" };
-  }
-}
-
-export function MonoLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", margin: "0 0 6px", ...style }}>
-      {children}
-    </p>
-  );
-}
-
 
 export function sameRanking(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;

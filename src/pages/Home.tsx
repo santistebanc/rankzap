@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { customAlphabet } from "nanoid";
@@ -27,6 +27,7 @@ import {
   type RecentPollEntry,
 } from "../lib/storage";
 import { ColourPicker } from "../components/ColourPicker";
+import { Arrow } from "../components/Arrow";
 import { usePollColour } from "../lib/pollColour";
 
 interface RecentPollView extends RecentPollEntry {
@@ -527,7 +528,7 @@ export function Home() {
             </fieldset>
             <button type="button" onClick={() => void startPoll()} disabled={busy} className={`${action} mt-5 w-full`}>
               <span aria-live="polite">{creatingPoll ? "Creating…" : "Start a poll"}</span>
-              <Arrow />
+              <Arrow className="size-6" />
             </button>
             {error ? <p role="alert" className="mt-3 bg-danger-soft p-3 text-sm font-semibold text-danger">{error}</p> : null}
           </section>
@@ -548,7 +549,7 @@ export function Home() {
                 disabled={busy}
                 aria-invalid={Boolean(joinError)}
                 aria-describedby={joinError ? "join-error" : "join-hint"}
-                className="display min-h-16 w-full min-w-0 border-3 border-transparent bg-step px-4 py-3 text-4xl tracking-[0.15em] text-step-ink outline-none placeholder:text-step-ink/35 focus:border-[#0b0b0b] disabled:opacity-50"
+                className="display min-h-16 w-full min-w-0 border-3 border-transparent bg-step px-4 py-3 text-4xl tracking-[0.15em] text-step-ink outline-none placeholder:text-step-ink/60 focus:border-[#0b0b0b] disabled:opacity-50"
               />
               <button type="submit" disabled={busy || joinCode.trim().length !== 4} className={action}>
                 {joiningPoll ? "Joining…" : "Join"}
@@ -585,7 +586,7 @@ export function Home() {
                       {p.optionsPreview.length > 0 ? <span className="mt-1 line-clamp-1 text-sm wrap-anywhere">{p.optionsPreview.join(", ")}</span> : null}
                       <span className="mt-1 block text-xs font-semibold">{p.roomId} · {openingRoomId === p.roomId ? "Opening…" : formatLastOpened(p.savedAt)}</span>
                     </span>
-                    <span className="hidden sm:block"><Arrow /></span>
+                    <span className="hidden sm:block"><Arrow className="size-6" /></span>
                   </button>
                   <button type="button" disabled={busy} onClick={() => setConfirmingDeleteRoomId(confirmingDeleteRoomId === p.roomId ? null : p.roomId)} aria-label={`Delete poll ${p.roomId}`} aria-expanded={confirmingDeleteRoomId === p.roomId} className="mr-2 grid size-11 place-items-center text-step-ink/60 hover:bg-danger-soft hover:text-danger disabled:opacity-50">
                     <Trash2 size={18} aria-hidden="true" />
@@ -606,8 +607,4 @@ export function Home() {
       <footer className="mt-8 text-sm font-semibold">Rank together. Decide together.</footer>
     </main>
   );
-}
-
-function Arrow() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0"><path d="M4 12h15M12 5l7 7-7 7" stroke="currentColor" strokeWidth="3" fill="none" /></svg>;
 }

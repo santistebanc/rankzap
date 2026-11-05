@@ -71,7 +71,7 @@ export function AddOption({ addedBy, onAddOption, variant = "row" }: AddOptionPr
           placeholder={batchMessage ?? "Add an option, or paste a list (one per line)"}
           aria-label="Add an option"
           disabled={busy}
-          className="min-h-[52px] min-w-0 bg-[#f1efe8] px-4 text-base font-semibold text-[#0b0b0b] outline-none placeholder:text-[#0b0b0b]/55 focus:shadow-[inset_0_0_0_3px_#0b0b0b] disabled:opacity-50"
+          className="min-h-[52px] min-w-0 bg-[#f1efe8] px-4 text-base font-semibold text-[#0b0b0b] outline-none placeholder:text-[#0b0b0b]/65 focus:shadow-[inset_0_0_0_3px_#0b0b0b] disabled:opacity-50"
         />
         <button type="submit" disabled={busy || !text.trim()} className="display min-h-[52px] bg-[#0b0b0b] px-5 text-xl text-sig-fg disabled:opacity-40">
           Add
@@ -95,7 +95,7 @@ export function AddOption({ addedBy, onAddOption, variant = "row" }: AddOptionPr
         aria-label="Add an option"
         disabled={busy}
         style={{ fontSize: adaptiveSize(text, 15, 17, 20, 80) }}
-        className="min-h-[52px] min-w-0 bg-transparent pr-4 font-bold outline-none placeholder:text-current placeholder:opacity-100 focus:placeholder:opacity-40 disabled:opacity-50"
+        className="min-h-[52px] min-w-0 bg-transparent pr-4 font-bold outline-none placeholder:text-current placeholder:opacity-100 disabled:opacity-50"
       />
     </form>
   );
