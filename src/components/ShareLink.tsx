@@ -1,172 +1,171 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, QrCode, X } from "lucide-react";
 import QRCode from "qrcode";
 import { buildVoterUrl } from "../lib/url";
+import { Panel } from "./Settings";
 
-interface ShareBarProps {
-  roomId: string;
-}
-
-export function ShareBar({ roomId }: ShareBarProps) {
-  const url = buildVoterUrl(roomId);
-  const [copied, setCopied] = useState(false);
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [isQrOpen, setIsQrOpen] = useState(false);
-  const qrTriggerRef = useRef<HTMLButtonElement>(null);
-  const qrDialogRef = useRef<HTMLDivElement>(null);
-
+function useQrDataUrl(url: string): string | null {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
     QRCode.toDataURL(url, {
       errorCorrectionLevel: "Q",
       width: 520,
-      margin: 2,
-      color: { dark: "#000000", light: "#ffffff" },
+      margin: 1,
+      color: { dark: "#0b0b0b", light: "#ffffff" },
     })
       .then((data) => {
-        if (alive) setQrDataUrl(data);
+        if (alive) setDataUrl(data);
       })
-      .catch((e) => {
-        console.warn("[rankzap] qr generation failed:", e);
-      });
+      .catch((e) => console.warn("[rankzap] qr generation failed:", e));
     return () => {
       alive = false;
     };
   }, [url]);
+  return dataUrl;
+}
 
+function useCopy(text: string) {
+  const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (e) {
       console.warn("[rankzap] clipboard write failed:", e);
     }
   };
+  return { copied, copy };
+}
 
-  useEffect(() => {
-    if (!isQrOpen) return;
-    const getFocusable = () =>
-      Array.from(
-        qrDialogRef.current?.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        ) ?? [],
-      );
-    getFocusable()[0]?.focus();
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setIsQrOpen(false); return; }
-      if (e.key !== "Tab") return;
-      const els = getFocusable();
-      if (!els.length) { e.preventDefault(); return; }
-      const first = els[0];
-      const last = els[els.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      qrTriggerRef.current?.focus();
-    };
-  }, [isQrOpen]);
+/** Link without the protocol, for display. */
+function shortUrl(url: string): string {
+  return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
 
+function Qr({ dataUrl, size }: { dataUrl: string | null; size: number }) {
+  return dataUrl ? (
+    <img
+      src={dataUrl}
+      alt="QR code for the voter link to this poll"
+      width={size}
+      height={size}
+      className="block h-auto w-full bg-white"
+    />
+  ) : (
+    <div className="grid aspect-square w-full place-items-center bg-white text-xs font-semibold text-[#0b0b0b]">
+      Making QR…
+    </div>
+  );
+}
+
+/** Admin panel: small QR, the code, the link, and buttons to copy it or show the big QR. */
+export function SharePanel({ roomId, onShowQr }: { roomId: string; onShowQr: () => void }) {
+  const url = buildVoterUrl(roomId);
+  const qr = useQrDataUrl(url);
+  const { copied, copy } = useCopy(url);
   return (
-    <div className="flex flex-col gap-1.5">
-      <div
-        className="flex min-h-11 w-full min-w-0 items-stretch overflow-hidden border-t border-b border-border"
-        role="region"
-        aria-label="Poll link for voters"
-      >
-        <div className="flex min-h-11 min-w-0 flex-1 items-center px-1 py-2">
-          <p className="m-0 min-w-0 flex-1 cursor-text select-text text-sm leading-snug break-all text-text">
-            {url}
-          </p>
+    <Panel title="Share">
+      <div className="grid grid-cols-[112px_1fr] items-center gap-3.5">
+        <div className="bg-white p-1.5 shadow-[inset_0_0_0_2px_#0b0b0b]">
+          <Qr dataUrl={qr} size={100} />
         </div>
-        <button
-          type="button"
-          onClick={copy}
-          title={copied ? "Copied" : "Copy link"}
-          aria-label={copied ? "Copied" : "Copy link"}
-          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l px-2 text-text transition-opacity hover:opacity-60 focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
-        >
-          {copied ? (
-            <Check className="size-4" strokeWidth={2} aria-hidden />
-          ) : (
-            <Copy className="size-4" strokeWidth={2} aria-hidden />
-          )}
-        </button>
-        <button
-          ref={qrTriggerRef}
-          type="button"
-          onClick={() => setIsQrOpen(true)}
-          title="Show QR code"
-          aria-label="Show QR code"
-          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center border-border border-l px-2 text-text transition-opacity hover:opacity-60 focus-visible:z-10 focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent lg:hidden"
-        >
-          <QrCode className="size-4" strokeWidth={2} aria-hidden />
-        </button>
-      </div>
-
-      {/* Desktop: always-visible QR panel (white backing kept for scannability) */}
-      <div className="hidden flex-col items-start gap-3 lg:flex">
-        {qrDataUrl ? (
-          <img
-            src={qrDataUrl}
-            alt="QR code for the voter link to this poll"
-            width={320}
-            height={320}
-            className="block rounded-[10px] bg-surface p-3"
-          />
-        ) : (
-          <div className="flex h-[320px] w-[320px] items-center justify-center bg-surface text-xs text-muted">Generating…</div>
-        )}
-        <span className="font-mono text-[11px] text-muted">scan to open poll</span>
-      </div>
-
-      {isQrOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/55 p-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))]"
-          role="dialog"
-          aria-modal="true"
-          aria-label="QR code for this poll link"
-          onClick={() => setIsQrOpen(false)}
-        >
-          <div
-            ref={qrDialogRef}
-            className="w-full max-w-[min(620px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-page"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <p className="m-0 text-sm font-semibold text-text">Scan to open poll</p>
-              <button
-                type="button"
-                onClick={() => setIsQrOpen(false)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm p-2 text-muted transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline focus-visible:-outline-offset-2 focus-visible:outline-accent"
-                aria-label="Close QR code modal"
-                title="Close"
-              >
-                <X className="size-4" strokeWidth={2} aria-hidden />
-              </button>
-            </div>
-            {qrDataUrl ? (
-              <div className="mx-auto inline-block overflow-hidden rounded border border-border">
-                <img
-                  src={qrDataUrl}
-                  alt="QR code for the voter link to this poll"
-                  className="block h-auto w-[min(520px,calc(100vw-4.5rem))]"
-                  width={520}
-                  height={520}
-                />
-              </div>
-            ) : (
-              <div className="py-3 text-sm text-muted">Generating…</div>
-            )}
+        <div className="min-w-0">
+          <p className="display text-[56px]">{roomId}</p>
+          <p className="mt-1 mb-2.5 truncate text-sm font-semibold">{shortUrl(url)}</p>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={copy}
+              className="display min-h-11 bg-[#0b0b0b] px-3.5 text-lg text-sig-fg"
+            >
+              <span aria-live="polite">{copied ? "Copied" : "Copy link"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onShowQr}
+              className="display min-h-11 px-3.5 text-lg shadow-[inset_0_0_0_3px_#0b0b0b]"
+            >
+              Show QR
+            </button>
           </div>
         </div>
-      ) : null}
-    </div>
+      </div>
+    </Panel>
+  );
+}
+
+/** Full-screen share: a big QR and a code you can read across a room. */
+export function ShareScreen({ roomId, onClose }: { roomId: string; onClose: () => void }) {
+  const url = buildVoterUrl(roomId);
+  const qr = useQrDataUrl(url);
+  const { copied, copy } = useCopy(url);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previous = document.activeElement as HTMLElement | null;
+    dialog?.showModal();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = overflow;
+      previous?.focus();
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      aria-modal="true"
+      aria-label="Share this poll"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Tab") return;
+        const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>("button");
+        const first = buttons[0];
+        const last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }}
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none overflow-y-auto border-0 bg-ground p-0 text-ink"
+    >
+      <div className="mx-auto flex min-h-full max-w-md flex-col px-[18px] pt-3 pb-[max(24px,env(safe-area-inset-bottom,0px))]">
+        <div className="flex items-center justify-between text-[15px] font-extrabold">
+          <span>Share</span>
+          <button autoFocus type="button" onClick={onClose} className="min-h-11 bg-chip px-3.5 text-chip-ink">
+            Done
+          </button>
+        </div>
+        <h2 className="display mt-4 mb-4 text-[64px]">Scan to rank.</h2>
+        <div className="bg-white p-3 shadow-[inset_0_0_0_3px_#0b0b0b]">
+          <Qr dataUrl={qr} size={520} />
+        </div>
+        <div className="my-1 grid grid-cols-4 gap-1" aria-label={`Code ${roomId.split("").join(" ")}`}>
+          {roomId.split("").map((c, i) => (
+            <span key={i} aria-hidden="true" className="display bg-[#0b0b0b] pt-2 pb-1 text-center text-[64px] text-sig-fg">
+              {c}
+            </span>
+          ))}
+        </div>
+        <div className="mt-1 grid grid-cols-[1fr_auto] gap-1">
+          <span className="flex min-w-0 items-center truncate bg-step px-3.5 text-[15px] font-bold text-step-ink">
+            {shortUrl(url)}
+          </span>
+          <button type="button" onClick={copy} className="display min-h-[52px] bg-hi px-5 text-xl text-hi-ink">
+            <span aria-live="polite">{copied ? "Copied" : "Copy"}</span>
+          </button>
+        </div>
+      </div>
+    </dialog>
   );
 }

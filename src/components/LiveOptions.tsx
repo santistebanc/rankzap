@@ -18,6 +18,8 @@ interface LiveOptionsProps {
   tallyMode: TallyMode;
   editable?: boolean;
   highlightWinner?: boolean;
+  /** `panel` sits on a white admin panel, so the bars fill with the poll colour instead of white. */
+  surface?: "ground" | "panel";
   optionsMap?: Map<string, Option>;
   votesMap?: Map<string, Vote>;
   usersMap?: Map<string, UserRecord>;
@@ -29,6 +31,7 @@ export function LiveOptions({
   tallyMode,
   editable = false,
   highlightWinner = false,
+  surface = "ground",
   optionsMap: optionsMapProp,
   votesMap: votesMapProp,
   usersMap: usersMapProp,
@@ -83,6 +86,7 @@ export function LiveOptions({
             showResults={showResults}
             isLeader={isLeader}
             isWinner={highlightWinner && isLeader}
+            surface={surface}
             removable={removable}
             editable={editable}
           />
@@ -100,6 +104,7 @@ interface OptionRowProps {
   showResults: boolean;
   isLeader: boolean;
   isWinner: boolean;
+  surface: "ground" | "panel";
   removable: boolean;
   editable: boolean;
 }
@@ -116,6 +121,7 @@ function OptionRow({
   showResults,
   isLeader,
   isWinner,
+  surface,
   removable,
   editable,
 }: OptionRowProps) {
@@ -123,6 +129,7 @@ function OptionRow({
   const [draft, setDraft] = useState(option.text);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!focused) setDraft(option.text);
@@ -161,7 +168,7 @@ function OptionRow({
       {showResults ? (
         <div
           aria-hidden="true"
-          className={`absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-(--ease-bar) ${isLeader ? "bg-hi" : "bg-step"}`}
+          className={`absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-(--ease-bar) ${isLeader ? "bg-hi" : surface === "panel" ? "bg-sig-fg" : "bg-step"}`}
           style={{ transform: `scaleX(${share})` }}
         />
       ) : null}
@@ -183,11 +190,11 @@ function OptionRow({
             value={draft}
             maxLength={200}
             onChange={(e) => setDraft(e.target.value.replace(/\n/g, " "))}
-            onFocus={() => setFocused(true)}
-            onBlur={(e) => { setFocused(false); commit(e.target.value); }}
+            onFocus={() => { cancelledRef.current = false; setFocused(true); }}
+            onBlur={(e) => { setFocused(false); if (!cancelledRef.current) commit(e.target.value); }}
             onKeyDown={(e) => {
               if (e.key === "Enter") { e.preventDefault(); inputRef.current?.blur(); }
-              else if (e.key === "Escape") { setDraft(option.text); inputRef.current?.blur(); }
+              else if (e.key === "Escape") { cancelledRef.current = true; setDraft(option.text); inputRef.current?.blur(); }
             }}
             aria-label={`Edit option: ${option.text}`}
             style={nameStyle}

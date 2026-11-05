@@ -1,19 +1,19 @@
-import { Check } from "lucide-react";
 import { SET_OPTS, useRoom, useRoomValue } from "../lib/room";
 import {
   DEFAULT_SETTINGS,
   pollColourOf,
+  POLL_COLOURS,
+  TALLY_MODE_INFO,
   TALLY_MODES,
-  TALLY_MODE_LABELS,
   type Settings as SettingsT,
 } from "../lib/types";
 import { ColourPicker } from "./ColourPicker";
 
-export function Settings() {
+/** The poll's settings plus a writer that merges a patch into them. */
+function useSettings() {
   const { client } = useRoom();
   const { value: stored } = useRoomValue("settings");
   const settings: SettingsT = { ...DEFAULT_SETTINGS(), ...(stored ?? {}) };
-
   const save = (patch: Partial<SettingsT>) =>
     client.set("settings", { ...settings, ...patch }, SET_OPTS).catch((e) => {
       console.warn("[rankzap] failed to update settings:", e);
@@ -22,61 +22,98 @@ export function Settings() {
   const update = (patch: Partial<SettingsT>) => {
     save(patch).catch(() => {});
   };
+  return { settings, save, update };
+}
 
+/** A white admin panel with a condensed heading and an optional note on the right. */
+export function Panel({
+  title,
+  aside,
+  children,
+  className = "",
+}: {
+  title: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <section aria-label="Settings" className="w-full">
-      <div className="flex flex-col">
-        <div className="flex flex-col gap-3 border-b border-border px-3 py-3 sm:px-4">
-          <div className="text-base font-medium">Poll colour</div>
-          <ColourPicker value={pollColourOf(settings.colour)} onChange={(colour) => save({ colour })} />
-        </div>
-        <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 sm:min-h-12 sm:px-4">
-          <div className="text-base font-medium">Scoring method</div>
-          <div role="group" aria-label="Scoring method" className="flex gap-1 rounded-full bg-surface-2 p-1">
-            {TALLY_MODES.map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={settings.tallyMode === m}
-                onClick={() => update({ tallyMode: m })}
-                className={`min-h-11 rounded-full px-3 text-sm font-medium whitespace-nowrap transition-colors ${
-                  settings.tallyMode === m
-                    ? "bg-text/90 text-bg"
-                    : "text-muted hover:text-text"
-                }`}
-              >
-                {TALLY_MODE_LABELS[m]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <Toggle
-          label="Show live results to voters"
-          value={settings.showLiveResults}
-          onChange={(v) => update({ showLiveResults: v })}
-        />
-        <Toggle
-          label="Allow voters to update their submitted vote"
-          value={settings.allowRevote}
-          onChange={(v) => update({ allowRevote: v })}
-        />
-        <Toggle
-          label="Allow voters to add options"
-          value={settings.allowAdd}
-          onChange={(v) => update({ allowAdd: v })}
-        />
-        <Toggle
-          label="Show voter list to voters"
-          value={settings.showUsers}
-          onChange={(v) => update({ showUsers: v })}
-        />
-        <Toggle
-          label="Let voters view other voters' rankings"
-          value={settings.showVoterVotes}
-          onChange={(v) => update({ showVoterVotes: v })}
-        />
-      </div>
+    <section aria-label={title} className={`bg-step px-5 pt-[18px] pb-5 text-step-ink [--ink:var(--step-ink)] ${className}`}>
+      <h2 className="mb-3 flex flex-wrap items-baseline justify-between gap-3">
+        <span className="display text-[26px]">{title}</span>
+        {aside ? <span className="text-right text-[13px] font-bold">{aside}</span> : null}
+      </h2>
+      {children}
     </section>
+  );
+}
+
+export function ColourPanel() {
+  const { settings, save } = useSettings();
+  const colour = pollColourOf(settings.colour);
+  return (
+    <Panel title="Colour" aside={POLL_COLOURS[colour].name}>
+      <div className="@container">
+        <ColourPicker value={colour} onChange={(next) => save({ colour: next })} className="grid-cols-4 @min-[394px]:grid-cols-8" />
+      </div>
+    </Panel>
+  );
+}
+
+const SHORT_LABELS = { borda: "Borda", dowdall: "Dowdall", copeland: "Copeland" } as const;
+
+export function ScoringPanel() {
+  const { settings, update } = useSettings();
+  return (
+    <Panel title="Scoring">
+      <div role="group" aria-label="Scoring method" className="grid grid-cols-3 gap-1">
+        {TALLY_MODES.map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={settings.tallyMode === m}
+            onClick={() => update({ tallyMode: m })}
+            className="min-h-11 bg-[#f1efe8] text-[15px] font-extrabold text-[#0b0b0b] aria-pressed:bg-[#0b0b0b] aria-pressed:text-sig-fg"
+          >
+            {SHORT_LABELS[m]}
+          </button>
+        ))}
+      </div>
+      <p className="mt-2 text-[13px] leading-snug">{TALLY_MODE_INFO[settings.tallyMode].summary}</p>
+    </Panel>
+  );
+}
+
+export function SettingsPanel() {
+  const { settings, update } = useSettings();
+  return (
+    <Panel title="Settings">
+      <Toggle
+        label="Show live results to voters"
+        value={settings.showLiveResults}
+        onChange={(v) => update({ showLiveResults: v })}
+      />
+      <Toggle
+        label="Allow voters to update their submitted vote"
+        value={settings.allowRevote}
+        onChange={(v) => update({ allowRevote: v })}
+      />
+      <Toggle
+        label="Allow voters to add options"
+        value={settings.allowAdd}
+        onChange={(v) => update({ allowAdd: v })}
+      />
+      <Toggle
+        label="Show voter list to voters"
+        value={settings.showUsers}
+        onChange={(v) => update({ showUsers: v })}
+      />
+      <Toggle
+        label="Let voters view other voters' rankings"
+        value={settings.showVoterVotes}
+        onChange={(v) => update({ showVoterVotes: v })}
+      />
+    </Panel>
   );
 }
 
@@ -90,30 +127,22 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-4 border-b border-border px-3 py-3 last:border-b-0 sm:min-h-12 sm:px-4">
-      <div className="min-w-0">
-        <div className="text-base font-medium">{label}</div>
-      </div>
+    <div className="flex min-h-12 items-center justify-between gap-4 border-b-2 border-[#f1efe8] py-2 text-[15px] font-semibold last:border-b-0">
+      <span className="min-w-0">{label}</span>
       <button
         type="button"
         role="switch"
         aria-checked={value}
         aria-label={label}
         onClick={() => onChange(!value)}
-        className={`relative h-7 w-12 shrink-0 cursor-pointer rounded-full transition-colors ${
-          value ? "bg-accent" : "border border-border bg-surface-2"
-        }`}
+        className={`relative h-7 w-12 shrink-0 transition-colors ${value ? "bg-[#0b0b0b]" : "bg-[#f1efe8]"}`}
       >
         <span
           aria-hidden="true"
-          className={`absolute top-0.5 left-0.5 flex size-6 items-center justify-center rounded-full bg-surface shadow-card transition-transform ${
-            value ? "translate-x-5" : "translate-x-0"
+          className={`absolute top-1 left-1 size-5 transition-transform duration-200 ease-(--ease-spring) ${
+            value ? "translate-x-5 bg-sig-fg" : "translate-x-0 bg-[#0b0b0b]/40"
           }`}
-        >
-          {value ? (
-            <Check className="size-3 text-accent" strokeWidth={2.5} aria-hidden />
-          ) : null}
-        </span>
+        />
       </button>
     </div>
   );

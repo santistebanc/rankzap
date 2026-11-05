@@ -7,11 +7,13 @@ import { adaptiveSize } from "../lib/adaptiveSize";
 interface AddOptionProps {
   addedBy: string;
   onAddOption?: (texts: string[]) => Promise<void> | void;
+  /** `row`: an outlined row under the ballot. `field`: an input and an Add button, for admin panels. */
+  variant?: "row" | "field";
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
+export function AddOption({ addedBy, onAddOption, variant = "row" }: AddOptionProps) {
   const { client } = useRoom();
   const [text, setText] = useState("");
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
@@ -57,6 +59,26 @@ export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
     setBatchMessage(null);
     setBusy(false);
   };
+
+  if (variant === "field") {
+    return (
+      <form onSubmit={submit} className="mt-1.5 grid grid-cols-[1fr_auto] gap-1">
+        <input
+          value={text}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
+          onPaste={onPaste}
+          maxLength={OPTION_MAX}
+          placeholder={batchMessage ?? "Add an option, or paste a list (one per line)"}
+          aria-label="Add an option"
+          disabled={busy}
+          className="min-h-[52px] min-w-0 bg-[#f1efe8] px-4 text-base font-semibold text-[#0b0b0b] outline-none placeholder:text-[#0b0b0b]/55 focus:shadow-[inset_0_0_0_3px_#0b0b0b] disabled:opacity-50"
+        />
+        <button type="submit" disabled={busy || !text.trim()} className="display min-h-[52px] bg-[#0b0b0b] px-5 text-xl text-sig-fg disabled:opacity-40">
+          Add
+        </button>
+      </form>
+    );
+  }
 
   return (
     <form
