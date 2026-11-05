@@ -31,8 +31,9 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 
 ```bash
 npm install
-cp .env.example .env       # already filled with the public room-server defaults
-npm run dev
+cp .env.example .env
+npm run dev:server        # terminal 1: local room server on port 1999
+npm run dev               # terminal 2: Vite frontend
 ```
 
 Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will skip the Rolldown native bindings and `npm run dev` may fail.
@@ -40,11 +41,13 @@ Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will
 `.env`:
 
 ```
-VITE_HOST=room-server.santistebanc.partykit.dev
+VITE_HOST=127.0.0.1:1999
 VITE_API_KEY=voting-app
 ```
 
-Both vars must also be set as GitHub repository **secrets** (or **variables**) so the deploy workflow can inject them at build time.
+Local polls are stored in `.partykit/` and survive server restarts. They are separate from hosted polls. `.env.local`, if present, overrides `.env`.
+
+For a hosted build, set `VITE_HOST` to a reachable deployed room-server hostname and `VITE_API_KEY` to its app key. Both must be set as GitHub repository **secrets** (or **variables**) so the deploy workflow can inject them at build time. The former default `room-server.santistebanc.partykit.dev` no longer resolves; local development uses the included server instead.
 
 ```bash
 npm run build      # → dist/
