@@ -1,4 +1,4 @@
-import { Check, Circle, Pencil, PenLine } from "lucide-react";
+import { Check } from "lucide-react";
 import { memo } from "react";
 import type { UserRecord } from "../lib/types";
 import { adaptiveSize } from "../lib/adaptiveSize";
@@ -15,78 +15,52 @@ interface UserPillProps {
   user: UserRecord;
   state: PillState;
   isYou?: boolean;
-  variant?: "pill" | "tab";
   showIgnoredBadge?: boolean;
 }
 
-const STATE_CONFIG: Record<
-  PillState,
-  { pillClassName: string; tabClassName: string; icon: React.ReactNode; label: string }
-> = {
-  changing: {
-    pillClassName: "bg-surface text-text border-transparent",
-    tabClassName: "bg-surface text-text",
-    icon: <Pencil className="size-3 animate-pulse" aria-hidden />,
-    label: "Changing vote",
-  },
-  voting: {
-    pillClassName: "bg-surface text-text border-transparent",
-    tabClassName: "bg-surface text-text",
-    icon: <PenLine className="size-3" aria-hidden />,
-    label: "Voting for first time",
-  },
-  voted: {
-    pillClassName: "bg-[var(--text)] text-white border-transparent",
-    tabClassName: "bg-[var(--text)] text-white",
-    icon: <Check className="size-3" aria-hidden />,
-    label: "Voted",
-  },
-  online: {
-    pillClassName: "bg-transparent text-muted border-[var(--text)]/28",
-    tabClassName: "bg-transparent text-muted",
-    icon: <Circle className="size-3" aria-hidden />,
-    label: "Not voted yet (online)",
-  },
+/**
+ * Square status tags. Voted is black with the poll colour; ranking and
+ * changing a vote blink a small square; offline is outlined and faded.
+ */
+const STATE_CONFIG: Record<PillState, { className: string; marker: "blink" | "check" | null; label: string }> = {
+  changing: { className: "bg-low text-low-ink", marker: "blink", label: "Changing vote" },
+  voting: { className: "bg-step text-step-ink", marker: "blink", label: "Ranking now" },
+  voted: { className: "bg-[#0b0b0b] text-sig-fg", marker: "check", label: "Voted" },
+  online: { className: "bg-step text-step-ink", marker: null, label: "Not voted yet (online)" },
   offline: {
-    pillClassName: "bg-transparent text-muted border-border opacity-60",
-    tabClassName: "bg-transparent text-muted opacity-60",
-    icon: <Circle className="size-3" aria-hidden />,
+    className: "bg-transparent text-ink opacity-55 shadow-[inset_0_0_0_2px_currentColor]",
+    marker: null,
     label: "Not voted yet (offline)",
   },
   "voted-offline": {
-    pillClassName: "bg-transparent text-muted border-border opacity-60",
-    tabClassName: "bg-transparent text-muted opacity-60",
-    icon: <Check className="size-3" aria-hidden />,
+    className: "bg-transparent text-ink opacity-55 shadow-[inset_0_0_0_2px_currentColor]",
+    marker: "check",
     label: "Voted (offline)",
   },
 };
 
-function UserPillRaw({
-  user,
-  state,
-  isYou,
-  variant = "pill",
-  showIgnoredBadge = false,
-}: UserPillProps) {
+function UserPillRaw({ user, state, isYou, showIgnoredBadge = false }: UserPillProps) {
   const cfg = STATE_CONFIG[state];
-  const isTab = variant === "tab";
-  const shape = isTab
-    ? "inline-flex min-h-11 items-center gap-2 px-3 py-2 text-sm font-semibold whitespace-nowrap"
-    : "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium";
-  const tone = isTab ? cfg.tabClassName : cfg.pillClassName;
+  const who = `${user.name}${isYou ? " (you)" : ""}`;
   return (
     <span
-      className={`${shape} ${tone}`}
-      title={`${user.name}${isYou ? " (you)" : ""}, ${cfg.label}`}
-      aria-label={`${user.name}${isYou ? " (you)" : ""}, ${cfg.label}`}
+      className={`inline-flex min-h-8 items-center gap-1.5 px-2.5 py-1.5 text-[13px] leading-none font-extrabold tracking-[0.02em] ${cfg.className} ${
+        isYou ? "outline-[3px] -outline-offset-[3px] outline-[#0b0b0b]" : ""
+      }`}
+      title={`${who}, ${cfg.label}`}
+      aria-label={`${who}, ${cfg.label}`}
     >
-      <span aria-hidden="true" className="flex items-center">
-        {cfg.icon}
+      {cfg.marker === "blink" ? (
+        <span aria-hidden="true" className="size-2 animate-blink bg-current" />
+      ) : cfg.marker === "check" ? (
+        <Check aria-hidden="true" className="size-3.5" strokeWidth={3} />
+      ) : null}
+      <span style={{ fontSize: adaptiveSize(user.name, 11, 13, 10, 30) }} className="max-w-40 truncate">
+        {user.name}
       </span>
-      <span style={{ fontSize: adaptiveSize(user.name, 11, 14, 10, 30) }} className="max-w-40 truncate">{user.name}</span>
-      {isYou ? <span className="text-[0.68rem] opacity-70">you</span> : null}
+      {isYou ? <span className="text-[0.68rem] font-semibold opacity-70">you</span> : null}
       {showIgnoredBadge && user.ignored ? (
-        <span className="rounded-full border border-danger/35 bg-danger-soft px-1.5 py-0.5 text-[0.64rem] font-semibold tracking-wide text-danger">
+        <span className="bg-danger px-1.5 py-0.5 text-[0.64rem] font-bold tracking-wide text-white uppercase">
           Ignored
         </span>
       ) : null}
@@ -102,8 +76,6 @@ export const UserPill = memo(UserPillRaw, (a, b) => {
     Boolean(a.user.ignored) === Boolean(b.user.ignored) &&
     a.state === b.state &&
     a.isYou === b.isYou &&
-    a.variant === b.variant &&
     a.showIgnoredBadge === b.showIgnoredBadge
   );
 });
-

@@ -19,9 +19,9 @@
  * Bump SCHEMA_VERSION on any breaking change.
  */
 import type { JsonSchema, PresenceInfo } from "room-server/types";
-import type { Meta, Option, Settings, UserRecord, Vote } from "./types";
+import { POLL_COLOUR_IDS, type Meta, type Option, type Settings, type UserRecord, type Vote } from "./types";
 
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 const metaSchema: JsonSchema = {
   type: "object",
@@ -53,6 +53,8 @@ const settingsSchema: JsonSchema = {
     allowAdd: { type: "boolean" },
     showUsers: { type: "boolean" },
     showVoterVotes: { type: "boolean" },
+    /** Optional so rooms created before poll colours stay valid. */
+    colour: { type: "string", enum: POLL_COLOUR_IDS },
   },
 };
 

@@ -13,6 +13,9 @@ import {
   DEFAULT_META,
   DEFAULT_SETTINGS,
   HOME_TIMEOUT_MS,
+  POLL_COLOURS,
+  pollColourOf,
+  type PollColour,
   ROOM_TTL_SEC,
 } from "../lib/types";
 import {
@@ -29,6 +32,7 @@ import { RankzapLogo } from "../components/RankzapLogo";
 interface RecentPollView extends RecentPollEntry {
   title: string;
   optionsPreview: string[];
+  colour: PollColour;
 }
 
 let recentPollsSessionCache: { key: string; polls: RecentPollView[] } | null = null;
@@ -85,7 +89,7 @@ async function checkRoomAvailable(roomId: string): Promise<boolean> {
 
 async function fetchRecentPollInfo(
   roomId: string,
-): Promise<{ title: string; optionsPreview: string[] } | null> {
+): Promise<{ title: string; optionsPreview: string[]; colour: PollColour } | null> {
   const c = newRoomClient(roomId);
   try {
     await c.ready(5_000);
@@ -134,6 +138,7 @@ async function fetchRecentPollInfo(
           allowAdd?: unknown;
           showUsers?: unknown;
           showVoterVotes?: unknown;
+          colour?: unknown;
         }
       | null;
 
@@ -148,6 +153,7 @@ async function fetchRecentPollInfo(
       settingsValue.allowAdd === true &&
       settingsValue.showUsers === true &&
       settingsValue.showVoterVotes === false &&
+      pollColourOf(settingsValue.colour) === "yellow" &&
       optionEntries.length === 0 &&
       voteEntries.length === 0 &&
       userEntries.length === 0;
@@ -179,7 +185,7 @@ async function fetchRecentPollInfo(
       .map((o) => (typeof o.text === "string" ? o.text.trim() : ""))
       .filter((x) => x.length > 0);
 
-    return { title, optionsPreview };
+    return { title, optionsPreview, colour: pollColourOf(settingsValue?.colour) };
   } catch {
     return null;
   } finally {
@@ -304,6 +310,7 @@ export function Home() {
           ...x.entry,
           title: x.info!.title,
           optionsPreview: x.info!.optionsPreview,
+          colour: x.info!.colour,
         }));
       setRecentPollsState(valid);
       if (valid.length !== stored.length) {
@@ -544,6 +551,10 @@ export function Home() {
                         key={p.roomId}
                         style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 0", borderTop: i === 0 ? "2px solid var(--text)" : "1px solid color-mix(in oklab, var(--text) 16%, transparent)" }}
                       >
+                        <span
+                          aria-hidden
+                          style={{ width: 14, height: 14, flexShrink: 0, background: POLL_COLOURS[p.colour ?? "yellow"].sig, boxShadow: "inset 0 0 0 1.5px var(--text)" }}
+                        />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "1rem", letterSpacing: "-0.01em" }}>
                             {p.title || p.roomId}

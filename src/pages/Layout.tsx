@@ -14,10 +14,12 @@ import {
   DEFAULT_META,
   DEFAULT_SETTINGS,
   clampOption,
+  pollColourOf,
   type Option,
   type UserMode,
 } from "../lib/types";
 import { adaptiveSize } from "../lib/adaptiveSize";
+import { usePollColour } from "../lib/pollColour";
 import { nanoid } from "nanoid";
 import { fallbackVoterName, getOrCreateVoterIdentity } from "../lib/identity";
 import {
@@ -88,6 +90,7 @@ function LayoutContent({ roomId, identity, isAdmin }: LayoutContentProps) {
     [storedSettings],
   );
   const meta = storedMeta ?? DEFAULT_META();
+  usePollColour(pollColourOf(settings.colour));
 
   const pollHeading = useMemo(() => {
     const fromSettings = clampTitle(settings.ballotTitle ?? "").trim();
