@@ -4,10 +4,12 @@
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-01",
   // The built app. /api/* goes to the Worker first; any other unknown path
-  // gets index.html so the React router can handle it.
+  // gets index.html so the React router can handle it. /parties/* is where
+  // the old PartyKit client connected: the Worker turns those sockets away
+  // (passing a WebSocket to the assets handler crashes the local dev server).
   "assets": {
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"],
+    "run_worker_first": ["/api/*", "/parties/*"],
     "binding": "ASSETS"
   },
   "durable_objects": {
