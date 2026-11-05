@@ -7,47 +7,33 @@ interface VoterRankingPanelProps {
   optionById: Map<string, Option>;
 }
 
-/** Read-only list of one voter's ranked options — matches LiveOptions results row styling. */
-export function VoterRankingPanel({
-  voterName: _voterName,
-  ranking,
-  optionById,
-}: VoterRankingPanelProps) {
-  const hasRanking = ranking && ranking.length > 0;
-  const rows = hasRanking ? ranking : [];
+/** One voter's ranking as a compact, read-only list of white rows. */
+export function VoterRankingPanel({ voterName, ranking, optionById }: VoterRankingPanelProps) {
+  if (!ranking || ranking.length === 0) {
+    return <p className="text-sm font-semibold">No vote submitted yet.</p>;
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      {!hasRanking ? (
-        <p className="text-sm text-muted">No vote submitted yet.</p>
-      ) : (
-        <ul className="flex flex-col border-t border-border" aria-label="Voter's ranked options">
-          {rows.map((id, index) => {
-            const text = optionById.get(id)?.text ?? "Removed option";
-            const rank = index + 1;
-            return (
-              <li
-                key={`${id}-${index}`}
-                className="group relative flex items-center gap-2 overflow-hidden border-b border-border px-1 py-3"
-                aria-label={`${text}, rank ${rank}`}
-              >
-                <div className="relative flex w-full min-w-0 items-center gap-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border text-xs font-semibold tabular-nums text-text">
-                    {rank}
-                  </span>
-                  <span
-                    style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80) }}
-                    className="min-w-0 flex-1 leading-5 wrap-break-word transition-[font-size] duration-150"
-                  >
-                    {text}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
+    <ol className="grid gap-[3px]" aria-label={`${voterName}'s ranking`}>
+      {ranking.map((id, index) => {
+        const text = optionById.get(id)?.text ?? "Removed option";
+        return (
+          <li
+            key={`${id}-${index}`}
+            className="grid grid-cols-[34px_1fr] items-center bg-step py-2 pr-2.5 text-step-ink"
+          >
+            <span className="display text-center text-xl tabular-nums" aria-hidden="true">
+              {index + 1}
+            </span>
+            <span
+              style={{ fontSize: adaptiveSize(text, 13, 15, 20, 80), fontStretch: "75%" }}
+              className="min-w-0 leading-none font-extrabold uppercase wrap-break-word"
+            >
+              {text}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
-
