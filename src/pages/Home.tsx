@@ -1,22 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
-import { customAlphabet } from "nanoid";
-
-const roomIdAlphabet = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4);
-import {
-  createRoomClient,
-  isRoomServerConfigured,
-} from "../lib/roomClient";
-import {
-  DEFAULT_META,
-  DEFAULT_SETTINGS,
-  HOME_TIMEOUT_MS,
-  POLL_COLOURS,
-  pollColourOf,
-  type PollColour,
-  ROOM_TTL_SEC,
-} from "../lib/types";
+import { createPoll, deletePoll as deletePollRequest, fetchPollSummary } from "../lib/pollApi";
+import { HOME_TIMEOUT_MS, POLL_COLOURS, pollColourOf, type PollColour } from "../lib/types";
 import {
   addRecentPoll,
   clearPollLocalStorage,
@@ -38,10 +24,6 @@ interface RecentPollView extends RecentPollEntry {
 
 let recentPollsSessionCache: { key: string; polls: RecentPollView[] } | null = null;
 
-const newRoomClient = (roomId: string) => createRoomClient(roomId);
-
-const SET_OPTS = { ttl: ROOM_TTL_SEC } as const;
-const HOME_UNAVAILABLE_MESSAGE = "Polls are unavailable right now. Please try again later.";
 
 function recentPollStorageKey(entries: RecentPollEntry[]): string {
   return entries.map((entry) => `${entry.roomId}:${entry.savedAt}`).join("|");
@@ -73,192 +55,36 @@ function formatLastOpened(ts: number): string {
 }
 
 async function checkRoomAvailable(roomId: string): Promise<boolean> {
-  const c = newRoomClient(roomId);
   try {
-    await c.ready(5_000);
-    const meta = await c.get("meta");
-    return meta.value !== null && meta.value !== undefined;
+    return (await fetchPollSummary(roomId)) !== null;
   } catch {
     return false;
-  } finally {
-    try {
-      c.flushAndDisconnect(1_000);
-    } catch {
-      /* ignore */
-    }
   }
 }
 
+/** Null when the poll is gone. If the server can't be reached, keep the entry with what we know. */
 async function fetchRecentPollInfo(
   roomId: string,
 ): Promise<{ title: string; optionsPreview: string[]; colour: PollColour } | null> {
-  const c = newRoomClient(roomId);
   try {
-    await c.ready(5_000);
-    const meta = await c.get("meta");
-    if (!meta.value) return null;
-    const settings = await c.get("settings");
-    const optionsRes = await c.subscribeWithSnapshotPrefix(
-      "options/",
-      () => {
-        // one-shot snapshot read
-      },
-      { includeSelf: false },
-    );
-    const usersRes = await c.subscribeWithSnapshotPrefix(
-      "users/",
-      () => {
-        // one-shot snapshot read
-      },
-      { includeSelf: false },
-    );
-    const votesRes = await c.subscribeWithSnapshotPrefix(
-      "votes/",
-      () => {
-        // one-shot snapshot read
-      },
-      { includeSelf: false },
-    );
-
-    const optionEntries = Object.values(optionsRes.initial.entries) as Array<{
-      text?: string;
-      addedAt?: number;
-    }>;
-    const userEntries = Object.values(usersRes.initial.entries);
-    const voteEntries = Object.values(votesRes.initial.entries);
-
-    optionsRes.unsubscribe();
-    usersRes.unsubscribe();
-    votesRes.unsubscribe();
-
-    const settingsValue = settings.value as
-      | {
-          tallyMode?: unknown;
-          ballotTitle?: unknown;
-          showLiveResults?: unknown;
-          allowRevote?: unknown;
-          allowAdd?: unknown;
-          showUsers?: unknown;
-          showVoterVotes?: unknown;
-          colour?: unknown;
-        }
-      | null;
-
-    const isDefaultUntouched =
-      meta.value.state === "open" &&
-      (meta.value.title ?? "") === "" &&
-      settingsValue !== null &&
-      settingsValue.tallyMode === "borda" &&
-      (settingsValue.ballotTitle ?? "") === "" &&
-      settingsValue.showLiveResults === true &&
-      settingsValue.allowRevote === true &&
-      settingsValue.allowAdd === true &&
-      settingsValue.showUsers === true &&
-      settingsValue.showVoterVotes === false &&
-      pollColourOf(settingsValue.colour) === "yellow" &&
-      optionEntries.length === 0 &&
-      voteEntries.length === 0 &&
-      userEntries.length === 0;
-
-    if (isDefaultUntouched) {
-      // Auto-prune stale empty polls: never configured and never joined.
-      await Promise.allSettled([
-        c.deletePrefix("options/"),
-        c.deletePrefix("votes/"),
-        c.deletePrefix("users/"),
-        c.delete("settings"),
-        c.delete("meta"),
-      ]);
-      return null;
-    }
-
-    const fromSettings =
-      settingsValue &&
-      typeof settingsValue === "object" &&
-      typeof settingsValue.ballotTitle === "string"
-        ? settingsValue.ballotTitle.trim()
-        : "";
-    const fromMeta = typeof meta.value.title === "string" ? meta.value.title.trim() : "";
-    const titleRaw = fromSettings || fromMeta;
-    const title = titleRaw;
-
-    const optionsPreview = optionEntries
-      .sort((a, b) => (a.addedAt ?? 0) - (b.addedAt ?? 0))
-      .map((o) => (typeof o.text === "string" ? o.text.trim() : ""))
-      .filter((x) => x.length > 0);
-
-    return { title, optionsPreview, colour: pollColourOf(settingsValue?.colour) };
+    const summary = await fetchPollSummary(roomId);
+    if (!summary) return null;
+    return { title: summary.title, optionsPreview: summary.optionsPreview, colour: pollColourOf(summary.colour) };
   } catch {
-    return null;
-  } finally {
-    try {
-      c.flushAndDisconnect(1_000);
-    } catch {
-      /* ignore */
-    }
+    return { title: "", optionsPreview: [], colour: "yellow" };
   }
 }
 
 async function deletePollOnServer(roomId: string): Promise<{ ok: true } | { ok: false; message: string }> {
-  const c = newRoomClient(roomId);
   try {
-    await c.ready(5_000);
-    const meta = await c.get("meta");
-    if (!meta.value) {
-      return { ok: true };
-    }
-    await Promise.allSettled([
-      c.deletePrefix("options/"),
-      c.deletePrefix("votes/"),
-      c.deletePrefix("users/"),
-      c.delete("settings"),
-      c.delete("meta"),
-    ]);
+    await deletePollRequest(roomId);
     return { ok: true };
   } catch (e) {
-    return {
-      ok: false,
-      message: e instanceof Error ? e.message : "Couldn't delete this poll.",
-    };
-  } finally {
-    try {
-      c.flushAndDisconnect(1_000);
-    } catch {
-      /* ignore */
-    }
+    return { ok: false, message: e instanceof Error ? e.message : "Couldn't delete this poll." };
   }
 }
 
-async function createRoom(colour: PollColour): Promise<string> {
-  for (let attempt = 0; attempt < 22; attempt++) {
-    const candidate = roomIdAlphabet();
-    const c = newRoomClient(candidate);
-    let reserved = false;
-    try {
-      await c.ready(5_000);
-      reserved = await c.reserve("meta", DEFAULT_META(), {
-        ttl: ROOM_TTL_SEC,
-      });
-      if (reserved) {
-        await c.set("settings", { ...DEFAULT_SETTINGS(), colour }, SET_OPTS);
-        return candidate;
-      }
-    } catch (e) {
-      if (reserved) {
-        await c.delete("meta").catch(() => {});
-        throw e;
-      }
-      /* try next */
-    } finally {
-      try {
-        c.flushAndDisconnect(1_000);
-      } catch {
-        /* ignore */
-      }
-    }
-  }
-  throw new Error("Couldn't reserve a room id after 22 attempts.");
-}
+const createRoom = createPoll;
 
 export function Home() {
   const navigate = useNavigate();
@@ -287,12 +113,6 @@ export function Home() {
     document.title = "Rankzap Â· Rank it together";
     setError(null);
 
-    if (!isRoomServerConfigured()) {
-      setRecentPollsState([]);
-      setLoadingRecents(false);
-      setError(HOME_UNAVAILABLE_MESSAGE);
-      return;
-    }
 
     void (async () => {
       const stored = getRecentPolls();
@@ -343,10 +163,6 @@ export function Home() {
 
   const openExisting = async (roomId: string) => {
     if (busy) return;
-    if (!isRoomServerConfigured()) {
-      setError(HOME_UNAVAILABLE_MESSAGE);
-      return;
-    }
     setOpeningRoomId(roomId);
     setError(null);
     let timedOut = false;
@@ -384,10 +200,6 @@ export function Home() {
 
   const deletePoll = async (roomId: string) => {
     if (busy) return;
-    if (!isRoomServerConfigured()) {
-      setError(HOME_UNAVAILABLE_MESSAGE);
-      return;
-    }
     setDeletingRoomId(roomId);
     setError(null);
     let timedOut = false;
@@ -430,10 +242,6 @@ export function Home() {
 
   const startPoll = async () => {
     if (busy) return;
-    if (!isRoomServerConfigured()) {
-      setError(HOME_UNAVAILABLE_MESSAGE);
-      return;
-    }
     setCreatingPoll(true);
     setError(null);
     let timedOut = false;
@@ -468,10 +276,6 @@ export function Home() {
     const code = joinCode.trim().toUpperCase();
     if (!/^[A-Z0-9]{4}$/.test(code)) {
       setJoinError("Enter the four-letter or number code from your host.");
-      return;
-    }
-    if (!isRoomServerConfigured()) {
-      setJoinError(HOME_UNAVAILABLE_MESSAGE);
       return;
     }
     setJoiningPoll(true);

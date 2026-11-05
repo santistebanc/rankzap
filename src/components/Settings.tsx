@@ -1,6 +1,6 @@
-import { SET_OPTS, useRoom, useRoomValue } from "../lib/room";
+import { usePoll } from "../lib/poll";
+import { usePollData } from "../pages/poll/shared";
 import {
-  DEFAULT_SETTINGS,
   pollColourOf,
   POLL_COLOURS,
   TALLY_MODE_INFO,
@@ -11,11 +11,10 @@ import { ColourPicker } from "./ColourPicker";
 
 /** The poll's settings plus a writer that merges a patch into them. */
 function useSettings() {
-  const { client } = useRoom();
-  const { value: stored } = useRoomValue("settings");
-  const settings: SettingsT = { ...DEFAULT_SETTINGS(), ...(stored ?? {}) };
+  const { settings } = usePollData();
+  const { send } = usePoll();
   const save = (patch: Partial<SettingsT>) =>
-    client.set("settings", { ...settings, ...patch }, SET_OPTS).catch((e) => {
+    send({ type: "updateSettings", patch }).catch((e) => {
       console.warn("[rankzap] failed to update settings:", e);
       throw e;
     });

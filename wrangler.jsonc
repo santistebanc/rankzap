@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rankzap",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  // The built app. /api/* goes to the Worker first; any other unknown path
+  // gets index.html so the React router can handle it.
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "POLLS", "class_name": "PollRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PollRoom"] }],
+  "observability": { "enabled": true }
+}

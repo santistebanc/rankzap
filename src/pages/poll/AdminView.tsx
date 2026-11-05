@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SET_OPTS, useRoom } from "../../lib/room";
+import { usePoll, useSendAction } from "../../lib/poll";
 import { clampTitle, TALLY_MODE_LABELS, type Settings } from "../../lib/types";
 import { adaptiveSize } from "../../lib/adaptiveSize";
 import { SharePanel, ShareScreen } from "../../components/ShareLink";
@@ -20,7 +20,7 @@ type Confirming = "close" | "reset" | "deleteVote" | null;
 export function AdminView({ poll }: { poll: PollData }) {
   const { roomId, meta, settings, options, votedUserIds, onlineUserIds } = poll;
   const navigate = useNavigate();
-  const { client } = useRoom();
+  const sendAction = useSendAction();
 
   const [selectedVoterId, setSelectedVoterId] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -31,21 +31,12 @@ export function AdminView({ poll }: { poll: PollData }) {
   const visibleVoterCount = new Set([...onlineUserIds, ...votedUserIds]).size;
   const closeShare = useCallback(() => setIsShareOpen(false), []);
 
-  const togglePollState = useCallback(async () => {
-    try {
-      await client.set("meta", { ...meta, state: closed ? "open" : "closed" }, SET_OPTS);
-    } catch (e) {
-      console.warn("[rankzap] failed to toggle poll state:", e);
-    }
-  }, [client, meta, closed]);
+  const togglePollState = useCallback(
+    () => sendAction({ type: "setState", state: closed ? "open" : "closed" }),
+    [sendAction, closed],
+  );
 
-  const resetVotes = useCallback(async () => {
-    try {
-      await client.deletePrefix("votes/");
-    } catch (e) {
-      console.warn("[rankzap] failed to reset votes:", e);
-    }
-  }, [client]);
+  const resetVotes = useCallback(() => sendAction({ type: "resetVotes" }), [sendAction]);
 
   const toggleVoterSelection = useCallback((userId: string) => {
     setSelectedVoterId((prev) => (prev === userId ? null : userId));
@@ -105,7 +96,7 @@ export function AdminView({ poll }: { poll: PollData }) {
                 highlightWinner={closed}
               />
             )}
-            <AddOption addedBy="admin" variant="field" />
+            <AddOption variant="field" />
           </Panel>
 
           <Panel
@@ -210,7 +201,7 @@ function PollActions({
 
 /** The question, edited in place. Saved on blur or Enter; Escape puts it back. */
 function PollTitle({ settings }: { settings: Settings }) {
-  const { client } = useRoom();
+  const { send } = usePoll();
   const committed = clampTitle(settings.ballotTitle ?? "");
   const ref = useRef<HTMLTextAreaElement>(null);
   /** While a title write is in flight, don't sync the draft from a stale `committed`. */
@@ -258,7 +249,7 @@ function PollTitle({ settings }: { settings: Settings }) {
     setDraft(next);
     if (next === committed) return;
     pendingRef.current = next;
-    void client.set("settings", { ...settings, ballotTitle: next }, SET_OPTS).catch((e) => {
+    send({ type: "updateSettings", patch: { ballotTitle: next } }).catch((e) => {
       console.warn("[rankzap] failed to update poll title:", e);
       pendingRef.current = null;
     });
@@ -313,9 +304,9 @@ function VoterDetail({
   setConfirmingDelete: (on: boolean) => void;
   onClose: () => void;
 }) {
-  const { client } = useRoom();
-  const vote = poll.votesMap.get(`votes/${voterId}`);
-  const user = poll.usersMap.get(`users/${voterId}`);
+  const sendAction = useSendAction();
+  const vote = poll.votesMap.get(voterId);
+  const user = poll.usersMap.get(voterId);
   const name = user?.name || "Voter";
   const hasVote = Boolean(vote?.ranking?.length);
   const isIgnored = Boolean(user?.ignored || vote?.ignored);
@@ -323,13 +314,11 @@ function VoterDetail({
   const toggleIgnored = () => {
     if (!user) return;
     const next = !isIgnored;
-    const writes: Promise<unknown>[] = [client.set(`users/${voterId}`, { ...user, ignored: next }, SET_OPTS)];
-    if (vote) writes.push(client.set(`votes/${voterId}`, { ...vote, ignored: next }, SET_OPTS));
-    void Promise.all(writes).catch((e) => console.warn("[rankzap] failed to toggle ignored:", e));
+    sendAction({ type: "setIgnored", userId: voterId, ignored: next });
   };
   const deleteVote = () => {
     setConfirmingDelete(false);
-    void client.delete(`votes/${voterId}`).catch((e) => console.warn("[rankzap] failed to delete voter's vote:", e));
+    sendAction({ type: "deleteVote", userId: voterId });
   };
 
   const link = "min-h-11 font-bold underline underline-offset-4 hover:no-underline";

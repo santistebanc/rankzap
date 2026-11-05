@@ -1,9 +1,8 @@
-import { useEffect, useRef } from "react";
+import { createContext, useContext, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import type { PresenceInfo } from "room-server/types";
 import type { Meta, Option, Settings, UserRecord, Vote } from "../../lib/types";
 
-/** Room data both poll views read. Loaded once in Layout. */
+/** The poll as both views read it. Built from the live snapshot in Layout. */
 export interface PollData {
   roomId: string;
   meta: Meta;
@@ -12,12 +11,21 @@ export interface PollData {
   /** Options in the order they were added. */
   options: Option[];
   optionById: Map<string, Option>;
-  optionsMap: Map<string, Option>;
+  /** By user id. */
   votesMap: Map<string, Vote>;
+  /** By user id. */
   usersMap: Map<string, UserRecord>;
-  presenceMap: Map<string, PresenceInfo>;
   onlineUserIds: Set<string>;
   votedUserIds: Set<string>;
+}
+
+export const PollDataContext = createContext<PollData | null>(null);
+
+/** The current poll, for components deep inside a poll page. */
+export function usePollData(): PollData {
+  const data = useContext(PollDataContext);
+  if (!data) throw new Error("usePollData must be used inside a poll page");
+  return data;
 }
 
 export function PoweredByFooter({

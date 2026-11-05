@@ -1,9 +1,0 @@
-{
-  "$schema": "https://www.partykit.io/schema.json",
-  "name": "rankzap-local",
-  "main": "node_modules/room-server/src/server.ts",
-  "compatibilityDate": "2026-04-28",
-  "parties": {
-    "room": "node_modules/room-server/src/server.ts"
-  }
-}
