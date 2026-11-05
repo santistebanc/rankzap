@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { customAlphabet } from "nanoid";
@@ -7,7 +7,6 @@ const roomIdAlphabet = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 4)
 import {
   createRoomClient,
   isRoomServerConfigured,
-  ROOM_CONFIG_ERROR,
 } from "../lib/roomClient";
 import {
   DEFAULT_META,
@@ -27,7 +26,8 @@ import {
   setRecentPolls,
   type RecentPollEntry,
 } from "../lib/storage";
-import { RankzapLogo } from "../components/RankzapLogo";
+import { ColourPicker } from "../components/ColourPicker";
+import { usePollColour } from "../lib/pollColour";
 
 interface RecentPollView extends RecentPollEntry {
   title: string;
@@ -40,6 +40,7 @@ let recentPollsSessionCache: { key: string; polls: RecentPollView[] } | null = n
 const newRoomClient = (roomId: string) => createRoomClient(roomId);
 
 const SET_OPTS = { ttl: ROOM_TTL_SEC } as const;
+const HOME_UNAVAILABLE_MESSAGE = "Polls are unavailable right now. Please try again later.";
 
 function recentPollStorageKey(entries: RecentPollEntry[]): string {
   return entries.map((entry) => `${entry.roomId}:${entry.savedAt}`).join("|");
@@ -227,20 +228,25 @@ async function deletePollOnServer(roomId: string): Promise<{ ok: true } | { ok: 
   }
 }
 
-async function createRoom(): Promise<string> {
+async function createRoom(colour: PollColour): Promise<string> {
   for (let attempt = 0; attempt < 22; attempt++) {
     const candidate = roomIdAlphabet();
     const c = newRoomClient(candidate);
+    let reserved = false;
     try {
       await c.ready(5_000);
-      const reserved = await c.reserve("meta", DEFAULT_META(), {
+      reserved = await c.reserve("meta", DEFAULT_META(), {
         ttl: ROOM_TTL_SEC,
       });
       if (reserved) {
-        await c.set("settings", DEFAULT_SETTINGS(), SET_OPTS).catch(() => {});
+        await c.set("settings", { ...DEFAULT_SETTINGS(), colour }, SET_OPTS);
         return candidate;
       }
-    } catch {
+    } catch (e) {
+      if (reserved) {
+        await c.delete("meta").catch(() => {});
+        throw e;
+      }
       /* try next */
     } finally {
       try {
@@ -255,6 +261,7 @@ async function createRoom(): Promise<string> {
 
 export function Home() {
   const navigate = useNavigate();
+  usePollColour("yellow");
   const aliveRef = useRef(true);
   const initialCachedRecentPolls = getCachedRecentPolls();
   const initialStoredRecentPollCountRef = useRef(getRecentPolls().length);
@@ -265,6 +272,10 @@ export function Home() {
     () => initialCachedRecentPolls === null,
   );
   const [creatingPoll, setCreatingPoll] = useState(false);
+  const [colour, setColour] = useState<PollColour>("yellow");
+  const [joinCode, setJoinCode] = useState("");
+  const [joiningPoll, setJoiningPoll] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [openingRoomId, setOpeningRoomId] = useState<string | null>(null);
   const [deletingRoomId, setDeletingRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -272,12 +283,13 @@ export function Home() {
 
   useEffect(() => {
     aliveRef.current = true;
+    document.title = "Rankzap Â· Rank it together";
     setError(null);
 
     if (!isRoomServerConfigured()) {
       setRecentPollsState([]);
       setLoadingRecents(false);
-      setError(ROOM_CONFIG_ERROR);
+      setError(HOME_UNAVAILABLE_MESSAGE);
       return;
     }
 
@@ -329,8 +341,9 @@ export function Home() {
   }, []);
 
   const openExisting = async (roomId: string) => {
+    if (busy) return;
     if (!isRoomServerConfigured()) {
-      setError(ROOM_CONFIG_ERROR);
+      setError(HOME_UNAVAILABLE_MESSAGE);
       return;
     }
     setOpeningRoomId(roomId);
@@ -345,7 +358,7 @@ export function Home() {
     }, HOME_TIMEOUT_MS);
     try {
       const ok = await checkRoomAvailable(roomId);
-      if (timedOut) return;
+      if (timedOut || !aliveRef.current) return;
       if (!ok) {
         setOpeningRoomId(null);
         const next = recentPolls.filter((x) => x.roomId !== roomId);
@@ -369,8 +382,9 @@ export function Home() {
   };
 
   const deletePoll = async (roomId: string) => {
+    if (busy) return;
     if (!isRoomServerConfigured()) {
-      setError(ROOM_CONFIG_ERROR);
+      setError(HOME_UNAVAILABLE_MESSAGE);
       return;
     }
     setDeletingRoomId(roomId);
@@ -386,7 +400,7 @@ export function Home() {
 
     try {
       const result = await deletePollOnServer(roomId);
-      if (timedOut) return;
+      if (timedOut || !aliveRef.current) return;
       if (!result.ok) {
         setError(result.message);
         return;
@@ -414,8 +428,9 @@ export function Home() {
   };
 
   const startPoll = async () => {
+    if (busy) return;
     if (!isRoomServerConfigured()) {
-      setError(ROOM_CONFIG_ERROR);
+      setError(HOME_UNAVAILABLE_MESSAGE);
       return;
     }
     setCreatingPoll(true);
@@ -429,8 +444,8 @@ export function Home() {
       }
     }, HOME_TIMEOUT_MS);
     try {
-      const fresh = await createRoom();
-      if (timedOut) return;
+      const fresh = await createRoom(colour);
+      if (timedOut || !aliveRef.current) return;
       setAdminLastRoomId(fresh);
       addRecentPoll(fresh);
       navigate(`/${fresh}/admin`);
@@ -444,208 +459,155 @@ export function Home() {
     }
   };
 
-  const busy = creatingPoll || openingRoomId !== null || deletingRoomId !== null;
-  const showRecentPolls = recentPolls.length > 0;
-  const showRecentPollRegion =
-    showRecentPolls || (loadingRecents && initialStoredRecentPollCountRef.current > 0);
-  const formatOptionsPreview = (items: string[]) =>
-    items.length === 0 ? "" : items.join(", ");
+  const busy = creatingPoll || joiningPoll || openingRoomId !== null || deletingRoomId !== null;
+
+  const joinPoll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    const code = joinCode.trim().toUpperCase();
+    if (!/^[A-Z0-9]{4}$/.test(code)) {
+      setJoinError("Enter the four-letter or number code from your host.");
+      return;
+    }
+    if (!isRoomServerConfigured()) {
+      setJoinError(HOME_UNAVAILABLE_MESSAGE);
+      return;
+    }
+    setJoiningPoll(true);
+    setJoinError(null);
+    let timedOut = false;
+    const timeoutId = setTimeout(() => {
+      timedOut = true;
+      if (!aliveRef.current) return;
+      setJoiningPoll(false);
+      setJoinError("Couldn't connect. Check the code and try again.");
+    }, HOME_TIMEOUT_MS);
+    try {
+      const available = await checkRoomAvailable(code);
+      if (timedOut || !aliveRef.current) return;
+      if (available) navigate(`/${code}`);
+      else setJoinError("Couldn't find that poll. Check the code or try again.");
+    } finally {
+      clearTimeout(timeoutId);
+      if (!timedOut && aliveRef.current) setJoiningPoll(false);
+    }
+  };
+
+  const action = "display flex min-h-14 items-center justify-between gap-4 bg-hi px-5 py-4 text-2xl text-hi-ink transition-transform duration-150 ease-(--ease-spring) hover:-translate-y-0.5 active:translate-y-0 disabled:translate-y-0 disabled:opacity-50";
 
   return (
-    <main
-      className="mx-auto flex min-h-dvh w-full max-w-full px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-10 sm:pb-[max(2rem,env(safe-area-inset-bottom,0px))] lg:max-w-[1180px]"
-    >
-      <div className="card flex w-full min-h-dvh sm:min-h-0">
-        <div className={`card-content home-card-content flex w-full flex-col ${showRecentPollRegion ? "justify-start" : "justify-center"}`}>
+    <main className="mx-auto w-full max-w-[1240px] px-4 pt-5 pb-[max(24px,env(safe-area-inset-bottom,0px))] text-ink sm:px-6 lg:px-7">
+      <header className="flex min-h-11 items-center gap-2 font-extrabold uppercase">
+        <svg viewBox="0 0 24 24" aria-hidden="true" className="size-5">
+          <path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor" />
+        </svg>
+        Rankzap
+      </header>
 
-          {/* Top bar */}
-          <div
-            className="mx-auto flex w-full max-w-[760px] justify-center"
-            style={{
-              marginBottom: "clamp(2rem, 6vw, 3.25rem)",
-            }}
-          >
-            <RankzapLogo />
-          </div>
+      {/* At 1240px: 1184px inside the gutters = 672px + 48px + 464px. */}
+      <div className="grid gap-8 pt-6 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] md:items-center lg:gap-12 lg:pt-10">
+        <div>
+          <h1 className="display text-[clamp(112px,25vw,180px)] tracking-[-0.03em] lg:text-[clamp(180px,17vw,232px)]">
+            Rank<br />it.
+          </h1>
+          <p className="mt-6 max-w-md text-lg leading-snug font-semibold sm:text-xl">
+            One link. Everyone ranks their favourites. See what comes out on top.
+          </p>
+        </div>
 
-          <div>
-            {/* Hero + CTA */}
-            <div className="mx-auto w-full max-w-[760px] text-center">
-              <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(3rem, 10vw, 5.75rem)", lineHeight: 0.98, fontWeight: 700, letterSpacing: 0, margin: "0 0 8px", color: "var(--text)", textTransform: "lowercase" }}>
-                make a poll,<br />
-                <span style={{ background: "var(--surface)", padding: "0 0.14em", borderRadius: 8, boxDecorationBreak: "clone", WebkitBoxDecorationBreak: "clone" }}>
-                  rank it
-                </span><br />
-                together.
-              </h1>
-              <p
-                style={{ margin: "clamp(1rem, 3vw, 1.35rem) auto 0", fontSize: "clamp(1rem, 2.4vw, 1.2rem)", lineHeight: 1.55, color: "var(--muted)", maxWidth: "42ch" }}
-              >
-                Share a link. Watch the ranking land.
-              </p>
-
-              <div
-                style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "center", marginTop: "clamp(1.75rem, 4vw, 2.75rem)" }}
-              >
-                <button
-                  type="button"
-                  onClick={startPoll}
-                  disabled={busy}
-                  style={{
-                    fontFamily: "var(--font-sans)",
-                    fontSize: "1rem",
-                    fontWeight: 600,
-                    padding: "15px 32px",
-                    background: "var(--text)",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 999,
-                    cursor: busy ? "not-allowed" : "pointer",
-                    opacity: busy ? 0.6 : 1,
-                    boxShadow: "0 14px 26px -18px rgba(25, 29, 34, 0.65)",
-                    transition: "opacity 0.15s, transform 0.15s",
-                  }}
-                >
-                  {creatingPoll ? "Creating…" : "+ Start a poll"}
-                </button>
+        <div className="grid min-w-0 gap-6">
+          <section aria-labelledby="create-heading" className="min-w-0 bg-step p-5 text-step-ink sm:p-6">
+            <h2 id="create-heading" className="display text-3xl">Start a poll</h2>
+            <p className="mt-2 text-base">Add your question and options next.</p>
+            <fieldset disabled={busy} className="mt-5 min-w-0 disabled:opacity-50">
+              <legend className="mb-3 text-sm font-bold">Poll colour · {POLL_COLOURS[colour].name}</legend>
+              <div className="@container">
+                <ColourPicker value={colour} onChange={async (next) => setColour(next)} previewPage={false} className="grid-cols-4 @min-[394px]:grid-cols-8 [&>button]:h-11 [&>button]:aspect-auto" />
               </div>
-            </div>
+            </fieldset>
+            <button type="button" onClick={() => void startPoll()} disabled={busy} className={`${action} mt-5 w-full`}>
+              <span aria-live="polite">{creatingPoll ? "Creating…" : "Start a poll"}</span>
+              <Arrow />
+            </button>
+            {error ? <p role="alert" className="mt-3 bg-danger-soft p-3 text-sm font-semibold text-danger">{error}</p> : null}
+          </section>
 
-            {/* Recent polls */}
-            {showRecentPollRegion && (
-            <div className="mx-auto mt-[clamp(3rem,8vw,5rem)] w-full max-w-[760px] transition-[opacity,transform] duration-300 ease-out">
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-                <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--text)", margin: 0, lineHeight: 1.05 }}>
-                  Recent polls
-                </h2>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  this device
-                </span>
-              </div>
-
-              <div aria-busy={loadingRecents}>
-                {loadingRecents ? (
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {Array.from({ length: Math.min(Math.max(initialStoredRecentPollCountRef.current, 1), 3) }).map((_, i) => (
-                      <li
-                        key={i}
-                        className="animate-pulse"
-                        style={{
-                          padding: "18px 0",
-                          borderTop: i === 0 ? "2px solid var(--text)" : "1px solid color-mix(in oklab, var(--text) 16%, transparent)",
-                          opacity: 0.46,
-                        }}
-                      >
-                        <div style={{ width: "min(72%, 24rem)", height: 18, borderRadius: 999, background: "color-mix(in oklab, var(--text) 13%, transparent)" }} />
-                        <div style={{ width: "min(56%, 18rem)", height: 13, borderRadius: 999, background: "color-mix(in oklab, var(--text) 9%, transparent)", marginTop: 10 }} />
-                        <div style={{ width: 120, height: 11, borderRadius: 999, background: "color-mix(in oklab, var(--text) 8%, transparent)", marginTop: 10 }} />
-                      </li>
-                    ))}
-                  </ul>
-                ) : recentPolls.length === 0 ? (
-                  null
-                ) : (
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, maxHeight: "min(50vh,22rem)", overflowY: "auto", overflowX: "hidden" }}>
-                    {recentPolls.map((p, i) => (
-                      <li
-                        key={p.roomId}
-                        style={{ display: "flex", alignItems: "center", gap: 16, padding: "18px 0", borderTop: i === 0 ? "2px solid var(--text)" : "1px solid color-mix(in oklab, var(--text) 16%, transparent)" }}
-                      >
-                        <span
-                          aria-hidden
-                          style={{ width: 14, height: 14, flexShrink: 0, background: POLL_COLOURS[p.colour ?? "yellow"].sig, boxShadow: "inset 0 0 0 1.5px var(--text)" }}
-                        />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)", fontSize: "1rem", letterSpacing: "-0.01em" }}>
-                            {p.title || p.roomId}
-                          </div>
-                          {p.optionsPreview.length > 0 && (
-                            <div style={{ fontSize: "0.82rem", color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 3 }}>
-                              {formatOptionsPreview(p.optionsPreview)}
-                            </div>
-                          )}
-                          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--muted)", marginTop: 5 }}>
-                            {p.roomId} · {formatLastOpened(p.savedAt)}
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                          {confirmingDeleteRoomId === p.roomId ? (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmingDeleteRoomId(null)}
-                                disabled={busy}
-                                style={btnStyle("secondary")}
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setConfirmingDeleteRoomId(null); void deletePoll(p.roomId); }}
-                                disabled={busy}
-                                style={btnStyle("danger")}
-                              >
-                                {deletingRoomId === p.roomId ? "Deleting…" : "Delete"}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setConfirmingDeleteRoomId(p.roomId)}
-                              disabled={busy}
-                              aria-label={`Delete poll ${p.roomId}`}
-                              title="Delete poll"
-                              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "50%", border: "none", background: "transparent", color: "var(--danger)", cursor: "pointer", opacity: busy ? 0.5 : 1, flexShrink: 0 }}
-                            >
-                              <Trash2 size={15} strokeWidth={2} aria-hidden />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => void openExisting(p.roomId)}
-                            disabled={busy}
-                            style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, background: "transparent", border: "none", color: "var(--text)", cursor: busy ? "not-allowed" : "pointer", opacity: busy ? 0.5 : 1, fontSize: 20, flexShrink: 0 }}
-                            aria-label={`Open poll ${p.roomId}`}
-                          >
-                            {openingRoomId === p.roomId ? <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--muted)" }}>…</span> : "→"}
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-            )}
-          </div>
-
-          {error ? (
-            <div
-              role="alert"
-              style={{ marginTop: "1rem", borderRadius: 10, border: "1px solid color-mix(in oklch, var(--danger) 30%, transparent)", background: "var(--danger-soft)", padding: "12px 16px", fontSize: "0.875rem", color: "var(--danger)" }}
-            >
-              {error}
-            </div>
-          ) : null}
-
+          <section aria-labelledby="join-heading">
+            <h2 id="join-heading" className="display text-3xl">Got a code?</h2>
+            <form onSubmit={joinPoll} className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-1">
+              <label htmlFor="join-code" className="sr-only">Poll code</label>
+              <input
+                id="join-code"
+                value={joinCode}
+                onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(null); }}
+                maxLength={4}
+                autoComplete="off"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="A3ZK"
+                disabled={busy}
+                aria-invalid={Boolean(joinError)}
+                aria-describedby={joinError ? "join-error" : "join-hint"}
+                className="display min-h-16 w-full min-w-0 border-3 border-transparent bg-step px-4 py-3 text-4xl tracking-[0.15em] text-step-ink outline-none placeholder:text-step-ink/35 focus:border-[#0b0b0b] disabled:opacity-50"
+              />
+              <button type="submit" disabled={busy || joinCode.trim().length !== 4} className={action}>
+                {joiningPoll ? "Joining…" : "Join"}
+              </button>
+            </form>
+            <p id="join-hint" className="mt-2 text-sm font-semibold">Enter the four-character code from your host.</p>
+            {joinError ? <p id="join-error" role="alert" className="mt-3 bg-danger-soft p-3 text-sm font-semibold text-danger">{joinError}</p> : null}
+          </section>
         </div>
       </div>
+
+      <section aria-labelledby="recent-heading" className="mt-10 sm:mt-12">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 id="recent-heading" className="display text-3xl">Your polls</h2>
+          <span className="text-sm font-semibold">Saved on this device</span>
+        </div>
+        <div aria-busy={loadingRecents}>
+          {loadingRecents ? (
+            <div role="status" aria-label="Loading your polls" className="grid gap-1">
+              {Array.from({ length: Math.min(Math.max(initialStoredRecentPollCountRef.current, 1), 3) }).map((_, i) => (
+                <div key={i} aria-hidden="true" className="h-24 animate-pulse bg-step/60" />
+              ))}
+            </div>
+          ) : recentPolls.length === 0 ? (
+            <p className="bg-low p-5 text-base font-semibold text-low-ink">Your polls will appear here after you create one.</p>
+          ) : (
+            <ul className="grid gap-1">
+              {recentPolls.map((p) => (
+                <li key={p.roomId} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 bg-step text-step-ink">
+                  <button type="button" onClick={() => void openExisting(p.roomId)} disabled={busy} aria-label={`Open poll ${p.roomId}: ${p.title || "Untitled poll"}`} className="group flex min-w-0 items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-low disabled:opacity-50 sm:gap-4 sm:px-5">
+                    <span aria-hidden="true" style={{ background: POLL_COLOURS[p.colour].sig }} className="size-4 shrink-0 border-2 border-[#0b0b0b]" />
+                    <span className="min-w-0 flex-1">
+                      <span className="line-clamp-2 text-base leading-tight font-extrabold wrap-anywhere sm:text-lg">{p.title || "Untitled poll"}</span>
+                      {p.optionsPreview.length > 0 ? <span className="mt-1 line-clamp-1 text-sm wrap-anywhere">{p.optionsPreview.join(", ")}</span> : null}
+                      <span className="mt-1 block text-xs font-semibold">{p.roomId} · {openingRoomId === p.roomId ? "Opening…" : formatLastOpened(p.savedAt)}</span>
+                    </span>
+                    <span className="hidden sm:block"><Arrow /></span>
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => setConfirmingDeleteRoomId(confirmingDeleteRoomId === p.roomId ? null : p.roomId)} aria-label={`Delete poll ${p.roomId}`} aria-expanded={confirmingDeleteRoomId === p.roomId} className="mr-2 grid size-11 place-items-center text-step-ink/60 hover:bg-danger-soft hover:text-danger disabled:opacity-50">
+                    <Trash2 size={18} aria-hidden="true" />
+                  </button>
+                  {confirmingDeleteRoomId === p.roomId ? (
+                    <div className="col-span-2 flex flex-wrap items-center gap-3 bg-danger-soft px-4 py-3 text-sm text-danger" role="group" aria-label={`Confirm deleting poll ${p.roomId}`}>
+                      <p className="min-w-0 flex-1 font-semibold">Delete {p.roomId} and all its votes for everyone?</p>
+                      <button type="button" disabled={busy} onClick={() => setConfirmingDeleteRoomId(null)} className="min-h-11 px-3 font-bold underline underline-offset-4">Cancel</button>
+                      <button type="button" disabled={busy} onClick={() => { void deletePoll(p.roomId); }} className="min-h-11 bg-danger px-4 font-bold text-white">{deletingRoomId === p.roomId ? "Deleting…" : "Yes, delete"}</button>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+      <footer className="mt-8 text-sm font-semibold">Rank together. Decide together.</footer>
     </main>
   );
 }
 
-function btnStyle(variant: "secondary" | "danger"): React.CSSProperties {
-  const base: React.CSSProperties = {
-    fontFamily: "var(--font-sans)",
-    fontSize: "0.825rem",
-    fontWeight: 600,
-    padding: "8px 14px",
-    borderRadius: 999,
-    cursor: "pointer",
-    minHeight: 36,
-  };
-  if (variant === "danger") {
-    return { ...base, background: "var(--danger-soft)", color: "var(--danger)", border: "1.5px solid color-mix(in oklch, var(--danger) 35%, transparent)" };
-  }
-  return { ...base, background: "transparent", color: "var(--text)", border: "1.5px solid var(--border)" };
+function Arrow() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className="size-6 shrink-0"><path d="M4 12h15M12 5l7 7-7 7" stroke="currentColor" strokeWidth="3" fill="none" /></svg>;
 }
