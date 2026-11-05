@@ -30,30 +30,19 @@ export function PoweredByFooter({
   showCreateLink?: boolean;
 }) {
   return (
-    <footer className="sticky bottom-0 z-20 border-t border-border bg-bg/95 px-5 py-3 backdrop-blur sm:px-8">
-      <div className="mx-auto flex max-w-full items-center justify-between gap-3 text-xs text-muted lg:max-w-5xl">
-        <div className="flex min-w-0 items-center gap-2">
-          <span>powered by</span>
-          <span className="inline-flex items-center gap-1.5 font-semibold text-text">
-            <svg width="12" height="14" viewBox="0 0 19 22" aria-hidden className="shrink-0">
-              <path
-                d="M11 1 L2 12.5 L8.5 12.5 L7.5 21 L17 8.5 L10.5 8.5 Z"
-                fill="var(--text)"
-              />
-            </svg>
-            rankzap
-          </span>
-        </div>
-        {showCreateLink ? (
-          <button
-            type="button"
-            onClick={onCreatePoll}
-            className="shrink-0 border-0 bg-transparent p-0 text-xs font-semibold text-text underline decoration-border underline-offset-4 transition-opacity hover:opacity-65"
-          >
-            create your own poll
-          </button>
-        ) : null}
-      </div>
+    <footer className="flex items-center justify-between gap-3 px-[18px] pt-6 pb-[max(18px,env(safe-area-inset-bottom,0px))] text-[13px] font-semibold text-ink">
+      <span className="inline-flex items-center gap-1.5">
+        Powered by
+        <svg viewBox="0 0 24 24" aria-hidden className="size-3.5">
+          <path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor" />
+        </svg>
+        <b className="font-extrabold">Rankzap</b>
+      </span>
+      {showCreateLink ? (
+        <button type="button" onClick={onCreatePoll} className="min-h-11 font-extrabold underline underline-offset-4 hover:no-underline">
+          Make your own poll
+        </button>
+      ) : null}
     </footer>
   );
 }
@@ -92,13 +81,13 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className="max-h-[min(760px,calc(100dvh-2rem))] w-full max-w-lg overflow-auto rounded-lg border border-border bg-surface p-5 shadow-page"
+        className="max-h-[min(760px,calc(100dvh-2rem))] w-full max-w-lg overflow-auto bg-ground p-5 text-ink shadow-[8px_8px_0_#0b0b0b]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2
             id={`modal-${title.toLowerCase().replace(/\s+/g, "-")}`}
-            className="m-0 text-lg font-semibold text-text"
+            className="display m-0 text-[30px]"
           >
             {title}
           </h2>
@@ -122,10 +111,10 @@ export function Modal({
 export function iconButton(): React.CSSProperties {
   return {
     alignItems: "center",
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: 8,
-    color: "var(--text)",
+    background: "var(--step)",
+    border: "none",
+    borderRadius: 0,
+    color: "var(--step-ink)",
     display: "inline-flex",
     height: 42,
     justifyContent: "center",

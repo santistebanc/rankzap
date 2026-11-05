@@ -6,18 +6,13 @@ import { clampOption, type Option, type UserMode } from "../../lib/types";
 import { adaptiveSize } from "../../lib/adaptiveSize";
 import { fallbackVoterName, persistVoterName, type VoterIdentity } from "../../lib/identity";
 import { getVoterRank, setVoterRank } from "../../lib/storage";
-import { UsersList } from "../../components/UsersList";
 import { UserPill, pillStateFor } from "../../components/UserPill";
 import { ArrangeOptions } from "../../components/ArrangeOptions";
 import { AddOption } from "../../components/AddOption";
 import { SubmitVote } from "../../components/SubmitVote";
-import { LiveOptions } from "../../components/LiveOptions";
-import { VoterRankingPanel } from "../../components/VoterRankingPanel";
+import { VoterResults } from "./VoterResults";
 import { Arrow } from "../../components/Arrow";
 import {
-  MonoLabel,
-  Modal,
-  pill,
   PollTopBar,
   PoweredByFooter,
   sameRanking,
@@ -29,7 +24,7 @@ type Screen = "compose" | "results";
 
 /** A voter's view of a poll: say who you are, rank the options, see results. */
 export function VoterView({ poll, identity }: { poll: PollData; identity: VoterIdentity }) {
-  const { roomId, meta, settings, pollHeading, options, optionById, optionsMap, votesMap, usersMap, onlineUserIds, votedUserIds } = poll;
+  const { roomId, meta, settings, pollHeading, options, votesMap, usersMap } = poll;
   const navigate = useNavigate();
   const { client, status } = useRoom();
 
@@ -51,24 +46,6 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
     () => [...options, ...pendingAddedOptions].sort((a, b) => a.addedAt - b.addedAt),
     [options, pendingAddedOptions],
   );
-
-  const hasAnyOtherVoters = useMemo(() => {
-    const self = identity.userId;
-    for (const user of usersMap.values()) {
-      if (user.id === self) continue;
-      if (onlineUserIds.has(user.id) || votedUserIds.has(user.id)) return true;
-    }
-    const inMap = new Set([...usersMap.values()].map((u) => u.id));
-    for (const uid of onlineUserIds) {
-      if (uid === self || inMap.has(uid)) continue;
-      return true;
-    }
-    for (const uid of votedUserIds) {
-      if (uid === self || inMap.has(uid)) continue;
-      return true;
-    }
-    return false;
-  }, [identity.userId, onlineUserIds, usersMap, votedUserIds]);
 
   const myVote = useMemo(
     () => votesMap.get(`votes/${identity.userId}`) ?? null,
@@ -305,86 +282,24 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
           </section>
         </Activity>
 
-        <div className="content-inset">
-            <Activity mode={voterView === "results" ? "visible" : "hidden"}>
-              <div
-                aria-label={canShowVoterResults ? "Results" : "Vote confirmation"}
-                inert={voterView !== "results" ? true : undefined}
-              >
-                {canShowVoterResults ? (
-                  <>
-                    {meta.state === "open" || meta.state === "closed" ? (
-                      <div className="content-inset" style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.2rem,4vw,1.4rem)", color: "var(--muted)", marginBottom: "clamp(1rem,3vw,1.5rem)", lineHeight: 1.4, letterSpacing: "-0.01em", opacity: 0.78 }}>
-                        {meta.state === "closed" ? "Poll closed. Results:" : "Results so far:"}
-                      </div>
-                    ) : null}
-                    <div style={{ borderTop: "2px solid var(--text)" }}>
-                      <LiveOptions
-                        removable={false}
-                        showResults
-                        tallyMode={settings.tallyMode}
-                        editable={false}
-                        optionsMap={optionsMap}
-                        votesMap={votesMap}
-                        usersMap={usersMap}
-                        highlightWinner={meta.state === "closed"}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="content-inset" style={{ borderTop: "2px solid var(--text)", paddingTop: "clamp(1rem,3vw,1.5rem)" }}>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.35rem,5vw,1.75rem)", fontWeight: 700, color: "var(--text)", lineHeight: 1.1, margin: 0 }}>
-                      Vote sent
-                    </h2>
-                    <p style={{ fontSize: "0.95rem", color: "var(--muted)", lineHeight: 1.6, margin: "0.75rem 0 0" }}>
-                      Your vote has been recorded. Results are hidden until the poll closes.
-                    </p>
-                  </div>
-                )}
-                {canChangeVote && (
-                  <div className="content-inset" style={{ display: "flex", justifyContent: "flex-end", marginTop: "clamp(1rem,3vw,1.5rem)" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        voterOpenedEditRef.current = true;
-                        setVoterView("compose");
-                      }}
-                      style={pill("default")}
-                    >
-                      Change vote
-                    </button>
-                  </div>
-                )}
-              </div>
-            </Activity>
-
-            {canShowVoterResults && settings.showUsers && hasAnyOtherVoters && (
-              <div className="content-inset" style={{ marginTop: "clamp(0.75rem,2vw,1.25rem)" }}>
-                <MonoLabel style={{ marginBottom: 8 }}>others have voted</MonoLabel>
-                <UsersList
-                  selfUserId={identity?.userId}
-                  includeSelf={false}
-                  variant="tabStrip"
-                  selectedVoterId={selectedVoterId}
-                  onToggleVoter={toggleVoterSelection}
-                  onInvalidateVoterSelection={clearVoterSelection}
-                />
-                <Modal
-                  open={Boolean(settings.showVoterVotes && selectedVoterId)}
-                  title={selectedVoterId ? usersMap.get(`users/${selectedVoterId}`)?.name || "Voter" : "Voter"}
-                  onClose={clearVoterSelection}
-                >
-                  {settings.showVoterVotes && selectedVoterId ? (
-                    <VoterRankingPanel
-                      voterName={usersMap.get(`users/${selectedVoterId}`)?.name || "Voter"}
-                      ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
-                      optionById={optionById}
-                    />
-                  ) : null}
-                </Modal>
-              </div>
-            )}
-        </div>
+        <Activity mode={voterView === "results" ? "visible" : "hidden"}>
+          <div inert={voterView !== "results" ? true : undefined}>
+            <VoterResults
+              poll={poll}
+              selfUserId={identity.userId}
+              myVote={myVote}
+              canChangeVote={canChangeVote}
+              canShowResults={canShowVoterResults}
+              onChangeVote={() => {
+                voterOpenedEditRef.current = true;
+                setVoterView("compose");
+              }}
+              selectedVoterId={selectedVoterId}
+              onToggleVoter={toggleVoterSelection}
+              onClearVoter={clearVoterSelection}
+            />
+          </div>
+        </Activity>
       </div>
       <PoweredByFooter onCreatePoll={() => navigate("/")} />
     </main>

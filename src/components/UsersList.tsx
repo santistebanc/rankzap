@@ -8,7 +8,7 @@ interface UsersListProps {
   selfUserId?: string;
   includeSelf?: boolean;
   showIgnoredBadge?: boolean;
-  /** `tabStrip`: one horizontal row of boxy segments (like main tabs), with scroll on overflow. */
+  /** `tabStrip`: the tags are buttons you can select. */
   variant?: "pills" | "tabStrip";
   /** Selected voter in `tabStrip` (shows pressed state). */
   selectedVoterId?: string | null;
@@ -101,10 +101,10 @@ export function UsersList({
 
   if (variant === "tabStrip") {
     return (
-      <div className="relative">
-        <div role="group" aria-label="Voters" className="flex w-full flex-nowrap gap-1 overflow-x-auto p-2">
+      <div>
+        <div role="group" aria-label="Voters" className="flex w-full flex-wrap gap-1.5">
           {visible.length === 0 ? (
-            <div className="flex min-h-9 min-w-full shrink-0 items-center px-2 py-1 text-sm text-muted sm:min-w-0">
+            <div className="text-sm font-semibold">
               No voters yet.
             </div>
           ) : (
@@ -116,7 +116,7 @@ export function UsersList({
                   type="button"
                   aria-pressed={selected}
                   onClick={() => onToggleVoter?.(u.id)}
-                  className={`inline-flex min-h-11 shrink-0 items-center outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0b0b0b] ${
+                  className={`inline-flex min-h-11 items-center outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#0b0b0b] ${
                     selected ? "outline-3 outline-offset-2 outline-[#0b0b0b]" : ""
                   }`}
                 >
@@ -135,7 +135,6 @@ export function UsersList({
             })
           )}
         </div>
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-bg to-transparent" />
       </div>
     );
   }
@@ -143,7 +142,7 @@ export function UsersList({
   return (
     <div className="flex flex-wrap gap-1.5">
       {visible.length === 0 ? (
-        <span className="text-xs text-muted">No voters yet.</span>
+        <span className="text-sm font-semibold">No voters yet.</span>
       ) : (
         visible.map((u) => (
           <UserPill
