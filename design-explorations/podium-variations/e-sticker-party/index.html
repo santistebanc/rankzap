@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium E · Sticker Party</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/frame.css">
+<link rel="stylesheet" href="../podium-base.css">
+<style>
+/* Podium E · Sticker Party. Podium at a party: every option is a die-cut sticker, outlined, tilted, slapped down. */
+:root {
+  --ground: #ffdd1f; --ink: #0b0b0b;
+  --hi: #ff6ac1; --hi-ink: #0b0b0b;
+  --step: #ffffff; --step-ink: #0b0b0b;
+  --low: #ffffff; --low-ink: #0b0b0b;
+  --chip: #0b0b0b; --chip-ink: #ffdd1f;
+  --pink: #ff6ac1; --mint: #2fe08f; --sky: #57b8ff; --orange: #ff8a1f;
+  --radius: 16px;
+  --line: 3px solid #0b0b0b;
+  --pop: 4px 4px 0 #0b0b0b;
+  --board-bg: #ffdd1f; --board-ink: #0b0b0b; --board-muted: #0b0b0b; --bezel: #0b0b0b;
+  --bg: var(--ground);
+}
+.board-head h1 { rotate: -2deg; display: inline-block; background: var(--pink); border: 4px solid #0b0b0b; box-shadow: 8px 8px 0 #0b0b0b; padding: 12px 18px 4px; border-radius: 22px; }
+.swatch i { border-radius: 12px; box-shadow: inset 0 0 0 3px #0b0b0b; }
+
+.btn { border: var(--line); box-shadow: var(--pop); background: var(--mint); color: #0b0b0b; }
+.btn:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 #0b0b0b; }
+.chip { border: 2.5px solid #0b0b0b; background: #fff; color: #0b0b0b; rotate: 3deg; }
+
+/* Home */
+.home .big { font-size: 140px; }
+.home .big span:first-child { rotate: -3deg; transform-origin: left bottom; }
+.home .big span:nth-child(2) { background: var(--pink); color: #0b0b0b; border: 4px solid #0b0b0b; box-shadow: 6px 6px 0 #0b0b0b; rotate: 2deg; padding: 10px 14px 0; }
+.code span { border: var(--line); background: #fff; }
+.code span:nth-child(odd) { rotate: -3deg; } .code span:nth-child(even) { rotate: 2deg; }
+.code .btn { background: var(--sky); }
+.recent { background: transparent; color: #0b0b0b; display: grid; gap: 10px; padding-top: 6px; }
+.recent a { border: var(--line); border-radius: 14px; background: #fff; padding: 14px; box-shadow: var(--pop); }
+.recent a:nth-of-type(1) { rotate: -1.2deg; background: var(--sky); }
+.recent a:nth-of-type(2) { rotate: .8deg; }
+
+/* Ballot: stickers */
+.stairs { gap: 10px; padding: 0 14px; }
+.stairs [data-item] { border: var(--line); box-shadow: var(--pop); grid-template-columns: 64px 1fr; }
+.stairs [data-item]:nth-child(1) { background: var(--pink); }
+.stairs [data-item]:nth-child(2) { background: var(--sky); }
+.stairs [data-item]:nth-child(3) { background: var(--mint); }
+.stairs [data-item]:nth-child(odd) { rotate: -1deg; }
+.stairs [data-item]:nth-child(even) { rotate: 1deg; }
+.stairs [data-item]:nth-child(1) { --h: 98px; }
+.stairs .n { justify-self: center; width: calc(var(--h) * .62); height: calc(var(--h) * .62); border-radius: 50%; background: #fff; border: var(--line); display: grid; place-items: center; font-size: calc(var(--h) * .44); }
+.stairs [data-item].is-dragging { scale: 1.06; rotate: -3deg; box-shadow: 10px 12px 0 #0b0b0b; animation: wiggle .5s ease-in-out infinite alternate; }
+@keyframes wiggle { from { rotate: -3deg; } to { rotate: -1deg; } }
+.slap-wrap { position: relative; }
+.slapped { position: absolute; right: 26px; top: -30px; background: var(--orange); border: var(--line); border-radius: 999px; padding: 10px 16px 8px; font: 900 26px/1 var(--font); font-stretch: 62%; text-transform: uppercase; box-shadow: var(--pop); rotate: 10deg; opacity: 0; pointer-events: none; }
+.slap-wrap.is-voted .slapped { animation: slap .35s cubic-bezier(.3,1.7,.5,1) forwards; }
+@keyframes slap { from { opacity: 0; scale: 2.2; rotate: 30deg; } to { opacity: 1; scale: 1; rotate: 10deg; } }
+
+/* Results */
+.winner { background: var(--pink); border-bottom: 4px solid #0b0b0b; position: relative; }
+.winner b { rotate: -2deg; transform-origin: left; }
+.winner.lead-changed b { animation: slap .4s cubic-bezier(.3,1.7,.5,1); }
+.crown { position: absolute; right: 18px; bottom: 18px; width: 64px; height: 52px; rotate: 12deg; }
+.methods button { border: var(--line); background: #fff; }
+.methods button[aria-pressed="true"] { background: #0b0b0b; color: var(--ground); }
+.bands { gap: 10px; }
+.bands li { border: var(--line); border-radius: 16px; background: #fff; overflow: hidden; box-shadow: var(--pop); }
+.bands li::before { border-radius: 0; background: var(--sky); }
+.bands li:nth-child(odd) { rotate: -.6deg; } .bands li:nth-child(even) { rotate: .6deg; }
+.bands li[data-leading]::before { background: var(--pink); }
+.bands li[data-leading] > * { color: #0b0b0b; }
+.bands li:nth-child(2)::before { background: var(--mint); }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All Podium variations</a><span>Podium E of E</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Sticker party</h1>
+      <p class="thesis">Podium turned up for parties and classrooms. Every option is a die-cut sticker: thick outline, hard shadow, slightly crooked. Pick one up and it wiggles; submit and a "Voted!" sticker slaps onto the button. The most fun, and the loudest. It works best as a theme you choose for a poll, not the whole app.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#ffdd1f"></i>Yellow</span>
+        <span class="swatch"><i style="background:#ff6ac1"></i>Pink</span>
+        <span class="swatch"><i style="background:#57b8ff"></i>Sky</span>
+        <span class="swatch"><i style="background:#2fe08f"></i>Mint</span>
+        <span class="swatch"><i style="background:#ff8a1f"></i>Orange</span>
+        <span class="swatch"><i style="background:#0b0b0b"></i>Outline</span>
+      </div>
+      <div><h2>What changes from Podium</h2><p>Square blocks become rounded stickers with 3px outlines and hard 4px shadows. Places 1–3 get pink, sky and mint; numerals sit in round badges.</p></div>
+      <div><h2>Motion</h2>
+        <ul>
+          <li>Pick-up: scale 1.06, tilt −3°, a gentle wiggle while held. Drop: spring back to its crooked rest angle.</li>
+          <li>Buttons press down into their shadow instead of scaling.</li>
+          <li>Submit slaps an orange "Voted!" sticker on with overshoot; a new leader's name slaps in the same way.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home">
+          <div>
+            <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>RANKZAP</span></div>
+            <h2 class="big"><span>Rank</span><span>it!</span></h2>
+          </div>
+          <p>One link for the whole group. Stick your favourites at the top.</p>
+          <div class="actions">
+            <button class="btn" type="button">Start a poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+            <div class="code"><span>A</span><span>3</span><span>Z</span><span>K</span><button class="btn" type="button">Join</button></div>
+          </div>
+          <div class="recent">
+            <a href="#">Best morning ritual? <span>A3ZK · live</span></a>
+            <a href="#">Team offsite city <span>Q7PL · done</span></a>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: crooked stickers on a yellow wall.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Grab a sticker, stick it higher.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span></li>
+        </ol>
+        <div class="submit slap-wrap" id="slap">
+          <span class="slapped" aria-hidden="true">Voted!</span>
+          <button class="btn" type="button" id="vote">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+        </div>
+      </div></div>
+      <figcaption>Ballot: stickers wiggle when held. Drag, then lock it in.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span>Winning right now</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+          <svg class="crown" viewBox="0 0 64 52" aria-hidden="true"><path d="M4 16 18 30 32 6 46 30 60 16 54 46H10Z" fill="#ffdd1f" stroke="#0b0b0b" stroke-width="3.5" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="bands" data-results data-seed="5">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+      </div></div>
+      <figcaption>Results: the leader wears the crown.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../podium.js"></script>
+<script>
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#vote")) return;
+  const wrap = document.getElementById("slap");
+  wrap.classList.remove("is-voted"); void wrap.offsetWidth; wrap.classList.add("is-voted");
+  navigator.vibrate?.(25);
+});
+</script>
+<script src="../../shared/rank.js"></script>
+</body>
+</html>

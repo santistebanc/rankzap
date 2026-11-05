@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Direction 1 · Ballot Paper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<style>
+/* Direction 1 · Ballot Paper. The poll is a printed ballot; the code is its serial number. */
+:root {
+  --paper: #e6e9e2;      /* ballot stock */
+  --sheet: #f7f8f4;
+  --ink: #16191c;
+  --ink-2: #4b5157;
+  --green: #0e5e46;      /* official band */
+  --stamp: #c8102e;      /* the one red thing */
+  --pen: #1d3fa8;        /* voter's handwriting */
+  --serif: "Newsreader", Georgia, serif;
+  --sans: "Hanken Grotesk", system-ui, sans-serif;
+  --hand: "Caveat", cursive;
+  --board-bg: var(--paper); --board-ink: var(--ink); --board-muted: var(--ink-2); --bezel: #23272b;
+  --bg: var(--sheet);
+}
+body { font-family: var(--sans); }
+.board-head h1 { font: 500 clamp(56px, 7vw, 104px)/.92 var(--serif); letter-spacing: -.03em; }
+.notes h2 { font-family: var(--sans); font-weight: 700; }
+
+/* ---------- screen chrome ---------- */
+.screen { background: var(--sheet); color: var(--ink); font-family: var(--sans); }
+.band { background: var(--green); color: #fff; padding: 0 22px 18px; }
+.band .statusbar { padding-inline: 8px; color: #fff; }
+.band-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; }
+.band-row b { font: 600 22px/1 var(--serif); letter-spacing: .01em; }
+.pad { padding: 22px; }
+h2.t { font: 500 40px/1 var(--serif); letter-spacing: -.025em; margin: 6px 0 10px; }
+.lede { font-size: 16px; line-height: 1.45; margin: 0; color: var(--ink); }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  min-height: 56px; border: 0; border-radius: 4px; font-weight: 700; font-size: 17px;
+  background: var(--ink); color: var(--sheet); cursor: pointer;
+  transition: transform .12s ease-out, background-color .15s ease-out;
+}
+.btn:active { transform: scale(.98); }
+.btn.green { background: var(--green); color: #fff; }
+
+/* ---------- home ---------- */
+.home-hero { padding: 24px 22px 28px; }
+.mast { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; margin-bottom: 64px; }
+.mast svg { width: 18px; height: 18px; }
+.home-hero h2 { font: 500 64px/.9 var(--serif); letter-spacing: -.035em; margin: 0 0 18px; }
+.home-hero .lede { font-size: 17px; margin-bottom: 28px; max-width: 30ch; }
+.serial { background: var(--paper); padding: 22px; }
+.serial p { margin: 0 0 12px; font-weight: 600; }
+.serial-row { display: flex; gap: 8px; }
+.serial-row span {
+  flex: 1; height: 58px; display: grid; place-items: center; background: var(--sheet);
+  box-shadow: inset 0 0 0 2px var(--ink); font: 700 34px/1 var(--hand); color: var(--pen);
+}
+.serial-row span:empty::after { content: ""; width: 2px; height: 26px; background: var(--pen); animation: caret 1s steps(1) infinite; }
+.serial-row .btn { flex: 1.3; min-height: 58px; }
+.serial-row span:empty + span:empty::after { content: none; }
+@keyframes caret { 50% { opacity: 0; } }
+.stubs { padding: 26px 22px 40px; display: grid; gap: 12px; }
+.stubs h3 { margin: 0 0 4px; font: 600 22px/1 var(--serif); }
+.stub {
+  display: grid; grid-template-columns: 64px 1fr; background: #fff; min-height: 78px;
+}
+.stub .no {
+  display: grid; place-items: center; font: 600 17px/1 var(--serif); background: var(--paper);
+  writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: .12em;
+  -webkit-mask: radial-gradient(circle 3px at 100% 50%, transparent 98%, #000) 0 0 / 100% 10px; /* perforation */
+}
+.stub div:last-child { padding: 14px 16px; display: grid; gap: 4px; align-content: center; }
+.stub b { font-size: 16px; }
+.stub small { font-size: 13px; color: var(--ink-2); }
+
+/* ---------- ballot ---------- */
+.instr { font-size: 15px; line-height: 1.45; color: var(--ink-2); margin: 0 0 16px; }
+.voter { display: flex; align-items: baseline; gap: 10px; margin: 0 0 18px; font-size: 15px; }
+.voter span { flex: 1; border-bottom: 2px solid var(--ink); font: 700 28px/1 var(--hand); color: var(--pen); padding: 0 4px 2px; }
+.ballot { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 6px; position: relative;
+  --swap-ms: 160; --drop-ease: cubic-bezier(.2,.9,.3,1); --drop-ms: 200; }
+.ballot [data-item] {
+  display: grid; grid-template-columns: 52px 1fr 20px; align-items: center; gap: 14px;
+  background: #fff; min-height: 60px; padding: 0 14px 0 8px; outline-offset: -2px;
+}
+.ballot [data-item].is-dragging { box-shadow: 0 14px 28px -12px rgb(22 25 28 / .45); rotate: -.6deg; }
+.box {
+  width: 44px; height: 44px; box-shadow: inset 0 0 0 2px var(--ink); display: grid; place-items: center;
+  font: 700 34px/1 var(--hand); color: var(--pen); position: relative; border: 0; padding: 0; background: none; cursor: pointer;
+}
+[data-item]:not([data-ranked]) .box [data-rank] { opacity: 0; }
+[data-item]:not([data-ranked]) .name { color: var(--ink-2); }
+[data-item].just-ranked .box [data-rank] { animation: write .32s cubic-bezier(.2,.8,.2,1); }
+@keyframes write { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+.name { font-size: 17px; font-weight: 500; }
+.grip { width: 14px; height: 16px; opacity: .35;
+  background: radial-gradient(circle, var(--ink) 1.5px, transparent 2px) 0 0 / 7px 5.5px; }
+.cast-wrap { position: relative; }
+.stampmark {
+  position: absolute; right: 18px; top: -86px; pointer-events: none;
+  font: 600 30px/1 var(--serif); letter-spacing: .14em; color: var(--stamp);
+  border: 4px solid var(--stamp); padding: 8px 14px 6px; text-align: center; rotate: -9deg;
+  opacity: 0; mix-blend-mode: multiply;
+}
+.stampmark small { display: block; font: 600 12px/1.2 var(--sans); letter-spacing: .08em; margin-top: 4px; }
+.cast-wrap.is-cast .stampmark { animation: stamp .26s cubic-bezier(.2,.9,.3,1.2) forwards; }
+@keyframes stamp { from { opacity: 0; scale: 1.6; } to { opacity: .92; scale: 1; } }
+
+/* ---------- results ---------- */
+.count-head { display: flex; gap: 6px 18px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); margin-bottom: 18px; }
+.method { display: flex; gap: 18px; margin: 0 0 18px; font-size: 15px; }
+.method button { background: none; border: 0; padding: 4px 0; cursor: pointer; color: var(--ink-2); font-weight: 600; }
+.method button[aria-pressed="true"] { color: var(--ink); box-shadow: inset 0 -3px 0 var(--ink); }
+.tally { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; --swap-ms: 520; }
+.tally li { display: grid; grid-template-columns: 40px 1fr auto; gap: 4px 12px; align-items: center; padding: 12px 10px 12px 4px; position: relative; background: #fff; }
+.tally .pl { font: 500 30px/1 var(--serif); text-align: center; }
+.tally .nm { font-size: 16px; font-weight: 600; }
+.tally .sc { font: 500 22px/1 var(--serif); font-variant-numeric: tabular-nums; }
+.tally .marks { grid-column: 2 / 4; height: 14px; }
+.tally .marks i {
+  display: block; height: 100%; width: calc(var(--share) * 100%);
+  background: repeating-linear-gradient(90deg, var(--ink) 0 2px, transparent 2px 6px);
+  transition: width .5s cubic-bezier(.2,.8,.2,1); transform: skewX(-12deg);
+}
+.tally li.is-bumped .sc { animation: bump .6s ease-out; }
+@keyframes bump { 30% { color: var(--pen); } }
+.ring { position: absolute; inset: -4px -6px; width: calc(100% + 12px); height: calc(100% + 8px); pointer-events: none; overflow: visible; }
+.ring path { fill: none; stroke: var(--stamp); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 1400; stroke-dashoffset: 1400; }
+.tally li[data-leading] .ring path { animation: draw .9s .2s cubic-bezier(.4,0,.2,1) forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.signed { margin-top: 22px; font-size: 14px; color: var(--ink-2); }
+.signed p { margin: 6px 0 0; font: 700 26px/1.1 var(--hand); color: var(--pen); }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All directions</a><span>Direction 1 of 5</span></nav>
+
+  <header class="board-head">
+    <div>
+      <h1>Ballot Paper</h1>
+      <p class="thesis">Rankzap as a printed ballot. Every poll is a sheet with a serial number (its room code), you number the boxes in pen, and casting it gets stamped. The trust of a real ballot, with live counting underneath.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#e6e9e2"></i>Stock</span>
+        <span class="swatch"><i style="background:#f7f8f4"></i>Sheet</span>
+        <span class="swatch"><i style="background:#16191c"></i>Ink</span>
+        <span class="swatch"><i style="background:#0e5e46"></i>Band</span>
+        <span class="swatch"><i style="background:#1d3fa8"></i>Pen</span>
+        <span class="swatch"><i style="background:#c8102e"></i>Stamp</span>
+      </div>
+      <div><h2>Type</h2><p>Newsreader for titles and figures, Hanken Grotesk for interface text, Caveat only for what the voter "writes": rank numbers, their name, signatures.</p></div>
+      <div><h2>Interaction and motion</h2>
+        <ul>
+          <li>Tap an empty box to number it next; drag to change your mind. Partial ballots are allowed (unranked scores 0).</li>
+          <li>Numbers write themselves in left to right; casting thumps a red stamp with time and ballot number.</li>
+          <li>Results look like a tally sheet; the winner gets circled in red pen when the poll closes.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home-hero">
+          <div class="mast"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>Rankzap</div>
+          <h2>Put it to a vote.</h2>
+          <p class="lede">Write the options, share the ballot, watch the preferences get counted live.</p>
+          <button class="btn green" type="button">Issue a new ballot</button>
+        </div>
+        <div class="serial">
+          <p>Got a ballot number?</p>
+          <div class="serial-row"><span>A</span><span>3</span><span></span><span></span><button class="btn" type="button">Open</button></div>
+        </div>
+        <div class="stubs">
+          <h3>Your ballots</h3>
+          <div class="stub"><span class="no">A3ZK</span><div><b>Best morning ritual?</b><small>14 cast · open · issued 2h ago</small></div></div>
+          <div class="stub"><span class="no">Q7PL</span><div><b>Team offsite city</b><small>9 cast · closed · Lisbon won</small></div></div>
+          <div class="stub"><span class="no">M2XD</span><div><b>Friday film</b><small>3 cast · open · issued 4d ago</small></div></div>
+        </div>
+      </div></div>
+      <figcaption>Home: issue a ballot or open one by its serial.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="band">
+          <div class="statusbar"><span>9:41</span></div>
+          <div class="band-row"><b>Ballot A3ZK</b><span>Counted by Borda</span></div>
+        </div>
+        <div class="pad">
+          <h2 class="t">Best morning ritual?</h2>
+          <p class="instr">Number the boxes in order of preference. Tap a box to give it the next number, drag a line to change your mind.</p>
+          <p class="voter">Voter <span>Santi</span></p>
+          <ol class="ballot" data-rank-list aria-label="Your ballot. Use arrow keys to reorder.">
+            <li data-item data-ranked tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Morning walk</span><i class="grip"></i></li>
+            <li data-item data-ranked tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Write for 20 minutes</span><i class="grip"></i></li>
+            <li data-item data-ranked tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Coffee first</span><i class="grip"></i></li>
+            <li data-item tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Stretch for 10 minutes</span><i class="grip"></i></li>
+            <li data-item tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Big breakfast</span><i class="grip"></i></li>
+            <li data-item tabindex="0"><button type="button" class="box" aria-label="Number this option"><span data-rank></span></button><span class="name">Clear messages</span><i class="grip"></i></li>
+          </ol>
+          <div class="cast-wrap">
+            <div class="stampmark" aria-hidden="true">CAST<small>A3ZK · 09:41</small></div>
+            <button class="btn" type="button" id="cast">Cast ballot</button>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Ballot: tap to number, drag to reorder, stamp to cast. Try it.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="band">
+          <div class="statusbar"><span>9:41</span></div>
+          <div class="band-row"><b>The count</b><span><span data-votes>14</span> ballots cast</span></div>
+        </div>
+        <div class="pad">
+          <h2 class="t">Best morning ritual?</h2>
+          <div class="count-head"><span>Ballot A3ZK</span><span>Counting live</span></div>
+          <div class="method" role="group" aria-label="Counting method">
+            <button type="button" data-method="borda">Borda</button>
+            <button type="button" data-method="dowdall">Dowdall</button>
+            <button type="button" data-method="copeland">Copeland</button>
+          </div>
+          <ol class="tally" data-results data-seed="11">
+            <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+            <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+            <li data-opt="write" data-name="Write for 20 minutes" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 minutes</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+            <li data-opt="stretch" data-name="Stretch for 10 minutes" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch for 10 minutes</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+            <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+            <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span><span class="marks"><i></i></span><svg class="ring" viewBox="0 0 340 80" preserveAspectRatio="none" aria-hidden="true"><path d="M30 8 C120 -4 300 0 332 22 C346 44 300 74 170 76 C60 78 6 66 4 40 C2 18 40 6 90 6"/></svg></li>
+          </ol>
+          <div class="signed">Signed by
+            <p>Ava, Diego, Iris, Leo, Mia, Noah, Sara, Santi &amp; 6 more</p>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Results: a tally sheet that recounts with every new ballot.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../shared/rank.js"></script>
+<script>
+// Ballot-only behaviour: tap an empty box to number it next; dragging a line numbers it and everything above it.
+document.addEventListener("DOMContentLoaded", () => {
+  const list = document.querySelector(".ballot");
+  if (!list) return;
+  const items = () => [...list.children];
+  const markAbove = (item) => {
+    const idx = items().indexOf(item);
+    items().forEach((it, i) => { if (i <= idx && !it.hasAttribute("data-ranked")) { it.setAttribute("data-ranked", ""); pop(it); } });
+  };
+  const pop = (it) => { it.classList.remove("just-ranked"); void it.offsetWidth; it.classList.add("just-ranked"); };
+  list.addEventListener("click", (e) => {
+    const box = e.target.closest(".box");
+    const item = box?.closest("[data-item]");
+    if (!item || item.hasAttribute("data-ranked")) return;
+    const lastRanked = items().filter((i) => i.hasAttribute("data-ranked")).pop();
+    Rankzap.flip(items(), () => {
+      lastRanked ? lastRanked.after(item) : list.prepend(item);
+      item.setAttribute("data-ranked", "");
+      Rankzap.renumber(list);
+    });
+    pop(item);
+  });
+  list.addEventListener("rank-drop", (e) => markAbove(e.detail.item));
+  const cast = document.getElementById("cast");
+  cast.addEventListener("click", () => {
+    const wrap = cast.parentElement;
+    wrap.classList.remove("is-cast"); void wrap.offsetWidth; wrap.classList.add("is-cast");
+    cast.textContent = "Cast. Change it any time";
+    navigator.vibrate?.(20);
+  });
+});
+</script>
+</body>
+</html>

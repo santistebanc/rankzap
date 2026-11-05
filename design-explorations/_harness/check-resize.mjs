@@ -1,0 +1,12 @@
+﻿import {chromium} from 'file:///C:/Users/user/code/career-desk/node_modules/playwright-core/index.mjs';
+const b=await chromium.launch({executablePath:'C:/Users/user/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe',headless:true});
+const p=await b.newPage({viewport:{width:390,height:844}});p.setDefaultTimeout(5000);
+await p.route('https://fonts.googleapis.com/**',r=>r.abort());
+await p.addInitScript(()=>{window.err=[];window.addEventListener('error',e=>window.err.push(e.message));});
+console.log('opening');await p.goto('http://127.0.0.1:5190/admin.html?colour=cobalt&long',{waitUntil:'domcontentloaded',timeout:10000});
+console.log('loaded');await p.getByRole('textbox',{name:'Poll question'}).waitFor();
+console.log('rendered');await p.setViewportSize({width:320,height:844});
+await p.getByRole('textbox',{name:'Poll question'}).fill('Resized question');
+await p.getByRole('textbox',{name:'Poll question'}).press('Enter');
+console.log(JSON.stringify(await p.evaluate(()=>({errors:window.err,overflow:document.documentElement.scrollWidth>innerWidth,title:window.__fakeValues.settings.ballotTitle}))));
+await b.close();console.log('done');

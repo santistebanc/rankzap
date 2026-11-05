@@ -1,0 +1,1580 @@
+{
+ "url": "http://127.0.0.1:5190/home.html",
+ "at": "2026-11-05T10:36:46.830Z",
+ "allow": [
+  "icon-chips",
+  "colour-sprawl",
+  "app-title-size"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.48,
+    0.53
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1080,
+     "screens": 1.2,
+     "words": 96,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 16,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 232,
+     "vw": 16.1,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 104,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "RANK IT.",
+     "words": 2,
+     "lines": 2,
+     "size": 232,
+     "font": "Archivo"
+    },
+    "headings": [
+     {
+      "text": "RANK IT.",
+      "words": 2,
+      "chars": 8,
+      "lines": 2,
+      "size": 232,
+      "vw": 16.1,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": -0.03,
+      "leading": 0.9,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.47,
+      "top": 104,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "START A POLL",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.29,
+      "top": 143,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "GOT A CODE?",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.32,
+      "top": 439,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "YOUR POLLS",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.09,
+      "top": 649,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 4,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Archivo",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      30,
+      232
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": {
+      "font": "Archivo",
+      "size": 20,
+      "leading": 1.38,
+      "weight": 600,
+      "tracking": 0,
+      "contrast": 14.6
+     },
+     "measureChars": 45,
+     "max": {
+      "size": 232,
+      "vw": 16.1,
+      "font": "Archivo",
+      "text": "Rankit."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.12,
+     "centerShare": 0.03,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffdd1f",
+     "bodyBgHsl": {
+      "h": 51,
+      "s": 1,
+      "l": 0.56
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffdd1f",
+       "top": 0,
+       "hsl": {
+        "h": 51,
+        "s": 1,
+        "l": 0.56
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0b0b0b",
+       "share": 0.97
+      },
+      {
+       "color": "#ffdd1f",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#0b0b0b",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.04
+      },
+      "fg": "#ffdd1f"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 0,
+     "height": 64,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 2,
+     "heroLabels": [
+      "START A POLL",
+      "JOIN"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 8,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 3,
+       "iconTopped": true,
+       "rounded": false,
+       "top": 701
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 44,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "archivo"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1080,
+    "margins": {
+     "left": 128,
+     "right": 128
+    },
+    "sections": [
+     {
+      "sel": "div.grid.gap-8",
+      "tag": "div",
+      "top": 64,
+      "height": 537,
+      "words": 40,
+      "media": 0,
+      "middle": 269,
+      "heading": {
+       "text": "Rank",
+       "size": 232,
+       "tag": "h1"
+      },
+      "left": 128,
+      "right": 128,
+      "textLeft": 128,
+      "textRight": 148,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-10.sm:mt-12",
+      "tag": "section",
+      "top": 649,
+      "height": 356,
+      "words": 45,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Your polls",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 128,
+      "right": 128,
+      "textLeft": 128,
+      "textRight": 128,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "RANK IT.",
+      "size": 232,
+      "top": 104,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 128,
+      "n": 4
+     },
+     {
+      "x": 848,
+      "n": 1
+     },
+     {
+      "x": 872,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 6,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.1,
+    "voidBox": {
+     "x": 600,
+     "y": 120,
+     "w": 240,
+     "h": 540
+    }
+   },
+   "app": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "dark": false,
+    "ground": "#ffdd1f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 128,
+     "right": 128
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 232,
+     "vw": 16.1,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 104,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 4,
+     "firstScreen": 3,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 4,
+     "radii": [
+      [
+       0,
+       4
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 8,
+     "hues": 7,
+     "samples": [
+      {
+       "hue": 51,
+       "size": 49,
+       "radius": "0px"
+      },
+      {
+       "hue": 73,
+       "size": 47,
+       "radius": "0px"
+      },
+      {
+       "hue": 153,
+       "size": 47,
+       "radius": "0px"
+      },
+      {
+       "hue": 205,
+       "size": 47,
+       "radius": "0px"
+      }
+     ]
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.1,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      30,
+      232
+     ]
+    },
+    "title": {
+     "text": "RANK\nIT.",
+     "size": 232,
+     "top": 104
+    },
+    "colourShare": 0.659
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.59,
+    0.63
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1128,
+     "screens": 1.1,
+     "words": 96,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 16,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 180,
+     "vw": 23.4,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 167,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "RANK IT.",
+     "words": 2,
+     "lines": 2,
+     "size": 180,
+     "font": "Archivo"
+    },
+    "headings": [
+     {
+      "text": "START A POLL",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.3,
+      "top": 112,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "RANK IT.",
+      "words": 2,
+      "chars": 8,
+      "lines": 2,
+      "size": 180,
+      "vw": 23.4,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": -0.03,
+      "leading": 0.9,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.53,
+      "top": 167,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "GOT A CODE?",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.37,
+      "top": 482,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "YOUR POLLS",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.18,
+      "top": 696,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 4,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 0,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Archivo",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      30,
+      180
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": {
+      "font": "Archivo",
+      "size": 20,
+      "leading": 1.38,
+      "weight": 600,
+      "tracking": 0,
+      "contrast": 14.6
+     },
+     "measureChars": 41,
+     "max": {
+      "size": 180,
+      "vw": 23.4,
+      "font": "Archivo",
+      "text": "Rankit."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.12,
+     "centerShare": 0.03,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffdd1f",
+     "bodyBgHsl": {
+      "h": 51,
+      "s": 1,
+      "l": 0.56
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffdd1f",
+       "top": 0,
+       "hsl": {
+        "h": 51,
+        "s": 1,
+        "l": 0.56
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0b0b0b",
+       "share": 0.97
+      },
+      {
+       "color": "#ffdd1f",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#0b0b0b",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.04
+      },
+      "fg": "#ffdd1f"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 0,
+     "height": 64,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 2,
+     "heroLabels": [
+      "START A POLL",
+      "JOIN"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 8,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 44,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "archivo"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1128,
+    "margins": {
+     "left": 24,
+     "right": 24
+    },
+    "sections": [
+     {
+      "sel": "div.grid.gap-8",
+      "tag": "div",
+      "top": 64,
+      "height": 584,
+      "words": 40,
+      "media": 0,
+      "middle": 64,
+      "heading": {
+       "text": "Rank",
+       "size": 180,
+       "tag": "h1"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 44,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-10.sm:mt-12",
+      "tag": "section",
+      "top": 696,
+      "height": 356,
+      "words": 45,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Your polls",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 24,
+      "right": 24,
+      "textLeft": 24,
+      "textRight": 24,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "RANK IT.",
+      "size": 180,
+      "top": 167,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 24,
+      "n": 4
+     },
+     {
+      "x": 463,
+      "n": 1
+     },
+     {
+      "x": 487,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 6,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "dark": false,
+    "ground": "#ffdd1f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 24,
+     "right": 24
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 180,
+     "vw": 23.4,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 167,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 4,
+     "firstScreen": 4,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 4,
+     "radii": [
+      [
+       0,
+       4
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.1,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      20,
+      24,
+      30,
+      180
+     ]
+    },
+    "title": {
+     "text": "RANK\nIT.",
+     "size": 180,
+     "top": 167
+    },
+    "colourShare": 0.582
+   },
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.57,
+    0.8
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 1367,
+     "screens": 1.6,
+     "words": 96,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 16,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 112,
+     "vw": 28.7,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 88,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "h1": {
+     "text": "RANK IT.",
+     "words": 2,
+     "lines": 2,
+     "size": 112,
+     "font": "Archivo"
+    },
+    "headings": [
+     {
+      "text": "RANK IT.",
+      "words": 2,
+      "chars": 8,
+      "lines": 2,
+      "size": 112,
+      "vw": 28.7,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": -0.03,
+      "leading": 0.9,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 88,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "START A POLL",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 415,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "START A POLL",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 649,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "GOT A CODE?",
+      "words": 3,
+      "chars": 11,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 757,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "JOIN",
+      "words": 1,
+      "chars": 4,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.21,
+      "top": 805,
+      "tag": "button",
+      "kind": "heading"
+     },
+     {
+      "text": "YOUR POLLS",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 30,
+      "vw": 7.7,
+      "font": "Archivo",
+      "weight": 900,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.35,
+      "top": 943,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 6,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 2,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Archivo",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      24,
+      30,
+      112
+     ],
+     "sizeCount": 7,
+     "notLoaded": [],
+     "body": {
+      "font": "Archivo",
+      "size": 18,
+      "leading": 1.38,
+      "weight": 600,
+      "tracking": 0,
+      "contrast": 14.6
+     },
+     "measureChars": 40,
+     "max": {
+      "size": 112,
+      "vw": 28.7,
+      "font": "Archivo",
+      "text": "Rankit."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.12,
+     "centerShare": 0.03,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffdd1f",
+     "bodyBgHsl": {
+      "h": 51,
+      "s": 1,
+      "l": 0.56
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#ffdd1f",
+       "top": 0,
+       "hsl": {
+        "h": 51,
+        "s": 1,
+        "l": 0.56
+       }
+      },
+      {
+       "color": "#ffffff",
+       "top": 395,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#0b0b0b",
+       "share": 0.97
+      },
+      {
+       "color": "#ffdd1f",
+       "share": 0.03
+      }
+     ],
+     "button": {
+      "bg": "#0b0b0b",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.04
+      },
+      "fg": "#0b0b0b"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 10,
+     "inHero": 10,
+     "radius": 0,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 2,
+     "heroLabels": [
+      "START A POLL",
+      "JOIN"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 8,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+      "button.grid.aspect-square → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 0,
+     "fixed": false,
+     "height": 44,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "archivo"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 1367,
+    "margins": {
+     "left": 16,
+     "right": 16
+    },
+    "sections": [
+     {
+      "sel": "div.grid.gap-8",
+      "tag": "div",
+      "top": 64,
+      "height": 839,
+      "words": 40,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Rank",
+       "size": 112,
+       "tag": "h1"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 36,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.mt-10.sm:mt-12",
+      "tag": "section",
+      "top": 943,
+      "height": 348,
+      "words": 45,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Your polls",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 16,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "RANK IT.",
+      "size": 112,
+      "top": 88,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 5
+     },
+     {
+      "x": 36,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 6,
+    "bodySize": 14,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "dark": false,
+    "ground": "#ffdd1f",
+    "sidebar": null,
+    "topbar": null,
+    "canvas": {
+     "left": 16,
+     "right": 16
+    },
+    "hero": {
+     "text": "Rank it.",
+     "words": 2,
+     "chars": 8,
+     "lines": 2,
+     "size": 112,
+     "vw": 28.7,
+     "font": "Archivo",
+     "weight": 900,
+     "tracking": -0.03,
+     "leading": 0.9,
+     "top": 88,
+     "tag": "h1",
+     "kind": "heading",
+     "align": "left",
+     "position": "left"
+    },
+    "charts": 0,
+    "layout": {
+     "panels": 4,
+     "firstScreen": 1,
+     "ragged": [],
+     "voids": []
+    },
+    "tiles": 0,
+    "panels": {
+     "count": 4,
+     "radii": [
+      [
+       0,
+       4
+      ]
+     ],
+     "heavyBorders": 0,
+     "borderSamples": [],
+     "heavyShadows": 0,
+     "softShadows": 0,
+     "shadowSamples": [],
+     "glass": 0
+    },
+    "chips": {
+     "count": 0,
+     "hues": 0,
+     "samples": []
+    },
+    "numbers": {
+     "cells": 0,
+     "leftAligned": 0,
+     "figures": 0,
+     "tabularShare": null,
+     "kpiMax": null
+    },
+    "rows": null,
+    "chartHues": 0,
+    "placeholders": [],
+    "type": {
+     "under13": 0.1,
+     "tiny": 0,
+     "tinySamples": [],
+     "sizes": [
+      12,
+      14,
+      16,
+      18,
+      24,
+      30,
+      112
+     ]
+    },
+    "title": {
+     "text": "RANK\nIT.",
+     "size": 112,
+     "top": 88
+    },
+    "colourShare": 0.63
+   },
+   "consoleErrors": []
+  }
+ ],
+ "findings": [],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\user\\code\\rankzap\\design-explorations\\screenshots\\home-inspection\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

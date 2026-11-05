@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Five design directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Comparison board for the five Rankzap directions. Neutral on purpose so the directions carry the colour. */
+*, *::before, *::after { box-sizing: border-box; }
+:root { --bg: #f2f2ef; --ink: #141518; --muted: #5b5f66; --card: #ffffff; --scale: .6; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 "Hanken Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 1480px; margin: 0 auto; padding: clamp(24px, 4vw, 56px); }
+h1 { font-size: clamp(48px, 6vw, 88px); line-height: .95; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 800; }
+.intro { font-size: 19px; max-width: 64ch; margin: 0 0 40px; }
+.switch { display: inline-flex; gap: 4px; background: #e3e3de; padding: 4px; border-radius: 999px; margin-bottom: 28px; }
+.switch button { border: 0; background: none; padding: 10px 20px; border-radius: 999px; font: 600 15px/1 inherit; font-family: inherit; color: var(--muted); cursor: pointer; transition: background-color .15s ease-out, color .15s ease-out; }
+.switch button[aria-pressed="true"] { background: var(--card); color: var(--ink); }
+
+.row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 20px; margin-bottom: 96px; }
+.col h2 { font-size: 22px; letter-spacing: -.02em; margin: 14px 0 2px; }
+.col h2 a { color: inherit; text-decoration: none; }
+.col h2 a:hover { text-decoration: underline; }
+.col p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
+.frame { width: calc(395px * var(--scale)); height: calc(844px * var(--scale)); overflow: hidden; margin: 0 auto; }
+.frame iframe { width: 395px; height: 844px; border: 0; transform: scale(var(--scale)); transform-origin: 0 0; background: transparent; }
+.dots { display: flex; gap: 4px; margin-top: 10px; }
+.dots i { width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .1); }
+
+h3.sec { font-size: 34px; letter-spacing: -.025em; margin: 0 0 20px; }
+table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 15px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 18px 20px; border-bottom: 1px solid #e6e6e1; }
+thead th { font-size: 13px; color: var(--muted); font-weight: 600; }
+tbody th { width: 15%; font-size: 18px; }
+tbody th small { display: block; font-size: 13px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+td ul { margin: 0; padding-left: 18px; }
+.rec { margin-top: 64px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 48px; background: var(--ink); color: #f2f2ef; padding: clamp(28px, 4vw, 56px); }
+.rec h3 { font-size: 40px; line-height: 1; letter-spacing: -.03em; margin: 0; }
+.rec p { margin: 0 0 14px; font-size: 17px; }
+.rec ol { margin: 0; padding-left: 20px; }
+.rec li { margin-bottom: 8px; }
+footer { margin-top: 40px; color: var(--muted); font-size: 14px; }
+@media (max-width: 1200px) { .row { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 40px; } .rec { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .row { grid-template-columns: repeat(2, minmax(0, 1fr)); } :root { --scale: .4; } table { font-size: 14px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rankzap, five ways</h1>
+  <p class="intro">Five competing directions for the voter's three most important moments: arriving, ranking, and watching the count. Each phone below is a live mockup with the same poll and the same ballots: drag to rank, switch the counting method, and watch new votes arrive. Open a direction for its palette, type and motion notes.</p>
+
+  <div class="switch" role="group" aria-label="Screen to compare">
+    <button type="button" data-show="home">Home</button>
+    <button type="button" data-show="ballot" aria-pressed="true">Ballot</button>
+    <button type="button" data-show="results">Live results</button>
+  </div>
+
+  <section class="row" id="row">
+    <div class="col" data-dir="01-ballot">
+      <div class="frame"><iframe title="Ballot Paper"></iframe></div>
+      <h2><a href="01-ballot/index.html">1 · Ballot Paper</a></h2>
+      <p>A printed ballot. Number the boxes in pen, get stamped.</p>
+      <div class="dots"><i style="background:#e6e9e2"></i><i style="background:#16191c"></i><i style="background:#0e5e46"></i><i style="background:#1d3fa8"></i><i style="background:#c8102e"></i></div>
+    </div>
+    <div class="col" data-dir="02-podium">
+      <div class="frame"><iframe title="Podium"></iframe></div>
+      <h2><a href="02-podium/index.html">2 · Podium</a></h2>
+      <p>Loud and flat. Higher places are physically bigger.</p>
+      <div class="dots"><i style="background:#ffdd1f"></i><i style="background:#0b0b0b"></i><i style="background:#ffffff"></i><i style="background:#ece9df"></i></div>
+    </div>
+    <div class="col" data-dir="03-election-night">
+      <div class="frame"><iframe title="Election Night"></iframe></div>
+      <h2><a href="03-election-night/index.html">3 · Election Night</a></h2>
+      <p>A live broadcast. The count is the show.</p>
+      <div class="dots"><i style="background:#0e0f11"></i><i style="background:#191b1f"></i><i style="background:#f3f2ee"></i><i style="background:#ff5a36"></i><i style="background:#5ad38f"></i></div>
+    </div>
+    <div class="col" data-dir="04-tiles">
+      <div class="frame"><iframe title="Tiles"></iframe></div>
+      <h2><a href="04-tiles/index.html">4 · Tiles</a></h2>
+      <p>Calm and tactile. Rank only what you care about.</p>
+      <div class="dots"><i style="background:#eceef1"></i><i style="background:#ffffff"></i><i style="background:#15171a"></i><i style="background:#2b50e6"></i></div>
+    </div>
+    <div class="col" data-dir="05-head-to-head">
+      <div class="frame"><iframe title="Head to Head"></iframe></div>
+      <h2><a href="05-head-to-head/index.html">5 · Head to Head</a></h2>
+      <p>Pick one of two; your ranking builds itself.</p>
+      <div class="dots"><i style="background:#fafaf8"></i><i style="background:#111214"></i><i style="background:#e2392b"></i><i style="background:#2152e3"></i></div>
+    </div>
+  </section>
+
+  <h3 class="sec">How they compare</h3>
+  <table>
+    <thead><tr><th>Direction</th><th>Strongest at</th><th>Pros</th><th>Cons</th></tr></thead>
+    <tbody>
+      <tr><th>Ballot Paper<small>Newsreader · Hanken · Caveat</small></th>
+        <td>Trust and meaning. Makes "ranked choice" self-explanatory.</td>
+        <td><ul><li>Most ownable concept: the room code becomes a ballot serial.</li><li>Tap-to-number supports partial ballots naturally.</li><li>Stamp and red-pen circle give closing moments real ceremony.</li></ul></td>
+        <td><ul><li>Skeuomorphic; can feel quaint for casual "what's for lunch" polls.</li><li>Three typefaces; handwriting face needs care at small sizes and in other scripts.</li><li>Dark mode is awkward for a paper metaphor.</li></ul></td></tr>
+      <tr><th>Podium<small>Archivo (width axis)</small></th>
+        <td>Energy and legibility from across a room. Fits the "zap" in the name.</td>
+        <td><ul><li>Instantly recognisable; the staircase explains ranking without words.</li><li>One family, few colours: cheap to build and theme.</li><li>Great for parties, classrooms, shared screens.</li></ul></td>
+        <td><ul><li>Condensed caps break down with long options (the app allows 200 chars).</li><li>Yellow everywhere tires quickly; needs a calmer admin view.</li><li>Variable row heights make dragging harder to aim on long lists.</li></ul></td></tr>
+      <tr><th>Election Night<small>Barlow Condensed · Barlow</small></th>
+        <td>The live results moment, especially projected for a group.</td>
+        <td><ul><li>Makes realtime visible: deltas, crowd presence, crawl.</li><li>Points-per-slot on the ballot teaches the counting method.</li><li>Natural "present mode" for the admin.</li></ul></td>
+        <td><ul><li>Dark-only identity; the app currently auto-switches themes.</li><li>Busy; the ticker and pulses need restraint and reduced-motion care.</li><li>The ballot is the least novel of the five.</li></ul></td></tr>
+      <tr><th>Tiles<small>Geist</small></th>
+        <td>Everyday usability on a phone, long lists, long option text.</td>
+        <td><ul><li>Tray and pile solve the 15-option problem without changing the data model.</li><li>Calm system that extends easily to admin, settings, dark mode.</li><li>Best drag feel: lift, sink, springs.</li></ul></td>
+        <td><ul><li>Least distinctive; at risk of reading as "nice generic app".</li><li>Personality has to come from motion and copy rather than visuals.</li></ul></td></tr>
+      <tr><th>Head to Head<small>Instrument Serif · Instrument Sans</small></th>
+        <td>Getting honest rankings out of people who hate ranking.</td>
+        <td><ul><li>Genuinely new interaction; no dragging needed at all.</li><li>The matchup grid is an honest picture of Copeland.</li><li>Shines on polls with many options.</li></ul></td>
+        <td><ul><li>More taps for short lists (6 options takes about 10 questions).</li><li>Needs a drag fallback and an "edit my order" step anyway.</li><li>The matrix is hard to read past 8 options.</li></ul></td></tr>
+    </tbody>
+  </table>
+
+  <section class="rec">
+    <h3>Recommendation: Tiles as the base, with Election Night for the results stage.</h3>
+    <div>
+      <p>Rankzap is used on phones, by people who've just been sent a link, with options up to 200 characters long and automatic light and dark themes. Tiles is the only direction that holds up under all of that without compromise. Its tray and pile also fixes the hardest real problem, long lists, using the "unranked counts as 0" rule the tally already has.</p>
+      <p>Tiles alone is too quiet, so borrow the strongest ideas from the others:</p>
+      <ol>
+        <li><b>Election Night's results</b> as a big-screen "present" mode for the admin: score deltas, crowd presence, method switcher.</li>
+        <li><b>Points per slot</b> from Election Night on the ballot, so voters see what Borda or Dowdall does with their order.</li>
+        <li><b>Head to Head</b> as an optional ballot mode, offered automatically when a poll has more than about 8 options.</li>
+        <li>From Podium, scaling the rank number by place and springy numeral punches, applied lightly.</li>
+      </ol>
+      <p style="margin-top:14px">If you'd rather the brand be the headline, Podium is the most memorable alternative. It would need a calmer admin and a long-text fallback.</p>
+    </div>
+  </section>
+
+  <footer><a href="podium-variations/index.html">Podium, five variations</a> · Static HTML mockups with fake data. Fonts from Google Fonts. Nothing in <code>src/</code> was changed.</footer>
+</main>
+<script>
+const buttons = document.querySelectorAll("[data-show]");
+function show(screen) {
+  buttons.forEach((b) => b.setAttribute("aria-pressed", b.dataset.show === screen));
+  document.querySelectorAll("#row .col").forEach((c) => {
+    c.querySelector("iframe").src = `${c.dataset.dir}/index.html?only=${screen}`;
+  });
+}
+buttons.forEach((b) => b.addEventListener("click", () => show(b.dataset.show)));
+show(new URLSearchParams(location.search).get("screen") || "ballot");
+</script>
+</body>
+</html>

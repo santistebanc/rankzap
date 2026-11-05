@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium A · Floodlight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/frame.css">
+<link rel="stylesheet" href="../podium-base.css">
+<style>
+/* Podium A · Floodlight. Podium's dark twin: a stadium at night, the leader under the lights. */
+:root {
+  --ground: #0b0b0b; --ink: #f5f3ea;
+  --hi: #ffdd1f; --hi-ink: #0b0b0b;
+  --step: #222220; --step-ink: #f5f3ea;
+  --low: #161615; --low-ink: #b9b6ab;
+  --chip: #ffdd1f; --chip-ink: #0b0b0b;
+  --board-bg: #0b0b0b; --board-ink: #f5f3ea; --board-muted: #b9b6ab; --bezel: #2a2a28;
+  --bg: var(--ground);
+}
+.board-head h1 span { color: var(--hi); }
+.recent { background: #161615; color: var(--ink); }
+.recent h3 { color: var(--hi); }
+.home .big span:first-child { color: var(--ink); }
+.stairs [data-item]:nth-child(1) .label::after { content: "Your pick"; display: block; font: 700 13px/1 var(--font); font-stretch: 100%; text-transform: none; margin-top: 6px; opacity: .7; }
+.stairs [data-item].is-dragging { box-shadow: 0 0 0 3px var(--hi), 0 24px 40px -12px #000; }
+/* The lights come up on a new leader. */
+.winner.lead-changed { animation: flood .9s ease-out; }
+@keyframes flood { 0% { background: #fff; } 100% { background: var(--hi); } }
+.winner .live { display: inline-flex; align-items: center; gap: 6px; }
+.winner .live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1.4s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.rows-note { margin: 0 18px 22px; font-size: 13px; color: var(--low-ink); }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All Podium variations</a><span>Podium A of E</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Flood<span>light</span></h1>
+      <p class="thesis">Podium after dark. Same staircase, same springs, but the ground goes black and the signal yellow becomes the floodlight: it only falls on your first pick, the leader and the main action. Whenever the leader changes, the lights flash white and come back up. It doubles as Podium's dark theme, so the app can keep following the system setting.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#0b0b0b"></i>Night</span>
+        <span class="swatch"><i style="background:#222220"></i>Step</span>
+        <span class="swatch"><i style="background:#161615"></i>Bench</span>
+        <span class="swatch"><i style="background:#f5f3ea"></i>Chalk</span>
+        <span class="swatch"><i style="background:#ffdd1f"></i>Floodlight</span>
+      </div>
+      <div><h2>What changes from Podium</h2><p>Yellow goes from the background to a single light source. Everything else sits in three greys, so the hierarchy is "lit or not".</p></div>
+      <div><h2>Motion</h2>
+        <ul>
+          <li>Leader change: the winner block flashes white for 900ms, like stadium lights.</li>
+          <li>Dragging shows a yellow outline plus a deep shadow instead of the hard offset (offsets don't read on black).</li>
+          <li>Live dot blinks in steps, not a soft pulse: a scoreboard, not a notification.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home">
+          <div>
+            <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="#ffdd1f"/></svg>RANKZAP</span></div>
+            <h2 class="big"><span>Rank</span><span>it.</span></h2>
+          </div>
+          <p>One link. Everyone drags their favourites to the top. The winner gets the lights.</p>
+          <div class="actions">
+            <button class="btn" type="button">Start a poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+            <div class="code"><span>A</span><span>3</span><span>Z</span><span>K</span><button class="btn" type="button">Join</button></div>
+          </div>
+          <div class="recent">
+            <h3>Yours</h3>
+            <a href="#">Best morning ritual? <span>A3ZK · live</span></a>
+            <a href="#">Team offsite city <span>Q7PL · done</span></a>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: the yellow is now a block of light in the dark.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Drag your favourite into the light.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span></li>
+        </ol>
+        <div class="submit"><button class="btn" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption>Ballot: only first place is lit. Try dragging.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span class="live">Live · leading</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+        </div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="bands" data-results data-seed="3" data-every="2400">
+          <li data-opt="walk" data-name="Morning walk" data-bias="4"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4.4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+        <p class="rows-note">Close race: the lights flash whenever the lead changes hands.</p>
+      </div></div>
+      <figcaption>Results: the leader under the floodlight.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../podium.js"></script>
+<script src="../../shared/rank.js"></script>
+</body>
+</html>

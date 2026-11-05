@@ -1,0 +1,290 @@
+{
+  "summaries": [
+    {
+      "label": "yellow/arrive",
+      "count": 18,
+      "minimum": 4.74
+    },
+    {
+      "label": "yellow/ballot",
+      "count": 17,
+      "minimum": 14.63
+    },
+    {
+      "label": "yellow/ballot-focused",
+      "count": 17,
+      "minimum": 14.63
+    },
+    {
+      "label": "yellow/voted",
+      "count": 24,
+      "minimum": 14.38
+    },
+    {
+      "label": "yellow/closed",
+      "count": 30,
+      "minimum": 14.63
+    },
+    {
+      "label": "yellow/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "yellow/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "lime/arrive",
+      "count": 18,
+      "minimum": 4.78
+    },
+    {
+      "label": "lime/ballot",
+      "count": 17,
+      "minimum": 14.96
+    },
+    {
+      "label": "lime/ballot-focused",
+      "count": 17,
+      "minimum": 14.96
+    },
+    {
+      "label": "lime/voted",
+      "count": 24,
+      "minimum": 14.38
+    },
+    {
+      "label": "lime/closed",
+      "count": 30,
+      "minimum": 14.96
+    },
+    {
+      "label": "lime/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "lime/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "mint/arrive",
+      "count": 18,
+      "minimum": 4.29
+    },
+    {
+      "label": "mint/ballot",
+      "count": 17,
+      "minimum": 11.01
+    },
+    {
+      "label": "mint/ballot-focused",
+      "count": 17,
+      "minimum": 11.01
+    },
+    {
+      "label": "mint/voted",
+      "count": 24,
+      "minimum": 11.01
+    },
+    {
+      "label": "mint/closed",
+      "count": 30,
+      "minimum": 11.01
+    },
+    {
+      "label": "mint/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "mint/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "sky/arrive",
+      "count": 18,
+      "minimum": 3.89
+    },
+    {
+      "label": "sky/ballot",
+      "count": 17,
+      "minimum": 8.86
+    },
+    {
+      "label": "sky/ballot-focused",
+      "count": 17,
+      "minimum": 8.86
+    },
+    {
+      "label": "sky/voted",
+      "count": 24,
+      "minimum": 8.86
+    },
+    {
+      "label": "sky/closed",
+      "count": 30,
+      "minimum": 8.86
+    },
+    {
+      "label": "sky/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "sky/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "cobalt/arrive",
+      "count": 18,
+      "minimum": 3.07
+    },
+    {
+      "label": "cobalt/ballot",
+      "count": 17,
+      "minimum": 5.9
+    },
+    {
+      "label": "cobalt/ballot-focused",
+      "count": 17,
+      "minimum": 5.9
+    },
+    {
+      "label": "cobalt/voted",
+      "count": 24,
+      "minimum": 5.9
+    },
+    {
+      "label": "cobalt/closed",
+      "count": 30,
+      "minimum": 5.9
+    },
+    {
+      "label": "cobalt/admin-empty",
+      "count": 34,
+      "minimum": 5.9
+    },
+    {
+      "label": "cobalt/admin",
+      "count": 52,
+      "minimum": 5.9
+    },
+    {
+      "label": "pink/arrive",
+      "count": 18,
+      "minimum": 3.65
+    },
+    {
+      "label": "pink/ballot",
+      "count": 17,
+      "minimum": 7.58
+    },
+    {
+      "label": "pink/ballot-focused",
+      "count": 17,
+      "minimum": 7.58
+    },
+    {
+      "label": "pink/voted",
+      "count": 24,
+      "minimum": 7.58
+    },
+    {
+      "label": "pink/closed",
+      "count": 30,
+      "minimum": 7.58
+    },
+    {
+      "label": "pink/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "pink/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "tomato/arrive",
+      "count": 18,
+      "minimum": 3.28
+    },
+    {
+      "label": "tomato/ballot",
+      "count": 17,
+      "minimum": 5.87
+    },
+    {
+      "label": "tomato/ballot-focused",
+      "count": 17,
+      "minimum": 5.87
+    },
+    {
+      "label": "tomato/voted",
+      "count": 24,
+      "minimum": 5.87
+    },
+    {
+      "label": "tomato/closed",
+      "count": 30,
+      "minimum": 5.87
+    },
+    {
+      "label": "tomato/admin-empty",
+      "count": 34,
+      "minimum": 5.87
+    },
+    {
+      "label": "tomato/admin",
+      "count": 52,
+      "minimum": 5.87
+    },
+    {
+      "label": "orange/arrive",
+      "count": 18,
+      "minimum": 3.81
+    },
+    {
+      "label": "orange/ballot",
+      "count": 17,
+      "minimum": 8.35
+    },
+    {
+      "label": "orange/ballot-focused",
+      "count": 17,
+      "minimum": 8.35
+    },
+    {
+      "label": "orange/voted",
+      "count": 24,
+      "minimum": 8.35
+    },
+    {
+      "label": "orange/closed",
+      "count": 30,
+      "minimum": 8.35
+    },
+    {
+      "label": "orange/admin-empty",
+      "count": 34,
+      "minimum": 5.94
+    },
+    {
+      "label": "orange/admin",
+      "count": 52,
+      "minimum": 5.94
+    },
+    {
+      "label": "home",
+      "count": 31,
+      "minimum": 5.16
+    }
+  ],
+  "failures": []
+}

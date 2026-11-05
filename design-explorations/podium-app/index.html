@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · The whole app in Podium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<link rel="stylesheet" href="../podium-variations/podium-base.css">
+<style>
+/* The whole Rankzap app in Podium (original, light) with a per-poll colour.
+   --sig / --sig-ink / --sig-fg come from the poll's colour; Home always uses brand yellow. */
+:root {
+  --sig: #ffdd1f; --sig-ink: #0b0b0b; --sig-fg: #ffdd1f;
+  --board-bg: #f1efe8; --board-ink: #0b0b0b; --board-muted: #45454a; --bezel: #0b0b0b;
+}
+.brand { --sig: #ffdd1f; --sig-ink: #0b0b0b; --sig-fg: #ffdd1f; }
+.app {
+  --ground: var(--sig); --ink: var(--sig-ink);
+  --hi: #0b0b0b; --hi-ink: var(--sig-fg);
+  --step: #ffffff; --step-ink: #0b0b0b;
+  --low: color-mix(in oklab, var(--sig) 32%, #f1efe8); --low-ink: #0b0b0b;
+  --chip: #0b0b0b; --chip-ink: var(--sig-fg);
+  --bg: var(--sig);
+}
+.phone { background: var(--bg); }
+.cnd { font-stretch: 62%; text-transform: uppercase; }
+.wide { font-stretch: 75%; text-transform: uppercase; }
+
+/* ---------- board ---------- */
+.board { padding-bottom: 8px; }
+.board-head h1 span { background: var(--sig); color: var(--sig-ink); padding: 0 .08em; transition: background-color .35s ease-out, color .35s ease-out; }
+.board-picker { display: grid; grid-template-columns: repeat(8, 44px); gap: 6px; }
+.lane { padding: 40px clamp(24px, 4vw, 64px) 72px; }
+.lane > header { max-width: 1400px; margin: 0 auto 32px; display: flex; gap: 18px; align-items: baseline; flex-wrap: wrap; }
+.lane > header h2 { margin: 0; font: 900 44px/1 var(--font); font-stretch: 62%; text-transform: uppercase; }
+.lane > header p { margin: 0; font-size: 16px; max-width: 70ch; }
+.lane.alt { background: #e6e4dc; }
+.phones { row-gap: 56px; }
+
+/* ---------- shared pieces ---------- */
+.lbl { display: flex; justify-content: space-between; align-items: baseline; font: 800 14px/1 var(--font); margin: 18px 0 8px; }
+.lbl span { font-weight: 600; opacity: .8; }
+.pad { padding: 0 18px 24px; }
+.field {
+  width: 100%; border: 0; border-bottom: 4px solid currentColor; background: none; color: var(--ink); padding: 4px 0 8px;
+  font: 900 44px/.95 var(--font); font-stretch: 62%; text-transform: uppercase; border-radius: 0;
+}
+.field:focus-visible { outline: none; border-bottom-color: #0b0b0b; }
+.btn.ghost { background: var(--step); color: var(--step-ink); }
+.btn.sm { min-height: 44px; font-size: 18px; padding: 0 14px; width: auto; gap: 10px; }
+.picker { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.picker button {
+  aspect-ratio: 1; border: 0; border-radius: 0; background: var(--c); color: var(--i); cursor: pointer; display: grid; place-items: center; padding: 0;
+  box-shadow: 0 0 0 2px rgb(0 0 0 / .25); transition: transform .18s var(--spring), box-shadow .18s ease-out;
+}
+.picker button:hover { transform: translateY(-2px); }
+.picker button:active { transform: scale(.94); }
+.picker button[aria-checked="true"] { box-shadow: 0 0 0 4px #0b0b0b; transform: scale(1.06); }
+.picker button svg { width: 18px; height: 18px; opacity: 0; }
+.picker button[aria-checked="true"] svg { opacity: 1; }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px 6px; font: 800 13px/1 var(--font); letter-spacing: .02em; background: var(--step); color: var(--step-ink); }
+.tag.voted { background: #0b0b0b; color: var(--sig-fg); }
+.tag.voting::before, .tag.editing::before { content: ""; width: 8px; height: 8px; background: currentColor; animation: blink 1.2s steps(1) infinite; }
+.tag.editing { background: var(--low); }
+.tag.off { background: transparent; box-shadow: inset 0 0 0 2px currentColor; opacity: .55; }
+.tag.me { box-shadow: inset 0 0 0 3px #0b0b0b; }
+@keyframes blink { 50% { opacity: 0; } }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tags button.tag { border: 0; cursor: pointer; font-family: var(--font); }
+.toggle { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 12px 0; font-size: 15px; font-weight: 600; line-height: 1.3; }
+.toggle + .toggle { box-shadow: 0 -2px 0 rgb(0 0 0 / .08); }
+.switch { width: 52px; height: 30px; border: 0; padding: 3px; background: #d8d6cf; cursor: pointer; display: flex; transition: background-color .2s ease-out; }
+.switch i { width: 24px; height: 24px; background: #fff; transition: transform .22s var(--spring); }
+.switch[aria-checked="true"] { background: #0b0b0b; }
+.switch[aria-checked="true"] i { transform: translateX(22px); background: var(--sig-fg); }
+.status { display: inline-flex; align-items: center; gap: 7px; font: 800 14px/1 var(--font); }
+.status::before { content: ""; width: 9px; height: 9px; background: currentColor; animation: blink 1.4s steps(1) infinite; }
+.foot { display: flex; justify-content: space-between; align-items: center; padding: 18px; font-size: 13px; font-weight: 600; }
+.foot a { color: inherit; }
+
+/* ---------- home ---------- */
+.home .recent a { align-items: center; }
+.home .recent h3 { color: var(--sig-fg); }
+.home .recent a i { width: 14px; height: 14px; flex: none; margin-right: 10px; }
+.home .recent a b { flex: 1; font-weight: 700; }
+
+/* ---------- join ---------- */
+.join-q { font: 900 64px/.84 var(--font); font-stretch: 62%; text-transform: uppercase; margin: 26px 18px 14px; letter-spacing: -.01em; }
+.facts { margin: 0 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.facts div { background: var(--step); color: var(--step-ink); padding: 12px 10px; }
+.facts b { display: block; font: 900 34px/1 var(--font); font-stretch: 62%; }
+.facts span { font-size: 12px; font-weight: 600; }
+.peek { margin: 0 18px; display: grid; gap: 4px; }
+.peek span { background: var(--low); color: var(--low-ink); padding: 10px 12px; font: 800 16px/1 var(--font); font-stretch: 75%; text-transform: uppercase; }
+
+/* ---------- ballot extras ---------- */
+.who { display: flex; justify-content: space-between; align-items: center; margin: 0 18px 2px; font-size: 14px; font-weight: 600; }
+.who button { background: none; border: 0; text-decoration: underline; font: inherit; color: inherit; cursor: pointer; padding: 0; }
+.add-row { margin: 4px 0 0; display: grid; grid-template-columns: 74px 1fr; align-items: center; min-height: 52px; background: transparent; box-shadow: inset 0 0 0 3px #0b0b0b; color: var(--ink); font-weight: 700; font-size: 15px; }
+.add-row b { font: 900 34px/1 var(--font); font-stretch: 62%; text-align: center; }
+.submit.locked .btn { background: var(--step); color: var(--step-ink); }
+
+/* ---------- voted / results ---------- */
+.inbox { background: #0b0b0b; color: #fff; margin: 0; padding: 4px 18px 18px; }
+.inbox .statusbar { padding-inline: 12px; }
+.inbox b { display: block; font: 900 56px/.86 var(--font); font-stretch: 62%; text-transform: uppercase; color: var(--sig-fg); margin: 12px 0 8px; }
+.inbox p { margin: 0 0 14px; font-size: 15px; }
+.inbox .row { display: flex; gap: 6px; }
+.inbox .btn.sm { background: var(--sig); color: var(--sig-ink); }
+.inbox .btn.sm.dark { background: #2a2a28; color: #fff; }
+.sub-h { margin: 18px 18px 0; font: 900 24px/1 var(--font); font-stretch: 62%; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; }
+.sub-h span { font: 700 13px/1 var(--font); font-stretch: 100%; text-transform: none; }
+.bands li { background: var(--low); }
+.bands li:not([data-leading]) > * { color: #0b0b0b; }
+.mine { margin: 0 18px; display: grid; gap: 3px; }
+.mine span { display: grid; grid-template-columns: 34px 1fr; background: var(--step); padding: 9px 10px 8px 0; font: 800 15px/1 var(--font); font-stretch: 75%; text-transform: uppercase; color: #0b0b0b; }
+.mine span b { font: 900 20px/1 var(--font); font-stretch: 62%; text-align: center; }
+
+/* ---------- closed ---------- */
+.final { background: #0b0b0b; color: #fff; padding: 4px 18px 22px; position: relative; overflow: hidden; }
+.final .statusbar { padding-inline: 12px; }
+.final small { display: block; font-weight: 700; font-size: 14px; margin: 10px 0 6px; }
+.final .w { font: 900 30px/1 var(--font); font-stretch: 62%; text-transform: uppercase; color: var(--sig-fg); }
+.final b { display: block; font: 900 100px/.82 var(--font); font-stretch: 62%; text-transform: uppercase; color: var(--sig-fg); margin-top: 4px; }
+.final p { margin: 12px 0 0; font-size: 15px; }
+.final .big1 { position: absolute; right: -14px; bottom: -48px; font: 900 240px/1 var(--font); font-stretch: 62%; color: #fff; opacity: .08; pointer-events: none; }
+
+/* ---------- share (mobile host) ---------- */
+.share-hero { padding: 0 18px; }
+.share-hero h2 { font: 900 50px/.86 var(--font); font-stretch: 62%; text-transform: uppercase; margin: 22px 0 16px; }
+.qr { background: #fff; padding: 16px; display: grid; place-items: center; }
+.qr svg { width: 100%; height: auto; display: block; }
+.codebig { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 4px 0; }
+.codebig span { background: #0b0b0b; color: var(--sig-fg); font: 900 64px/1 var(--font); font-stretch: 62%; text-align: center; padding: 8px 0 4px; }
+.linkrow { display: grid; grid-template-columns: 1fr auto; gap: 4px; margin-top: 4px; }
+.linkrow span { background: var(--step); color: #0b0b0b; padding: 0 14px; display: flex; align-items: center; font-weight: 700; font-size: 15px; }
+.linkrow .btn { width: auto; min-height: 52px; font-size: 20px; }
+
+/* ---------- desktop admin ---------- */
+.desk { width: 1240px; max-width: 100%; margin: 0 auto; border-radius: 14px; overflow: hidden; box-shadow: 0 0 0 10px #0b0b0b, 0 60px 100px -50px rgb(0 0 0 / .55); background: var(--bg); }
+.chrome { height: 40px; background: #0b0b0b; color: #9b9a94; display: flex; align-items: center; gap: 16px; padding: 0 16px; font-size: 13px; }
+.chrome i { width: 11px; height: 11px; border-radius: 50%; background: #3a3a38; }
+.chrome span { flex: 1; text-align: center; margin-right: 60px; }
+.desk .screen { height: auto; overflow: visible; }
+.d-top { display: flex; align-items: center; gap: 14px; padding: 18px 28px; }
+.d-top .logo { font-weight: 800; }
+.d-top .grow { flex: 1; }
+.d-title { padding: 0 28px; display: flex; gap: 24px; align-items: end; }
+.d-title .field { font-size: 84px; flex: 1; }
+.d-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; padding: 24px 28px 28px; align-items: start; }
+.panel { background: var(--step); color: #0b0b0b; padding: 18px 20px 20px; }
+.panel + .panel { margin-top: 16px; }
+.panel h3 { margin: 0 0 12px; font: 900 26px/1 var(--font); font-stretch: 62%; text-transform: uppercase; display: flex; justify-content: space-between; align-items: baseline; }
+.panel h3 span { font: 700 13px/1 var(--font); font-stretch: 100%; text-transform: none; }
+.opts-live { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; --swap-ms: 480; --swap-ease: cubic-bezier(.3,1.35,.5,1); }
+.opts-live li { position: relative; display: grid; grid-template-columns: 52px 1fr auto 40px; align-items: center; min-height: 58px; background: var(--low); }
+.opts-live li::before { content: ""; position: absolute; inset: 0; width: calc(var(--share) * 100%); background: var(--sig-fg); transition: width .55s cubic-bezier(.3,1.3,.5,1); }
+.opts-live li[data-leading]::before { background: #0b0b0b; }
+.opts-live li > * { position: relative; }
+.opts-live li[data-leading] > * { color: var(--sig-fg); }
+.opts-live li > * { color: #0b0b0b; }
+.opts-live .pl { font: 900 36px/1 var(--font); font-stretch: 62%; text-align: center; }
+.opts-live .nm { font: 800 20px/1 var(--font); font-stretch: 75%; text-transform: uppercase; outline: none; padding: 4px 0; }
+.opts-live .nm:focus { box-shadow: 0 3px 0 currentColor; }
+.opts-live .sc { font: 900 30px/1 var(--font); font-stretch: 62%; padding-right: 8px; }
+.opts-live .firsts { font: 600 12px/1 var(--font); opacity: .8; display: block; margin-top: 4px; text-transform: none; font-stretch: 100%; }
+.opts-live button { border: 0; background: none; font-size: 22px; cursor: pointer; opacity: .55; }
+.opts-live button:hover { opacity: 1; }
+.opts-live li.is-bumped .sc { animation: punch .35s var(--spring); }
+.add-in { margin-top: 6px; display: grid; grid-template-columns: 1fr auto; gap: 4px; }
+.add-in input { border: 0; background: #f1efe8; padding: 0 16px; font: 600 16px/1 var(--font); min-height: 52px; color: #0b0b0b; }
+.add-in .btn { width: auto; min-height: 52px; font-size: 20px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.seg button { border: 0; color: #0b0b0b; background: #f1efe8; padding: 12px 0; font: 800 15px/1 var(--font); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #0b0b0b; color: var(--sig-fg); }
+.seg-note { font-size: 13px; margin: 8px 0 4px; line-height: 1.4; }
+.share-d { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; }
+.share-d .qr { padding: 6px; background: #fff; box-shadow: inset 0 0 0 2px #0b0b0b; }
+.share-d b { display: block; font: 900 56px/.9 var(--font); font-stretch: 62%; }
+.share-d p { margin: 4px 0 10px; font-size: 14px; font-weight: 600; }
+.share-d .row { display: flex; gap: 6px; }
+.voter-panel { margin-top: 12px; background: #f1efe8; padding: 12px 14px; }
+.voter-panel p { margin: 0 0 8px; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; }
+.voter-panel ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; }
+.voter-panel li { display: grid; grid-template-columns: 28px 1fr; font: 800 14px/1.2 var(--font); font-stretch: 75%; text-transform: uppercase; background: #fff; padding: 7px 8px 6px 0; }
+.voter-panel li b { font: 900 18px/1 var(--font); font-stretch: 62%; text-align: center; }
+.danger { display: flex; gap: 6px; }
+.danger .btn.sm { background: #0b0b0b; color: var(--sig-fg); }
+.danger .btn.sm.ghost { background: var(--step); color: #0b0b0b; }
+
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../podium-colour/index.html">Colour study</a><span>Rankzap · whole app · Podium</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>The whole <span>app</span></h1>
+      <p class="thesis">Every screen of Rankzap in the chosen design: the original Podium with a poll colour picked by the host. The voter journey on phones, the host's admin on desktop, and the host on a phone. Home stays in brand yellow; everything inside a poll takes the poll's colour. Everything is live: drag, switch methods, toggle settings, click voters, rename options, and pick a colour to repaint the whole app.</p>
+    </div>
+    <div class="notes">
+      <div><h2>Poll colour</h2><div class="picker board-picker" data-picker role="radiogroup" aria-label="Poll colour"></div></div>
+      <div><h2>Maps to the current app</h2>
+        <ul>
+          <li><b>/</b> Home: start a poll, reopen a recent one, plus a new join-by-code box.</li>
+          <li><b>/:roomId</b> Voter: name, staircase ballot, submit, results when allowed, closed state.</li>
+          <li><b>/:roomId/admin</b> Host: title, options with live scores, colour, scoring method, the five settings, share and QR, voters with their rankings, close and reset.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+</main>
+
+<!-- ================= VOTER ================= -->
+<section class="lane">
+  <header><h2>Voter</h2><p>From the link to the final result. Five screens on a phone.</p></header>
+  <div class="phones">
+
+    <figure class="phone-wrap">
+      <div class="phone app brand"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home">
+          <div>
+            <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>RANKZAP</span></div>
+            <h2 class="big"><span>Rank</span><span>it.</span></h2>
+          </div>
+          <p>One link. Everyone drags their favourites to the top. The winner is obvious.</p>
+          <div class="actions">
+            <button class="btn" type="button">Start a poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+            <div class="code"><span>A</span><span>3</span><span>Z</span><span>K</span><button class="btn" type="button">Join</button></div>
+          </div>
+          <div class="recent">
+            <h3>Your polls</h3>
+            <a href="#"><i data-poll-swatch></i><b>Best morning ritual?</b><span>A3ZK · live</span></a>
+            <a href="#"><i style="background:#2d4bff"></i><b>Team offsite city</b><span>Q7PL · done</span></a>
+            <a href="#"><i style="background:#2fdc8e"></i><b>Friday film</b><span>M2XD · draft</span></a>
+          </div>
+        </div>
+      </div></div>
+      <figcaption><b>1 · Home.</b> Brand yellow. Recent polls show their own colour.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>RANKZAP</span><span class="chip">A3ZK</span></div>
+        <h2 class="join-q">Best morning ritual?</h2>
+        <div class="facts">
+          <div><b>6</b><span>options</span></div>
+          <div><b>14</b><span>have voted</span></div>
+          <div><b>3</b><span>ranking now</span></div>
+        </div>
+        <div class="pad">
+          <div class="lbl">Your name</div>
+          <input class="field" value="Santi" aria-label="Your name">
+          <button class="btn" type="button" style="margin-top:18px">Start ranking <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+          <div class="lbl">Already here</div>
+          <div class="tags"><span class="tag voted">Ava</span><span class="tag voted">Diego</span><span class="tag voting">Iris</span><span class="tag voted">Leo</span><span class="tag editing">Mia</span><span class="tag off">Noah</span></div>
+        </div>
+      </div></div>
+      <figcaption><b>2 · Arrive.</b> The link opens in the poll's colour. Name once, remembered after.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Drag your favourite to the top.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span></li>
+        </ol>
+        <div style="padding:0 0 0"><div class="add-row"><b>+</b>Add an option</div></div>
+        <div class="submit" id="submit"><button class="btn" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption><b>3 · Rank.</b> The staircase. "Add an option" shows only when the host allows it.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="inbox">
+          <div class="statusbar"><span>9:41</span></div>
+          <b>You're in.</b>
+          <p>Your ranking is saved. You can change it until the host closes the poll.</p>
+          <div class="row"><button class="btn sm" type="button">Change my vote</button><button class="btn sm dark" type="button">Share</button></div>
+        </div>
+        <p class="sub-h">Results so far <span><span data-votes></span> votes · <span data-method-name>Borda</span></span></p>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="bands" data-results data-seed="5">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+        <p class="sub-h" style="margin-top:0">Who's voted</p>
+        <div class="pad" style="padding-top:10px"><div class="tags"><span class="tag voted me">Santi</span><span class="tag voted">Ava</span><span class="tag voted">Diego</span><span class="tag voting">Iris</span><span class="tag voted">Leo</span><span class="tag editing">Mia</span><span class="tag off">Noah</span><span class="tag voted">Sara</span></div></div>
+      </div></div>
+      <figcaption><b>4 · Voted.</b> Live results if the host shows them; otherwise just your ranking.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="final">
+          <div class="statusbar"><span>9:41</span></div>
+          <small>Poll closed · 18 votes · Borda</small>
+          <span class="w">Winner</span>
+          <b>Morning walk</b>
+          <p>Won by 9 points over Coffee first.</p>
+          <span class="big1" aria-hidden="true">1</span>
+        </div>
+        <ol class="bands" data-results data-seed="5" data-live="off" style="margin-top:16px">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+        <p class="sub-h" style="margin-top:0">Your ranking</p>
+        <div class="mine" style="margin-top:10px"><span><b>1</b>Morning walk</span><span><b>2</b>Write for 20 minutes</span><span><b>3</b>Coffee first</span></div>
+        <div class="foot"><span>Powered by Rankzap</span><a href="#">Make your own poll</a></div>
+      </div></div>
+      <figcaption><b>5 · Closed.</b> The final result, with your own ranking underneath.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= HOST DESKTOP ================= -->
+<section class="lane alt">
+  <header><h2>Host · desktop</h2><p>The admin page on a laptop. One screen: edit, share, set up, watch, close.</p></header>
+  <div class="desk app">
+    <div class="chrome"><i></i><i></i><i></i><span>rankzap.site/A3ZK/admin</span></div>
+    <div class="screen">
+      <div class="d-top">
+        <span class="logo"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg> RANKZAP</span>
+        <span class="chip">A3ZK</span>
+        <span class="status">Open · <span data-votes></span> votes</span>
+        <span class="grow"></span>
+        <div class="danger"><button class="btn sm ghost" type="button">Reset votes</button><button class="btn sm" type="button">Close poll</button></div>
+      </div>
+      <div class="d-title"><input class="field" value="Best morning ritual?" aria-label="Poll title"></div>
+      <div class="d-grid">
+        <div>
+          <div class="panel">
+            <h3>Options <span>Live · <span data-method-name>Borda</span> · click a name to edit</span></h3>
+            <ol class="opts-live" data-results data-seed="5">
+              <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Morning walk</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+              <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Coffee first</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+              <li data-opt="write" data-name="Write for 20 minutes" data-bias="3"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Write for 20 minutes</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+              <li data-opt="stretch" data-name="Stretch for 10 minutes" data-bias="1.6"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Stretch for 10 minutes</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+              <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Big breakfast</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+              <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm" contenteditable="true" spellcheck="false">Clear messages</span><span class="sc" data-score></span><button type="button" aria-label="Remove option">×</button></li>
+            </ol>
+            <div class="add-in"><input placeholder="Add an option, or paste a list (one per line)" aria-label="Add an option"><button class="btn" type="button">Add</button></div>
+          </div>
+          <div class="panel">
+            <h3>Voters <span>8 joined · click one to see their ranking</span></h3>
+            <div class="tags" id="voters">
+              <button class="tag voted" type="button">Ava</button><button class="tag voted" type="button">Diego</button><button class="tag voting" type="button">Iris</button><button class="tag voted" type="button">Leo</button><button class="tag editing" type="button">Mia</button><button class="tag off" type="button">Noah</button><button class="tag voted" type="button">Sara</button><button class="tag voted" type="button">Santi</button>
+            </div>
+            <div class="voter-panel" id="voter-panel"><p><span id="vp-name">Diego</span><span>voted 4 min ago · <a href="#" style="color:inherit">ignore vote</a></span></p><ol id="vp-list"></ol></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <h3>Share</h3>
+            <div class="share-d">
+              <div class="qr" data-qr></div>
+              <div><b>A3ZK</b><p>rankzap.site/A3ZK</p><div class="row"><button class="btn sm" type="button">Copy link</button><button class="btn sm ghost" type="button" style="box-shadow:inset 0 0 0 3px #0b0b0b">Show QR</button></div></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Colour <span data-sig-name>Yellow</span></h3>
+            <div class="picker" data-picker role="radiogroup" aria-label="Poll colour"></div>
+          </div>
+          <div class="panel">
+            <h3>Scoring</h3>
+            <div class="seg" role="group" aria-label="Scoring method">
+              <button type="button" data-method="borda" data-label="Borda">Borda</button>
+              <button type="button" data-method="dowdall" data-label="Dowdall">Dowdall</button>
+              <button type="button" data-method="copeland" data-label="Copeland">Copeland</button>
+            </div>
+            <p class="seg-note" id="method-note">Rewards broadly liked options, higher ranks earn more points.</p>
+          </div>
+          <div class="panel">
+            <h3>Settings</h3>
+            <div class="toggle">Show live results to voters<button class="switch" role="switch" aria-checked="true" aria-label="Show live results to voters"><i></i></button></div>
+            <div class="toggle">Allow voters to update their submitted vote<button class="switch" role="switch" aria-checked="true" aria-label="Allow voters to update their vote"><i></i></button></div>
+            <div class="toggle">Allow voters to add options<button class="switch" role="switch" aria-checked="true" aria-label="Allow voters to add options"><i></i></button></div>
+            <div class="toggle">Show voter list to voters<button class="switch" role="switch" aria-checked="true" aria-label="Show voter list to voters"><i></i></button></div>
+            <div class="toggle">Let voters view other voters' rankings<button class="switch" role="switch" aria-checked="false" aria-label="Let voters view other voters' rankings"><i></i></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOST PHONE ================= -->
+<section class="lane">
+  <header><h2>Host · phone</h2><p>The same admin, split into what you need on the go: set up, share, watch.</p></header>
+  <div class="phones">
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>NEW POLL</span><span class="chip">A3ZK</span></div>
+        <div class="pad">
+          <div class="lbl">Question</div>
+          <div class="field" contenteditable="true" role="textbox" aria-label="Poll question" spellcheck="false">Best morning ritual?</div>
+          <div class="lbl">Options <span>6</span></div>
+          <div class="peek" style="margin:0"><span style="background:#fff">Morning walk</span><span style="background:#fff">Coffee first</span><span style="background:#fff">Write for 20 minutes</span><span>+ Add, or paste a list</span></div>
+          <div class="lbl">Poll colour <span data-sig-name>Yellow</span></div>
+          <div class="picker" data-picker role="radiogroup" aria-label="Poll colour"></div>
+          <div class="lbl">Scoring</div>
+          <div class="seg" role="group" aria-label="Scoring method"><button type="button" aria-pressed="true">Borda</button><button type="button">Dowdall</button><button type="button">Copeland</button></div>
+          <button class="btn" type="button" style="margin-top:20px">Share poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+        </div>
+      </div></div>
+      <figcaption><b>6 · Set up.</b> Question, options, colour, scoring. Settings live behind a "More" sheet.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Share</span><span class="chip">Done</span></div>
+        <div class="share-hero">
+          <h2>Scan to rank.</h2>
+          <div class="qr" data-qr></div>
+          <div class="codebig" aria-label="Code A3ZK"><span>A</span><span>3</span><span>Z</span><span>K</span></div>
+          <div class="linkrow"><span>rankzap.site/A3ZK</span><button class="btn" type="button">Copy</button></div>
+        </div>
+      </div></div>
+      <figcaption><b>7 · Share.</b> A QR, the code big enough to read across a room, and the link.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap">
+      <div class="phone app"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span class="status">Open</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+        </div>
+        <ol class="bands" data-results data-seed="9" style="margin-top:16px">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+        <div class="pad">
+          <div class="tags"><span class="tag voted">Ava</span><span class="tag voted">Diego</span><span class="tag voting">Iris</span><span class="tag voted">Leo</span><span class="tag editing">Mia</span><span class="tag off">Noah</span></div>
+          <div class="danger" style="margin-top:16px"><button class="btn sm ghost" type="button" style="flex:1;justify-content:center">Reset</button><button class="btn sm" type="button" style="flex:2;justify-content:center">Close poll</button></div>
+        </div>
+      </div></div>
+      <figcaption><b>8 · Watch and close.</b> Live count, who's in, and the close button.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<script src="../podium-variations/podium.js"></script>
+<script>
+const SIGNALS = [
+  { id: "yellow", name: "Yellow", c: "#ffdd1f", ink: "#0b0b0b", fg: "#ffdd1f" },
+  { id: "lime",   name: "Lime",   c: "#c8f031", ink: "#0b0b0b", fg: "#c8f031" },
+  { id: "mint",   name: "Mint",   c: "#2fdc8e", ink: "#0b0b0b", fg: "#2fdc8e" },
+  { id: "sky",    name: "Sky",    c: "#4db6ff", ink: "#0b0b0b", fg: "#4db6ff" },
+  { id: "cobalt", name: "Cobalt", c: "#2d4bff", ink: "#ffffff", fg: "#8b9bff" },
+  { id: "pink",   name: "Pink",   c: "#ff6ac1", ink: "#0b0b0b", fg: "#ff6ac1" },
+  { id: "tomato", name: "Tomato", c: "#ff4a2b", ink: "#0b0b0b", fg: "#ff6a50" },
+  { id: "orange", name: "Orange", c: "#ff8a1f", ink: "#0b0b0b", fg: "#ff8a1f" },
+];
+const METHOD_NOTES = {
+  borda: "Rewards broadly liked options, higher ranks earn more points.",
+  dowdall: "Strongly favors first choices while still counting lower ranks.",
+  copeland: "Compares options head to head, strongest in direct matchups wins.",
+};
+const check = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="square"/></svg>';
+
+function setSignal(s) {
+  const root = document.documentElement.style;
+  root.setProperty("--sig", s.c); root.setProperty("--sig-ink", s.ink); root.setProperty("--sig-fg", s.fg);
+  document.querySelectorAll("[data-picker] button").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === s.id));
+  document.querySelectorAll("[data-sig-name]").forEach((e) => (e.textContent = s.name));
+  document.querySelectorAll("[data-poll-swatch]").forEach((e) => (e.style.background = s.c));
+  const u = new URL(location.href); u.searchParams.set("colour", s.id); history.replaceState(null, "", u);
+}
+function pick(s, btn) {
+  if (!document.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return setSignal(s);
+  const r = btn.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  document.startViewTransition(() => setSignal(s)).ready.then(() => {
+    document.documentElement.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 550, easing: "cubic-bezier(.2,.8,.2,1)", pseudoElement: "::view-transition-new(root)" });
+  });
+}
+document.querySelectorAll("[data-picker]").forEach((p) => {
+  p.innerHTML = SIGNALS.map((s) => `<button type="button" role="radio" aria-checked="false" aria-label="${s.name}" data-id="${s.id}" style="--c:${s.c};--i:${s.ink}">${check}</button>`).join("");
+  p.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || b.getAttribute("aria-checked") === "true") return;
+    pick(SIGNALS.find((s) => s.id === b.dataset.id), b);
+  });
+});
+setSignal(SIGNALS.find((s) => s.id === new URLSearchParams(location.search).get("colour")) || SIGNALS[0]);
+
+// A deterministic, QR-looking matrix (not a real code) with the three finder squares.
+document.querySelectorAll("[data-qr]").forEach((el) => {
+  const n = 29; let seed = 41; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const inFinder = (x, y) => [[0, 0], [n - 7, 0], [0, n - 7]].some(([fx, fy]) => x >= fx - 1 && x <= fx + 7 && y >= fy - 1 && y <= fy + 7);
+  let rects = "";
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!inFinder(x, y) && rnd() > .52) rects += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  [[0, 0], [n - 7, 0], [0, n - 7]].forEach(([x, y]) => {
+    rects += `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+  });
+  el.innerHTML = `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" aria-label="QR code for rankzap.site/A3ZK" role="img"><g fill="#0b0b0b">${rects}</g></svg>`;
+});
+
+// Settings switches.
+document.addEventListener("click", (e) => {
+  const sw = e.target.closest(".switch");
+  if (sw) sw.setAttribute("aria-checked", sw.getAttribute("aria-checked") !== "true");
+});
+
+// Scoring note follows the method.
+document.querySelectorAll(".seg [data-method]").forEach((b) => b.addEventListener("click", () => {
+  document.getElementById("method-note").textContent = METHOD_NOTES[b.dataset.method];
+}));
+
+// Remove an option (admin).
+document.querySelector(".opts-live").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const li = b.closest("li"); const rows = [...li.parentElement.children];
+  Rankzap.flip(rows, () => li.remove());
+});
+
+// Voter ranking panel.
+const opts = ["Morning walk", "Coffee first", "Write for 20 minutes", "Stretch for 10 minutes", "Big breakfast", "Clear messages"];
+function showVoter(name) {
+  let h = [...name].reduce((s, c) => s + c.charCodeAt(0), 0);
+  const order = [...opts].sort(() => ((h = (h * 9301 + 49297) % 233280) / 233280) - .5);
+  document.getElementById("vp-name").textContent = name;
+  document.getElementById("vp-list").innerHTML = order.map((o, i) => `<li><b>${i + 1}</b>${o}</li>`).join("");
+}
+document.getElementById("voters").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (b) showVoter(b.textContent);
+});
+showVoter("Diego");
+
+// Lock it in.
+document.querySelector("#submit .btn").addEventListener("click", (e) => {
+  const wrap = document.getElementById("submit");
+  wrap.classList.toggle("locked");
+  e.currentTarget.firstChild.textContent = wrap.classList.contains("locked") ? "Locked in. Change it any time " : "Lock it in ";
+});
+</script>
+<script src="../shared/rank.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium with a poll colour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<link rel="stylesheet" href="../podium-variations/podium-base.css">
+<style>
+/* Podium + Floodlight with a poll colour chosen at creation.
+   One signal per poll: --sig (the colour), --sig-ink (text on it), --sig-fg (the colour used as text on black).
+   Light theme = the original Podium (signal is the ground). Dark theme = Floodlight (signal is the light). */
+:root {
+  --sig: #ffdd1f; --sig-ink: #0b0b0b; --sig-fg: #ffdd1f;
+  --board-bg: #f1efe8; --board-ink: #0b0b0b; --board-muted: #45454a; --bezel: #0b0b0b;
+}
+.theme-light {
+  --ground: var(--sig); --ink: var(--sig-ink);
+  --hi: #0b0b0b; --hi-ink: var(--sig-fg);
+  --step: #ffffff; --step-ink: #0b0b0b;
+  --low: color-mix(in oklab, var(--sig) 32%, #f1efe8); --low-ink: #0b0b0b;
+  --chip: #0b0b0b; --chip-ink: var(--sig-fg);
+  --bg: var(--sig);
+}
+.theme-dark {
+  --ground: #0b0b0b; --ink: #f5f3ea;
+  --hi: var(--sig); --hi-ink: var(--sig-ink);
+  --step: #222220; --step-ink: #f5f3ea;
+  --low: #161615; --low-ink: #b9b6ab;
+  --chip: var(--sig); --chip-ink: var(--sig-ink);
+  --bg: #0b0b0b; --bezel: #2a2a28;
+}
+.phone { background: var(--bg); }
+.theme-dark.phone { box-shadow: 0 0 0 10px #2a2a28, 0 50px 90px -40px rgb(0 0 0 / .7); }
+
+/* Board: header, then a light row and a dark row, each full width. */
+.board { padding-bottom: 0; }
+.board-head h1 span { background: var(--sig); color: var(--sig-ink); padding: 0 .08em; transition: background-color .35s ease-out, color .35s ease-out; }
+.band { padding: 56px clamp(24px, 4vw, 64px) 72px; }
+.band > h2 { max-width: 1400px; margin: 0 auto 32px; font: 900 40px/1 var(--font); font-stretch: 62%; text-transform: uppercase; display: flex; gap: 16px; align-items: baseline; }
+.band > h2 small { font: 500 16px/1.4 var(--font); font-stretch: 100%; text-transform: none; }
+.band.dark { background: #0b0b0b; color: #f5f3ea; }
+.band.dark figcaption { color: #b9b6ab; }
+
+/* Shared Podium details that differ by theme. */
+.theme-light .bands li { background: var(--low); }
+.theme-light .bands li:not([data-leading]) > * { color: #0b0b0b; }
+.theme-dark .recent { background: #161615; color: var(--ink); }
+.theme-dark .recent h3 { color: var(--sig-fg); }
+.theme-light .recent h3 { color: var(--sig-fg); }
+.theme-dark .stairs [data-item].is-dragging { box-shadow: 0 0 0 3px var(--sig-fg), 0 24px 40px -12px #000; }
+.theme-dark .stairs [data-item]:nth-child(1) .label::after { content: "Your pick"; display: block; font: 700 13px/1 var(--font); font-stretch: 100%; text-transform: none; margin-top: 6px; opacity: .7; }
+.theme-dark .winner.lead-changed { animation: flood .9s ease-out; }
+@keyframes flood { 0% { background: #fff; } 100% { background: var(--hi); } }
+.theme-light .winner.lead-changed b { animation: punch .4s var(--spring); }
+.logo svg path { fill: var(--sig-fg); }
+.theme-light .logo svg path { fill: currentColor; }
+
+/* ---------- create poll ---------- */
+.create { padding: 0 18px 24px; }
+.lbl { display: flex; justify-content: space-between; align-items: baseline; font: 800 14px/1 var(--font); margin: 18px 0 8px; }
+.lbl span { font-weight: 600; opacity: .8; }
+.title-in {
+  width: 100%; border: 0; border-bottom: 4px solid currentColor; background: none; color: var(--ink); padding: 4px 0 8px;
+  font: 900 44px/.95 var(--font); font-stretch: 62%; text-transform: uppercase; border-radius: 0;
+}
+.title-in:focus-visible { outline: none; border-bottom-color: var(--hi); }
+.theme-light .title-in:focus-visible { border-bottom-color: #0b0b0b; }
+.opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.opts li { display: grid; grid-template-columns: 1fr 36px; align-items: center; min-height: 48px; padding-left: 14px; background: var(--step); color: var(--step-ink); font: 800 18px/1 var(--font); font-stretch: 75%; text-transform: uppercase; }
+.opts li button { width: 36px; height: 48px; border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; opacity: .6; }
+.opts li.add { background: var(--low); color: var(--low-ink); font-stretch: 100%; text-transform: none; font-weight: 600; font-size: 15px; }
+.picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.picker button {
+  aspect-ratio: 1.5; border: 0; border-radius: 0; background: var(--c); cursor: pointer; display: grid; place-items: center;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ink) 30%, transparent); color: var(--i);
+  transition: transform .18s var(--spring), box-shadow .18s ease-out;
+}
+.picker button:hover { transform: translateY(-2px); }
+.picker button:active { transform: scale(.94); }
+.picker button[aria-checked="true"] { box-shadow: 0 0 0 4px var(--ink); transform: scale(1.04); }
+.picker button svg { width: 22px; height: 22px; opacity: 0; transition: opacity .15s ease-out; }
+.picker button[aria-checked="true"] svg { opacity: 1; }
+.pick-note { margin: 10px 0 0; font-size: 13px; font-weight: 500; line-height: 1.4; opacity: .85; }
+.create .btn { margin-top: 20px; }
+
+/* Theme-wide recolour fades when the browser can't do the flood transition. */
+.recolouring .screen, .recolouring .screen * { transition: background-color .35s ease-out, color .35s ease-out, border-color .35s ease-out !important; }
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../podium-variations/index.html">All Podium variations</a><a href="../podium-app/index.html">The whole app in this design</a></nav>
+  <header class="board-head">
+    <div>
+      <h1>Your <span>colour</span></h1>
+      <p class="thesis">The original Podium for light mode, Floodlight for dark, and the host picks the poll's colour when making it. In light mode the colour is the whole ground, the original's yellow made choosable. In dark mode it becomes the floodlight on your first pick, the leader and the main button. Voters see the poll's colour from the first tap of the link. Pick a colour in either "New poll" phone: every phone below repaints, in both themes.</p>
+    </div>
+    <div class="notes">
+      <div><h2>The colour set</h2><p>Eight curated signals, each with its own text colour (black, or white on cobalt) and a lighter variant for use as text on black. Every pairing stays readable in both themes, which a free colour picker can't promise. Yellow stays the default, so an unconfigured poll looks like the brand.</p></div>
+      <div><h2>Interaction and motion</h2>
+        <ul>
+          <li>Tap a swatch: the new colour floods out from your finger in a circle over about 550ms, then the poll is that colour everywhere.</li>
+          <li>Light and dark follow the device setting; the poll colour carries across both.</li>
+          <li>Everything else is the original Podium: staircase ballot, springs, numeral punch, and Floodlight's white flash on a new leader.</li>
+        </ul>
+      </div>
+      <div><h2>Data</h2><p>One new setting next to the existing ones, e.g. <code>settings.colour: "yellow" | "cobalt" | …</code>. The voter page reads it before first paint so there's no flash of yellow.</p></div>
+    </div>
+  </header>
+</main>
+
+<section class="band light">
+  <h2>Light · Original <small>The colour is the ground.</small></h2>
+  <div class="phones">
+    <figure class="phone-wrap" data-screen="create">
+      <div class="phone theme-light"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>NEW POLL</span><span class="chip">A3ZK</span></div>
+        <div class="create">
+          <div class="lbl">Question</div>
+          <div class="title-in" contenteditable="true" role="textbox" aria-label="Poll question" spellcheck="false">Best morning ritual?</div>
+          <div class="lbl">Options <span>6</span></div>
+          <ul class="opts">
+            <li>Morning walk<button type="button" aria-label="Remove">×</button></li>
+            <li>Coffee first<button type="button" aria-label="Remove">×</button></li>
+            <li>Write for 20 minutes<button type="button" aria-label="Remove">×</button></li>
+            <li class="add">+ Add an option, or paste a list</li>
+          </ul>
+          <div class="lbl">Poll colour <span data-sig-name>Yellow</span></div>
+          <div class="picker" role="radiogroup" aria-label="Poll colour"></div>
+          <p class="pick-note">Voters see this colour. Dark mode uses it as the highlight.</p>
+          <button class="btn" type="button">Share poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+        </div>
+      </div></div>
+      <figcaption>New poll: pick a colour. Try it.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone theme-light"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Drag your favourite to the top.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span></li>
+        </ol>
+        <div class="submit"><button class="btn" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption>Ballot: the voter lands in the poll's colour.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone theme-light"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span>Leading · Best morning ritual?</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+        </div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="bands" data-results data-seed="5">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+      </div></div>
+      <figcaption>Results: black winner block, lit in the poll's colour.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="band dark">
+  <h2>Dark · Floodlight <small>The colour is the light.</small></h2>
+  <div class="phones">
+    <figure class="phone-wrap" data-screen="create">
+      <div class="phone theme-dark"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>NEW POLL</span><span class="chip">A3ZK</span></div>
+        <div class="create">
+          <div class="lbl">Question</div>
+          <div class="title-in" contenteditable="true" role="textbox" aria-label="Poll question" spellcheck="false">Best morning ritual?</div>
+          <div class="lbl">Options <span>6</span></div>
+          <ul class="opts">
+            <li>Morning walk<button type="button" aria-label="Remove">×</button></li>
+            <li>Coffee first<button type="button" aria-label="Remove">×</button></li>
+            <li>Write for 20 minutes<button type="button" aria-label="Remove">×</button></li>
+            <li class="add">+ Add an option, or paste a list</li>
+          </ul>
+          <div class="lbl">Poll colour <span data-sig-name>Yellow</span></div>
+          <div class="picker" role="radiogroup" aria-label="Poll colour"></div>
+          <p class="pick-note">Voters see this colour. Light mode uses it as the background.</p>
+          <button class="btn" type="button">Share poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+        </div>
+      </div></div>
+      <figcaption>New poll, dark: the same picker, the colour as light.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone theme-dark"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Drag your favourite into the light.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span></li>
+        </ol>
+        <div class="submit"><button class="btn" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption>Ballot, dark: only first place is lit.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone theme-dark"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span>Live · leading</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+        </div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="bands" data-results data-seed="5">
+          <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+      </div></div>
+      <figcaption>Results, dark: the leader under the poll's light.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<script src="../podium-variations/podium.js"></script>
+<script>
+// Curated poll colours. ink = text on the colour; fg = the colour as text on black (lighter where needed).
+const SIGNALS = [
+  { id: "yellow", name: "Yellow", c: "#ffdd1f", ink: "#0b0b0b", fg: "#ffdd1f" },
+  { id: "lime",   name: "Lime",   c: "#c8f031", ink: "#0b0b0b", fg: "#c8f031" },
+  { id: "mint",   name: "Mint",   c: "#2fdc8e", ink: "#0b0b0b", fg: "#2fdc8e" },
+  { id: "sky",    name: "Sky",    c: "#4db6ff", ink: "#0b0b0b", fg: "#4db6ff" },
+  { id: "cobalt", name: "Cobalt", c: "#2d4bff", ink: "#ffffff", fg: "#8b9bff" },
+  { id: "pink",   name: "Pink",   c: "#ff6ac1", ink: "#0b0b0b", fg: "#ff6ac1" },
+  { id: "tomato", name: "Tomato", c: "#ff4a2b", ink: "#0b0b0b", fg: "#ff6a50" },
+  { id: "orange", name: "Orange", c: "#ff8a1f", ink: "#0b0b0b", fg: "#ff8a1f" },
+];
+const check = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 9.5 18 20 6" stroke="currentColor" stroke-width="3.5" fill="none" stroke-linecap="square"/></svg>';
+
+function setSignal(s) {
+  const root = document.documentElement.style;
+  root.setProperty("--sig", s.c);
+  root.setProperty("--sig-ink", s.ink);
+  root.setProperty("--sig-fg", s.fg);
+  document.querySelectorAll(".picker button").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === s.id));
+  document.querySelectorAll("[data-sig-name]").forEach((e) => (e.textContent = s.name));
+  const u = new URL(location.href); u.searchParams.set("colour", s.id); history.replaceState(null, "", u);
+}
+
+function pick(s, btn) {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!document.startViewTransition || reduce) {
+    document.body.classList.add("recolouring");
+    setSignal(s);
+    setTimeout(() => document.body.classList.remove("recolouring"), 400);
+    return;
+  }
+  // Flood the new colour out from the tapped swatch.
+  const r = btn.getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+  const t = document.startViewTransition(() => setSignal(s));
+  t.ready.then(() => {
+    document.documentElement.animate(
+      { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+      { duration: 550, easing: "cubic-bezier(.2,.8,.2,1)", pseudoElement: "::view-transition-new(root)" }
+    );
+  });
+}
+
+document.querySelectorAll(".picker").forEach((picker) => {
+  picker.innerHTML = SIGNALS.map((s) =>
+    `<button type="button" role="radio" aria-checked="false" aria-label="${s.name}" data-id="${s.id}" style="--c:${s.c};--i:${s.ink}">${check}</button>`
+  ).join("");
+  picker.addEventListener("click", (e) => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    const s = SIGNALS.find((x) => x.id === btn.dataset.id);
+    if (btn.getAttribute("aria-checked") !== "true") pick(s, btn);
+  });
+  picker.addEventListener("keydown", (e) => {
+    if (!["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"].includes(e.key)) return;
+    e.preventDefault();
+    const btns = [...picker.querySelectorAll("button")];
+    const i = btns.findIndex((b) => b.getAttribute("aria-checked") === "true");
+    const step = { ArrowRight: 1, ArrowDown: 4, ArrowLeft: -1, ArrowUp: -4 }[e.key];
+    const next = btns[(i + step + btns.length) % btns.length];
+    next.focus(); next.click();
+  });
+});
+setSignal(SIGNALS.find((s) => s.id === new URLSearchParams(location.search).get("colour")) || SIGNALS[0]);
+</script>
+<script src="../shared/rank.js"></script>
+</body>
+</html>

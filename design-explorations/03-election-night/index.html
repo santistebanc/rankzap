@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Direction 3 · Election Night</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<style>
+/* Direction 3 · Election Night. Every poll is a live broadcast; results are the main event. */
+:root {
+  --night: #0e0f11;
+  --panel: #191b1f;
+  --panel-2: #23262b;
+  --ink: #f3f2ee;
+  --muted: #a3a7ae;
+  --live: #ff5a36;
+  --up: #5ad38f;
+  --cond: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --text: "Barlow", system-ui, sans-serif;
+  --board-bg: var(--night); --board-ink: var(--ink); --board-muted: var(--muted); --bezel: #2b2e33;
+  --bg: var(--night);
+}
+body { font-family: var(--text); }
+.board-head h1 { font: 800 clamp(72px, 9vw, 136px)/.86 var(--cond); text-transform: uppercase; letter-spacing: -.005em; }
+.board-head h1 span { color: var(--live); }
+.notes h2 { font: 700 17px/1 var(--cond); text-transform: uppercase; letter-spacing: .03em; }
+
+.screen { background: var(--night); color: var(--ink); font-family: var(--text); font-variant-numeric: tabular-nums; }
+.cond { font-family: var(--cond); text-transform: uppercase; }
+.live { display: inline-flex; align-items: center; gap: 7px; background: var(--live); color: #160805; padding: 4px 9px 3px; font: 800 14px/1 var(--cond); letter-spacing: .08em; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+.bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 18px 0; color: var(--muted); font-size: 14px; font-weight: 600; }
+.btn { width: 100%; min-height: 58px; border: 0; border-radius: 2px; cursor: pointer; font: 800 22px/1 var(--cond); text-transform: uppercase; letter-spacing: .04em;
+  background: var(--live); color: #160805; transition: transform .12s ease-out, filter .15s ease-out; }
+.btn:active { transform: scale(.98); }
+.btn.ghost { background: var(--panel-2); color: var(--ink); }
+
+/* ---------- home ---------- */
+.home-h { margin: 70px 18px 14px; font: 800 82px/.86 var(--cond); text-transform: uppercase; }
+.home-h span { color: var(--live); }
+.home-p { margin: 0 18px 26px; color: var(--muted); font-size: 17px; line-height: 1.45; max-width: 30ch; }
+.home-a { padding: 0 18px; display: grid; gap: 10px; }
+.join { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.join input { min-width: 0; background: var(--panel); border: 0; border-radius: 2px; color: var(--ink); padding: 0 16px; font: 700 28px/1 var(--cond); letter-spacing: .3em; }
+.join input::placeholder { color: #50545b; }
+.join .btn { width: 104px; }
+.channels { margin: 34px 18px 30px; display: grid; gap: 2px; }
+.channels h3 { margin: 0 0 10px; font: 700 17px/1 var(--cond); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.ch { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; background: var(--panel); padding: 14px; }
+.ch b { font-size: 17px; }
+.ch small { color: var(--muted); font-size: 14px; }
+.ch .live, .ch .off { grid-row: span 2; align-self: center; }
+.off { font: 700 14px/1 var(--cond); color: var(--muted); letter-spacing: .08em; }
+
+/* ---------- ballot ---------- */
+.b-title { margin: 14px 18px 4px; font: 700 40px/.95 var(--cond); text-transform: uppercase; }
+.b-sub { margin: 0 18px 16px; color: var(--muted); font-size: 15px; }
+.b-sub b { color: var(--ink); }
+.slots { list-style: none; margin: 0 18px; padding: 0; display: grid; gap: 4px; position: relative; --swap-ms: 150; --drop-ms: 180; --drop-ease: cubic-bezier(.2,.8,.2,1); }
+.slots [data-item] { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 12px; min-height: 62px; background: var(--panel); padding-right: 14px; outline-offset: -2px;
+  transition: background-color .15s ease-out; }
+.slots [data-item]:first-child { background: var(--panel-2); box-shadow: inset 4px 0 0 var(--live); }
+.slots [data-item].is-dragging { background: #2d3137; box-shadow: inset 4px 0 0 var(--live), 0 18px 36px -10px #000; }
+.slots .pos { font: 800 28px/1 var(--cond); text-align: center; color: var(--muted); }
+.slots [data-item]:first-child .pos { color: var(--live); }
+.slots .nm { font-size: 17px; font-weight: 600; }
+.slots .pts { font: 700 17px/1 var(--cond); color: var(--muted); letter-spacing: .03em; min-width: 44px; text-align: right; }
+.slots .pts b { color: var(--ink); font-size: 22px; }
+.b-foot { margin: 18px 18px 28px; display: grid; gap: 10px; }
+.b-foot p { margin: 0; color: var(--muted); font-size: 14px; text-align: center; }
+
+/* ---------- results ---------- */
+.r-head { padding: 6px 18px 0; }
+.r-head .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.r-head .row span:last-child { color: var(--muted); font-size: 14px; font-weight: 600; }
+.r-q { font: 700 22px/1 var(--cond); text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.lead { font: 800 64px/.86 var(--cond); text-transform: uppercase; margin: 0; }
+.lead-meta { display: flex; gap: 16px; align-items: baseline; margin: 10px 0 0; color: var(--muted); font-size: 15px; font-weight: 600; }
+.lead-meta b { font: 800 40px/1 var(--cond); color: var(--live); }
+.tabs { display: flex; margin: 18px 18px 8px; background: var(--panel); padding: 3px; }
+.tabs button { flex: 1; border: 0; background: none; padding: 10px 0; font: 700 16px/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--panel-2); color: var(--ink); }
+.board-list { list-style: none; margin: 0 18px; padding: 0; display: grid; --swap-ms: 600; --swap-ease: cubic-bezier(.2,.8,.2,1); }
+.board-list li { display: grid; grid-template-columns: 30px 1fr auto 44px; gap: 10px; align-items: center; padding: 12px 0; position: relative; }
+.board-list li + li { box-shadow: 0 -1px 0 #24272c; }
+.board-list .pl { font: 800 24px/1 var(--cond); color: var(--muted); }
+.board-list li[data-leading] .pl { color: var(--live); }
+.board-list .nm { font-weight: 600; font-size: 16px; }
+.board-list .meter { grid-column: 2 / 4; height: 6px; background: var(--panel-2); }
+.board-list .meter i { display: block; height: 100%; width: calc(var(--share) * 100%); background: var(--ink); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.board-list li[data-leading] .meter i { background: var(--live); }
+.board-list .sc { font: 800 28px/1 var(--cond); grid-row: 1; grid-column: 3; overflow: hidden; }
+.board-list .dl { grid-column: 4; grid-row: 1 / 3; font: 700 15px/1 var(--cond); color: var(--up); opacity: 0; text-align: right; }
+.board-list li.is-bumped .dl { animation: delta 2s ease-out; }
+.board-list li.is-bumped .sc { animation: roll .45s cubic-bezier(.2,.8,.2,1); }
+@keyframes delta { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes roll { from { translate: 0 60%; opacity: 0; } }
+.crowd { margin: 22px 18px 0; display: flex; gap: 6px; flex-wrap: wrap; }
+.crowd span { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--panel-2); font: 700 15px/1 var(--cond); }
+.crowd .v { box-shadow: 0 0 0 2px var(--ink); }
+.crowd .r { box-shadow: 0 0 0 2px var(--live); animation: pulse 1.6s ease-in-out infinite; }
+.crowd-l { margin: 8px 18px 0; color: var(--muted); font-size: 13px; }
+.ticker { position: sticky; bottom: 0; margin-top: 20px; background: var(--ink); color: var(--night); overflow: hidden; white-space: nowrap; height: 38px; display: flex; align-items: center; }
+.ticker div { display: inline-block; padding-left: 100%; animation: crawl 22s linear infinite; font: 700 16px/1 var(--cond); text-transform: uppercase; letter-spacing: .05em; }
+.ticker b { color: var(--live); margin: 0 10px; }
+@keyframes crawl { to { translate: -100% 0; } }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All directions</a><span>Direction 3 of 5</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Election <span>Night</span></h1>
+      <p class="thesis">Every poll is a live broadcast. The results screen is the main event: a scoreboard that recounts on each vote, a crawl of who just voted, and a method switch that shows how Borda, Dowdall and Copeland can call the race differently. Made to be shown on a big screen while people vote on their phones.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#0e0f11"></i>Night</span>
+        <span class="swatch"><i style="background:#191b1f"></i>Panel</span>
+        <span class="swatch"><i style="background:#f3f2ee"></i>Ink</span>
+        <span class="swatch"><i style="background:#a3a7ae"></i>Muted</span>
+        <span class="swatch"><i style="background:#ff5a36"></i>Live</span>
+        <span class="swatch"><i style="background:#5ad38f"></i>Gain</span>
+      </div>
+      <div><h2>Type</h2><p>Barlow Condensed for scores, names and headlines (scoreboard numerals, tabular); Barlow for sentences.</p></div>
+      <div><h2>Interaction and motion</h2>
+        <ul>
+          <li>The ballot shows what each slot is worth under the poll's method, so voters understand the count while ranking.</li>
+          <li>Scores roll up from below on change; a green "+n" flashes and fades; rows glide to their new place over 600ms.</li>
+          <li>Presence as a crowd strip (voted, ranking now) and a news crawl of events. Both stop for reduced motion.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="bar"><span>RANKZAP</span></div>
+        <h2 class="home-h">Run a <span>live</span> vote</h2>
+        <p class="home-p">Share a link, rank together, watch the count move in real time.</p>
+        <div class="home-a">
+          <button class="btn" type="button">Go live</button>
+          <form class="join" onsubmit="return false"><input aria-label="Poll code" placeholder="CODE" maxlength="4" value="A3"><button class="btn ghost" type="submit">Join</button></form>
+        </div>
+        <div class="channels">
+          <h3>Your polls</h3>
+          <div class="ch"><b>Best morning ritual?</b><span class="live">Live</span><small>A3ZK · 15 votes · 3 ranking now</small></div>
+          <div class="ch"><b>Team offsite city</b><span class="off">Final</span><small>Q7PL · Lisbon won by 4</small></div>
+          <div class="ch"><b>Friday film</b><span class="off">Draft</span><small>M2XD · 5 options, no votes</small></div>
+        </div>
+      </div></div>
+      <figcaption>Home: start a broadcast or tune in with a code.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="bar"><span class="live">Live</span><span>A3ZK · 15 voted</span></div>
+        <h2 class="b-title">Best morning ritual?</h2>
+        <p class="b-sub">Counted by <b>Borda</b>. Your 1st gets 5 points, your last gets 0.</p>
+        <ol class="slots" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Morning walk</span><span class="pts"></span></li>
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Write for 20 minutes</span><span class="pts"></span></li>
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Coffee first</span><span class="pts"></span></li>
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Stretch for 10 minutes</span><span class="pts"></span></li>
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Big breakfast</span><span class="pts"></span></li>
+          <li data-item tabindex="0"><span class="pos" data-rank></span><span class="nm">Clear messages</span><span class="pts"></span></li>
+        </ol>
+        <div class="b-foot">
+          <button class="btn" type="button">Submit as Santi</button>
+          <p>You can change your vote until the host closes the poll.</p>
+        </div>
+      </div></div>
+      <figcaption>Ballot: each slot shows the points it gives. Try dragging.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="r-head">
+          <div class="row"><span class="live">Live</span><span><span data-votes></span> votes counted</span></div>
+          <p class="r-q">Best morning ritual? · Leading</p>
+          <h2 class="lead" data-leader>Morning walk</h2>
+          <p class="lead-meta"><b data-leader-score></b><span><span data-method-name>Borda</span> points</span></p>
+        </div>
+        <div class="tabs" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="board-list" data-results data-seed="3" data-every="2200">
+          <li data-opt="walk" data-name="Morning walk" data-bias="4"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4.4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+          <li data-opt="write" data-name="Write for 20 minutes" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 minutes</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+          <li data-opt="stretch" data-name="Stretch for 10 minutes" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch for 10 minutes</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span><span class="dl" data-delta></span><span class="meter"><i></i></span></li>
+        </ol>
+        <div class="crowd" aria-label="Voters"><span class="v">A</span><span class="v">D</span><span class="v">I</span><span class="r">L</span><span class="v">M</span><span class="r">N</span><span class="v">S</span><span>K</span><span class="v">T</span><span class="r">R</span></div>
+        <p class="crowd-l">White ring voted · red ring ranking now · plain not started</p>
+        <div class="ticker" aria-hidden="true"><div>Diego voted <b>/</b> Leo is ranking <b>/</b> Coffee first takes 2nd under Dowdall <b>/</b> Mia updated a vote <b>/</b> 3 people ranking now <b>/</b></div></div>
+      </div></div>
+      <figcaption>Results: a scoreboard with deltas, presence and a crawl.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../shared/rank.js"></script>
+<script>
+// Show each slot's Borda value next to whatever sits in it.
+document.addEventListener("rank-change", (e) => {
+  const list = e.target.closest?.(".slots");
+  if (!list) return;
+  const items = [...list.children];
+  items.forEach((it, i) => (it.querySelector(".pts").innerHTML = `<b>+${items.length - 1 - i}</b>`));
+});
+document.querySelectorAll(".slots").forEach((l) => l.dispatchEvent(new CustomEvent("rank-change", { bubbles: true })));
+</script>
+</body>
+</html>

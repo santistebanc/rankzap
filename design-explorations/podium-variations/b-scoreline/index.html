@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium B · Scoreline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/frame.css">
+<link rel="stylesheet" href="../podium-base.css">
+<style>
+/* Podium B · Scoreline. Podium for real-world text: condensed numerals stay loud, option text becomes readable sentences. */
+:root {
+  --ground: #f3f3ef; --ink: #0b0b0b;
+  --hi: #ffdd1f; --hi-ink: #0b0b0b;
+  --step: #ffffff; --step-ink: #0b0b0b;
+  --low: #e7e7e1; --low-ink: #26262a;
+  --chip: #0b0b0b; --chip-ink: #ffffff;
+  --board-bg: #f3f3ef; --board-ink: #0b0b0b; --board-muted: #45454a; --bezel: #0b0b0b;
+  --bg: var(--ground);
+}
+.board-head h1 mark { background: var(--hi); color: inherit; padding: 0 .06em; }
+.btn.dark { background: var(--ink); color: #fff; }
+.home .big { font-size: 128px; }
+.home .big span:nth-child(2) { background: var(--hi); }
+
+/* Long text: mixed case, normal width, wraps. Numerals carry the loudness. */
+.q { font: 800 38px/1 var(--font); font-stretch: 85%; text-transform: none; letter-spacing: -.02em; }
+.stairs [data-item] { grid-template-columns: 66px 1fr; }
+.stairs [data-item]:nth-child(1) { --size: 22px; --h: 108px; }
+.stairs [data-item]:nth-child(2) { --size: 19px; --h: 84px; }
+.stairs [data-item]:nth-child(3) { --size: 17px; --h: 70px; }
+.stairs [data-item]:nth-child(n+4) { --size: 16px; }
+.stairs .label { font: 600 var(--size)/1.2 var(--font); font-stretch: 100%; text-transform: none; padding: 12px 16px 12px 0; }
+.stairs .n { font-size: min(calc(var(--h) * .86), 92px); align-self: start; padding-top: 6px; }
+.stairs [data-item]:nth-child(n+4) .n { align-self: center; padding: 0; }
+
+/* Results: name on its own line, score bar underneath, so nothing is cut. */
+.winner b { font: 800 46px/.95 var(--font); font-stretch: 85%; text-transform: none; letter-spacing: -.02em; }
+.lines { list-style: none; margin: 0 18px 24px; padding: 0; display: grid; gap: 4px; --swap-ms: 480; --swap-ease: cubic-bezier(.3,1.35,.5,1); }
+.lines li { display: grid; grid-template-columns: 44px 1fr auto; gap: 6px 10px; align-items: start; background: var(--step); padding: 12px 14px 14px 0; }
+.lines .pl { font: 900 40px/.9 var(--font); font-stretch: 62%; text-align: center; grid-row: span 2; }
+.lines .nm { font-weight: 600; font-size: 16px; line-height: 1.25; }
+.lines .sc { font: 900 26px/1 var(--font); font-stretch: 62%; }
+.lines .bar { grid-column: 2 / 4; height: 10px; background: var(--low); }
+.lines .bar i { display: block; height: 100%; width: calc(var(--share) * 100%); background: var(--ink); transition: width .55s cubic-bezier(.3,1.3,.5,1); }
+.lines li[data-leading] { background: var(--hi); }
+.lines li[data-leading] .bar { background: rgb(0 0 0 / .12); }
+.lines li.is-bumped .sc { animation: punch .35s var(--spring); }
+.winner { background: var(--ink); color: #fff; }
+.winner .pts span:first-child { color: var(--hi); }
+.winner.lead-changed b { animation: punch .4s var(--spring); }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All Podium variations</a><span>Podium B of E</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Score<mark>line</mark></h1>
+      <p class="thesis">Podium, made to survive real options. People paste whole sentences (the app allows 200 characters), and condensed capitals fall apart on those. Here the numerals keep all the volume while option text becomes readable mixed-case sentences that wrap. Yellow becomes a highlighter instead of a floor. This is the version that could run the admin screen too.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#f3f3ef"></i>Ground</span>
+        <span class="swatch"><i style="background:#ffffff"></i>Card</span>
+        <span class="swatch"><i style="background:#e7e7e1"></i>Bench</span>
+        <span class="swatch"><i style="background:#0b0b0b"></i>Ink</span>
+        <span class="swatch"><i style="background:#ffdd1f"></i>Highlighter</span>
+      </div>
+      <div><h2>What changes from Podium</h2><p>Two voices from one family: Archivo at 62% width for numerals and the brand, at 100% width in sentence case for anything a user typed. Row heights still scale with place.</p></div>
+      <div><h2>Motion</h2>
+        <ul>
+          <li>Same spring swaps and numeral punch; text never animates its size, so long labels don't reflow mid-drag.</li>
+          <li>When the lead changes hands, the new leader's name punches in on the black winner block.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home">
+          <div>
+            <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>RANKZAP</span></div>
+            <h2 class="big"><span>Rank</span><span>it.</span></h2>
+          </div>
+          <p>Share a link, everyone puts the options in order, and the group's ranking adds itself up.</p>
+          <div class="actions">
+            <button class="btn dark" type="button">Start a poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+            <div class="code"><span>A</span><span>3</span><span>Z</span><span>K</span><button class="btn" type="button">Join</button></div>
+          </div>
+          <div class="recent">
+            <h3>Yours</h3>
+            <a href="#">Best morning ritual? <span>A3ZK · live</span></a>
+            <a href="#">Where should the Q3 offsite be? <span>Q7PL · done</span></a>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: same poster energy, on a light ground.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q">Best morning ritual?</h2>
+        <p class="hint">Drag your favourite to the top.</p>
+        <ol class="stairs" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">A long walk around the park before anyone else is awake</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first, everything else after</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes before opening any app</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages so the day starts at inbox zero</span></li>
+        </ol>
+        <div class="submit"><button class="btn dark" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption>Ballot: long options wrap; numerals stay huge. Try dragging.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="winner">
+          <div class="statusbar"><span>9:41</span></div>
+          <small><span>Leading · Best morning ritual?</span><span><span data-votes></span> votes</span></small>
+          <b data-leader>Morning walk</b>
+          <div class="pts"><span data-leader-score></span><span data-method-name>Borda</span> points</div>
+        </div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <ol class="lines" data-results data-seed="5">
+          <li data-opt="walk" data-name="A long walk around the park" data-bias="5"><span class="pl" data-place></span><span class="nm">A long walk around the park before anyone else is awake</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first, everything else after</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+          <li data-opt="write" data-name="Write for 20 minutes" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 minutes before opening any app</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+          <li data-opt="stretch" data-name="Stretch for 10 minutes" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch for 10 minutes</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages so the day starts at inbox zero</span><span class="sc" data-score></span><span class="bar"><i></i></span></li>
+        </ol>
+      </div></div>
+      <figcaption>Results: full option text, bars underneath.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../podium.js"></script>
+<script src="../../shared/rank.js"></script>
+</body>
+</html>
