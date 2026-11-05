@@ -1,0 +1,58 @@
+﻿import assert from 'node:assert/strict';
+import { chromium } from 'file:///C:/Users/santi/code/career-desk/node_modules/playwright-core/index.mjs';
+const browser = await chromium.launch({ executablePath:'C:/Users/santi/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe',headless:true });
+const page = await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+page.setDefaultTimeout(10000);
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.addInitScript(()=>{window.__browserErrors=[];window.addEventListener('error',e=>window.__browserErrors.push(e.message));});
+const go = async(q='')=>{await page.goto('http://127.0.0.1:5190/home.html'+q,{waitUntil:'domcontentloaded'});await page.getByRole('heading',{name:'Rank it.'}).waitFor();await page.locator('[aria-busy=false]').waitFor();};
+try {
+ await go();
+ await page.getByRole('radio',{name:'Cobalt',exact:true}).click();
+ assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--sig').trim()),'#ffdd1f');
+ await page.getByRole('button',{name:'Start a poll',exact:true}).click();
+ await page.getByTestId('destination').waitFor();
+ const destination=await page.getByTestId('destination').textContent();
+ assert.match(destination,/^\/[A-Z0-9]{4}\/admin$/);
+ assert.equal(await page.evaluate(()=>window.__homeWrites.find(w=>w.key==='settings').value.colour),'cobalt');
+ assert.equal(await page.evaluate(()=>localStorage.getItem('rankzap:admin:lastRoomId')),destination.split('/')[1]);
+ console.log('PASS create: saved chosen colour before host navigation; home stayed yellow');
+ await go();await page.getByRole('textbox',{name:'Poll code'}).fill('a3zk');
+ assert.equal(await page.getByRole('textbox',{name:'Poll code'}).inputValue(),'A3ZK');
+ await page.getByRole('textbox',{name:'Poll code'}).press('Enter');
+ await page.getByTestId('destination').waitFor();assert.equal(await page.getByTestId('destination').textContent(),'/A3ZK');
+ console.log('PASS join: lowercase normalisation and voter route');
+ await go();await page.getByRole('textbox',{name:'Poll code'}).fill('ZZZZ');await page.getByRole('button',{name:'Join',exact:true}).click();
+ await page.getByRole('alert').waitFor();assert.match(await page.getByRole('alert').textContent(),/Couldn't find/);
+ assert.equal(await page.getByTestId('destination').count(),0);
+ await page.getByRole('textbox',{name:'Poll code'}).fill('!?@#');await page.getByRole('button',{name:'Join',exact:true}).click();
+ assert.match(await page.getByRole('alert').textContent(),/four-letter/);
+ console.log('PASS join: unavailable and invalid codes stay on home with feedback');
+ await go();await page.getByRole('button',{name:/Open poll Q7PL/}).click();await page.getByTestId('destination').waitFor();
+ assert.equal(await page.getByTestId('destination').textContent(),'/Q7PL/admin');
+ await go();await page.getByRole('button',{name:'Delete poll Q7PL',exact:true}).click();
+ assert.equal(await page.evaluate(()=>Boolean(window.__homeRooms.Q7PL.meta)),true);
+ await page.getByRole('button',{name:'Cancel',exact:true}).click();
+ assert.equal(await page.evaluate(()=>Boolean(window.__homeRooms.Q7PL.meta)),true);
+ await page.getByRole('button',{name:'Delete poll Q7PL',exact:true}).click();await page.getByRole('button',{name:'Yes, delete',exact:true}).click();
+ await page.getByRole('button',{name:/Open poll Q7PL/}).waitFor({state:'detached'});
+ assert.equal(await page.evaluate(()=>Boolean(window.__homeRooms.Q7PL.meta)),false);
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('rankzap:admin:recentPolls')).some(p=>p.roomId==='Q7PL')),false);
+ console.log('PASS recents: host route; cancel preserves poll; confirmation removes poll and local entry');
+ await go('?savefails');await page.getByRole('radio',{name:'Pink',exact:true}).click();await page.getByRole('button',{name:'Start a poll',exact:true}).click();
+ await page.getByRole('alert').waitFor();assert.equal(await page.getByTestId('destination').count(),0);
+ assert.equal(await page.getByRole('button',{name:'Start a poll',exact:true}).isEnabled(),true);
+ assert.equal(await page.evaluate(()=>Object.entries(window.__homeRooms).filter(([id])=>!['A3ZK','Q7PL','M2XD'].includes(id)).some(([,r])=>r.meta)),false);
+ console.log('PASS failed settings save: no navigation, retry enabled, reservation cleaned up');
+ for (const [width,q,name] of [[1440,'','home-desktop'],[768,'','home-tablet'],[390,'','home-phone'],[320,'?long','home-narrow'],[390,'?empty','home-empty']]) {
+  await page.setViewportSize({width,height:900});await go(q);await page.evaluate(()=>document.fonts.ready);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${width}px overflow`);
+  assert.deepEqual(await page.evaluate(()=>window.__browserErrors),[]);
+  await page.screenshot({path:`design-explorations/screenshots/impl/${name}.png`,fullPage:true});
+  console.log('PASS screenshot '+name);
+ }
+ await go('?unconfigured');await page.getByRole('alert').waitFor();
+ assert.equal(await page.getByTestId('destination').count(),0);
+ assert.deepEqual(errors,[]);
+ console.log('PASS configuration error; no page errors');
+} finally {await browser.close();}

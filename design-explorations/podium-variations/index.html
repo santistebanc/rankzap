@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium, five variations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+/* Comparison board for the Podium family: the original plus variations A–E. */
+*, *::before, *::after { box-sizing: border-box; }
+:root { --bg: #ffdd1f; --ink: #0b0b0b; --scale: .52; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 16px/1.5 "Archivo", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 1560px; margin: 0 auto; padding: clamp(24px, 4vw, 56px); }
+nav { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 36px; }
+nav a { color: inherit; }
+h1 { font: 900 clamp(64px, 9vw, 140px)/.82 "Archivo", sans-serif; font-stretch: 62%; text-transform: uppercase; letter-spacing: -.02em; margin: 0 0 20px; }
+.intro { font-size: 19px; max-width: 66ch; margin: 0 0 36px; }
+.switch { display: inline-flex; gap: 4px; margin-bottom: 28px; }
+.switch button { border: 0; padding: 12px 20px; background: #fff; font: 800 15px/1 inherit; font-family: inherit; cursor: pointer; }
+.switch button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin-bottom: 88px; }
+.col h2 { font: 900 26px/1 "Archivo", sans-serif; font-stretch: 62%; text-transform: uppercase; margin: 14px 0 4px; }
+.col h2 a { color: inherit; text-decoration: none; }
+.col h2 a:hover { text-decoration: underline; }
+.col p { margin: 0; font-size: 14px; line-height: 1.4; }
+.frame { width: calc(395px * var(--scale)); height: calc(844px * var(--scale)); overflow: hidden; margin: 0 auto; }
+.frame iframe { width: 395px; height: 844px; border: 0; transform: scale(var(--scale)); transform-origin: 0 0; background: transparent; }
+h3 { font: 900 48px/1 "Archivo", sans-serif; font-stretch: 62%; text-transform: uppercase; margin: 0 0 18px; }
+table { width: 100%; border-collapse: collapse; background: #fff; font-size: 15px; line-height: 1.45; }
+th, td { text-align: left; vertical-align: top; padding: 16px 18px; border-bottom: 3px solid var(--bg); }
+thead th { font-size: 13px; background: var(--ink); color: var(--bg); }
+tbody th { width: 14%; font: 900 22px/1 "Archivo", sans-serif; font-stretch: 62%; text-transform: uppercase; }
+.rec { margin-top: 48px; background: var(--ink); color: #fff; padding: clamp(28px, 4vw, 52px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 40px; }
+.rec h3 { color: var(--bg); margin: 0; font-size: 56px; line-height: .9; }
+.rec p { margin: 0 0 12px; font-size: 17px; }
+.rec ol { margin: 0; padding-left: 20px; }
+.rec li { margin-bottom: 8px; }
+@media (max-width: 1300px) { .row { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 36px; } :root { --scale: .6; } .rec { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="../index.html">All five directions</a><a href="../podium-colour/index.html">Original + Floodlight with a poll colour</a></nav>
+  <h1>Podium, five ways</h1>
+  <p class="intro">Five variations on Direction 2. They all keep its core: the rank sets the layout, colour is flat, and Archivo's width axis does the shouting. Each pushes in a different direction, and several fix Podium's weak spots: long option text, dark mode, and too much yellow. The original is on the left for reference. Every phone is live, so you can drag, switch the counting method, and watch votes arrive.</p>
+
+  <div class="switch" role="group" aria-label="Screen to compare">
+    <button type="button" data-show="home">Home</button>
+    <button type="button" data-show="ballot" aria-pressed="true">Ballot</button>
+    <button type="button" data-show="results">Live results</button>
+  </div>
+
+  <section class="row" id="row">
+    <div class="col" data-dir="../02-podium"><div class="frame"><iframe title="Podium original"></iframe></div>
+      <h2><a href="../02-podium/index.html">Original</a></h2><p>Yellow poster, black steps.</p></div>
+    <div class="col" data-dir="a-floodlight"><div class="frame"><iframe title="Floodlight"></iframe></div>
+      <h2><a href="a-floodlight/index.html">A · Floodlight</a></h2><p>Dark twin. Yellow becomes the light on the leader.</p></div>
+    <div class="col" data-dir="b-scoreline"><div class="frame"><iframe title="Scoreline"></iframe></div>
+      <h2><a href="b-scoreline/index.html">B · Scoreline</a></h2><p>Loud numerals, readable sentences. Survives long options.</p></div>
+    <div class="col" data-dir="c-signal-sets"><div class="frame"><iframe title="Signal Sets"></iframe></div>
+      <h2><a href="c-signal-sets/index.html">C · Signal Sets</a></h2><p>Every poll gets its own colour.</p></div>
+    <div class="col" data-dir="d-medal-stand"><div class="frame"><iframe title="Medal Stand"></iframe></div>
+      <h2><a href="d-medal-stand/index.html">D · Medal Stand</a></h2><p>A literal 2-1-3 podium that follows the votes.</p></div>
+    <div class="col" data-dir="e-sticker-party"><div class="frame"><iframe title="Sticker Party"></iframe></div>
+      <h2><a href="e-sticker-party/index.html">E · Sticker Party</a></h2><p>Outlined, crooked, slapped-down stickers.</p></div>
+  </section>
+
+  <h3>How they compare</h3>
+  <table>
+    <thead><tr><th>Variation</th><th>Fixes or adds</th><th>Pros</th><th>Cons</th></tr></thead>
+    <tbody>
+      <tr><th>A · Floodlight</th><td>Dark mode for Podium.</td><td>Keeps the automatic light/dark switching the app has today. Calmer on the eyes, and the leader stands out more. Strong on a projector.</td><td>Not a standalone identity; it's the night version of another theme. Hard offset shadows don't work on black.</td></tr>
+      <tr><th>B · Scoreline</th><td>Long option text, admin screens.</td><td>Handles 200-character options and wrapping. Light ground scales to settings and admin. Still unmistakably Podium thanks to the numerals.</td><td>The least loud. Loses some of the poster punch in exchange for being readable.</td></tr>
+      <tr><th>C · Signal Sets</th><td>Yellow fatigue; telling polls apart.</td><td>Polls become recognisable (recent list, link previews, the projector). It's only one token per poll, so it's cheap to build. Pairs with any of the others.</td><td>Brand colour is no longer fixed. Each new signal needs a contrast check. Some hosts will want to pick the colour themselves.</td></tr>
+      <tr><th>D · Medal Stand</th><td>A signature results moment.</td><td>Makes the name literal and memorable. Your podium previews live while you drag. Shows the top 3 at a glance.</td><td>Spends a lot of screen on three options. Ties and polls with only two options need special cases.</td></tr>
+      <tr><th>E · Sticker Party</th><td>Delight and play.</td><td>The most fun to drag. Very shareable. Great for kids, classrooms and parties.</td><td>Too loud as the default for every poll. Tilted rows are slightly harder to scan. The most CSS to maintain.</td></tr>
+    </tbody>
+  </table>
+
+  <section class="rec">
+    <h3>My pick: Scoreline as the base, Signal Sets for colour, Floodlight for dark.</h3>
+    <div>
+      <p>These three fit together into one system. <b>B</b> fixes Podium's real problem (long options) and works on admin screens. <b>C</b> takes the yellow fatigue away and makes each poll recognisable. <b>A</b> is the same system with the lights off, so the app keeps following the system theme.</p>
+      <ol>
+        <li>Use <b>D's podium</b> as the closing moment only: when the host closes a poll, the results become the medal stand.</li>
+        <li>Offer <b>E</b> as an optional "party" theme the host can turn on per poll.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+<script>
+const buttons = document.querySelectorAll("[data-show]");
+function show(screen) {
+  buttons.forEach((b) => b.setAttribute("aria-pressed", b.dataset.show === screen));
+  document.querySelectorAll("#row .col").forEach((c) => (c.querySelector("iframe").src = `${c.dataset.dir}/index.html?only=${screen}`));
+}
+buttons.forEach((b) => b.addEventListener("click", () => show(b.dataset.show)));
+show(new URLSearchParams(location.search).get("screen") || "ballot");
+</script>
+</body>
+</html>

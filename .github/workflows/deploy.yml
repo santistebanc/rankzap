@@ -13,17 +13,34 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Skip quietly until the Cloudflare token is added as a repository secret.
+      - name: Check for Cloudflare credentials
+        id: creds
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN isn't set, so nothing was deployed."
+            echo ok=false >> "$GITHUB_OUTPUT"
+          else
+            echo ok=true >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.creds.outputs.ok == 'true'
 
       - uses: actions/setup-node@v4
+        if: steps.creds.outputs.ok == 'true'
         with:
           node-version: 22
           cache: npm
 
       - run: npm ci
+        if: steps.creds.outputs.ok == 'true'
 
       # Builds the app and the poll server, then uploads both as one Worker.
       - name: Deploy
+        if: steps.creds.outputs.ok == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

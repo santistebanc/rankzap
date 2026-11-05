@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Podium D · Medal Stand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/frame.css">
+<link rel="stylesheet" href="../podium-base.css">
+<style>
+/* Podium D · Medal Stand. Take the name literally: a 2-1-3 podium is the hero of the ballot and the results. */
+:root {
+  --ground: #ffdd1f; --ink: #0b0b0b;
+  --hi: #0b0b0b; --hi-ink: #ffdd1f;
+  --step: #ffffff; --step-ink: #0b0b0b;
+  --low: #f2e7a6; --low-ink: #0b0b0b;
+  --chip: #0b0b0b; --chip-ink: #ffdd1f;
+  --gold: #e8a400; --silver: #b9c0ca; --bronze: #c9743c;
+  --board-bg: #ffdd1f; --board-ink: #0b0b0b; --board-muted: #0b0b0b; --bezel: #0b0b0b;
+  --bg: var(--ground);
+}
+
+/* The stand: three columns in 2-1-3 order; block heights are set from scores. */
+.stand { display: grid; grid-template-columns: 1fr 1.12fr 1fr; align-items: end; gap: 4px; padding: 0 18px; }
+.step { display: grid; align-content: end; text-align: center; min-width: 0; }
+.step .who { font: 800 16px/1 var(--font); font-stretch: 75%; text-transform: uppercase; padding: 0 2px 8px; overflow-wrap: anywhere; }
+.step .medal { justify-self: center; width: 34px; height: 34px; border-radius: 50%; margin-bottom: 8px; display: grid; place-items: center; font: 900 18px/1 var(--font); font-stretch: 62%; color: #0b0b0b; box-shadow: inset 0 0 0 3px rgb(0 0 0 / .18); }
+.step.p1 .medal { background: var(--gold); width: 42px; height: 42px; font-size: 22px; }
+.step.p2 .medal { background: var(--silver); }
+.step.p3 .medal { background: var(--bronze); }
+.step .block { background: #0b0b0b; color: #ffdd1f; display: grid; place-items: start center; padding-top: 8px; height: var(--h, 80px); transition: height .6s cubic-bezier(.3,1.35,.5,1); }
+.step .block b { font: 900 54px/.9 var(--font); font-stretch: 62%; }
+.step .block small { font: 800 15px/1 var(--font); font-stretch: 75%; color: #fff; margin-top: 2px; }
+.step.p1 .who { font-size: 20px; }
+.step .who.swap { animation: drop .45s cubic-bezier(.3,1.5,.5,1); }
+@keyframes drop { from { translate: 0 -18px; opacity: 0; } }
+
+/* Ballot: mini stand that follows your drag + compact list. */
+.mini { margin: 4px 0 14px; }
+.mini .step .block { height: var(--h); }
+.mini .p1 { --h: 74px; } .mini .p2 { --h: 54px; } .mini .p3 { --h: 40px; }
+.mini .step .block b { font-size: 40px; }
+.list { list-style: none; margin: 0 18px; padding: 0; display: grid; gap: 4px; position: relative; --swap-ms: 200; --swap-ease: var(--spring); --drop-ms: 320; --drop-ease: cubic-bezier(.25,1.6,.45,1); }
+.list [data-item] { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; min-height: 52px; background: var(--low); outline-offset: -4px; padding-right: 14px; }
+.list [data-item]:nth-child(-n+3) { background: #fff; }
+.list .n { font: 900 36px/1 var(--font); font-stretch: 62%; text-align: center; }
+.list .label { font: 800 18px/1 var(--font); font-stretch: 75%; text-transform: uppercase; }
+.list .dot { width: 14px; height: 14px; border-radius: 50%; }
+.list [data-item]:nth-child(1) .dot { background: var(--gold); }
+.list [data-item]:nth-child(2) .dot { background: var(--silver); }
+.list [data-item]:nth-child(3) .dot { background: var(--bronze); }
+.list [data-item].is-dragging { scale: 1.03; box-shadow: 8px 8px 0 #0b0b0b; z-index: 3; }
+.cut { margin: 6px 18px; font: 700 13px/1 var(--font); display: flex; align-items: center; gap: 8px; }
+.cut::before, .cut::after { content: ""; flex: 1; height: 3px; background: #0b0b0b; }
+
+/* Results */
+.r-top { padding: 0 18px; }
+.r-top h2 { font: 900 44px/.88 var(--font); font-stretch: 62%; text-transform: uppercase; margin: 6px 0 4px; }
+.r-top p { margin: 0 0 18px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; }
+.floor { height: 10px; background: #0b0b0b; margin: 0 18px; }
+.bench { list-style: none; margin: 14px 18px 24px; padding: 0; display: grid; gap: 4px; --swap-ms: 420; }
+.bench li { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; min-height: 48px; padding-right: 12px; background: var(--low); }
+.bench li:nth-child(-n+3) { display: none; }
+.bench .pl { font: 900 28px/1 var(--font); font-stretch: 62%; text-align: center; }
+.bench .nm { font: 800 17px/1 var(--font); font-stretch: 75%; text-transform: uppercase; }
+.bench .sc { font: 900 24px/1 var(--font); font-stretch: 62%; }
+.bench-h { margin: 18px 18px 0; font: 900 20px/1 var(--font); font-stretch: 62%; text-transform: uppercase; }
+.methods { margin-top: 18px; }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All Podium variations</a><span>Podium D of E</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Medal stand</h1>
+      <p class="thesis">Take the name literally. Your top three stand on a real 2-1-3 podium that rebuilds itself as you drag, and the live results are a podium whose step heights follow the scores. Everything below third place sits on the bench. The most game-like Podium, and the easiest to understand on a projector.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#ffdd1f"></i>Signal</span>
+        <span class="swatch"><i style="background:#0b0b0b"></i>Black</span>
+        <span class="swatch"><i style="background:#ffffff"></i>White</span>
+        <span class="swatch"><i style="background:#e8a400"></i>Gold</span>
+        <span class="swatch"><i style="background:#b9c0ca"></i>Silver</span>
+        <span class="swatch"><i style="background:#c9743c"></i>Bronze</span>
+      </div>
+      <div><h2>What changes from Podium</h2><p>The staircase becomes an actual podium. Medal colours appear only as small discs, so the yellow and black poster still dominates.</p></div>
+      <div><h2>Motion</h2>
+        <ul>
+          <li>Drag a new option into the top three and its name drops onto the step from above.</li>
+          <li>Live results: step heights spring to their new scores; a lead change swaps names on the stand.</li>
+          <li>On close (not shown): a confetti-free "medal ceremony", where the steps rise one at a time, 3rd, 2nd, then 1st.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="home">
+          <div>
+            <div class="top"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>RANKZAP</span></div>
+            <h2 class="big" style="font-size:120px"><span>Who</span><span>wins?</span></h2>
+          </div>
+          <div class="stand mini" aria-hidden="true">
+            <div class="step p2"><span class="medal">2</span><div class="block"></div></div>
+            <div class="step p1"><span class="medal">1</span><div class="block"></div></div>
+            <div class="step p3"><span class="medal">3</span><div class="block"></div></div>
+          </div>
+          <div class="actions" style="padding-top:16px">
+            <button class="btn" type="button">Start a poll <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button>
+            <div class="code"><span>A</span><span>3</span><span>Z</span><span>K</span><button class="btn" type="button">Join</button></div>
+          </div>
+          <div class="recent">
+            <h3>Yours</h3>
+            <a href="#">Best morning ritual? <span>A3ZK · live</span></a>
+            <a href="#">Team offsite city <span>Q7PL · Lisbon gold</span></a>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: an empty podium waiting for a winner.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="top"><span>Hi Santi</span><span class="chip">A3ZK</span></div>
+        <h2 class="q" style="font-size:44px">Best morning ritual?</h2>
+        <div class="stand mini" id="mini" aria-hidden="true">
+          <div class="step p2"><span class="who"></span><span class="medal">2</span><div class="block"></div></div>
+          <div class="step p1"><span class="who"></span><span class="medal">1</span><div class="block"></div></div>
+          <div class="step p3"><span class="who"></span><span class="medal">3</span><div class="block"></div></div>
+        </div>
+        <ol class="list" data-rank-list aria-label="Your ranking. Use arrow keys to reorder.">
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Morning walk</span><i class="dot"></i></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Coffee first</span><i class="dot"></i></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Write for 20 minutes</span><i class="dot"></i></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Stretch for 10 minutes</span><i class="dot"></i></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Big breakfast</span><i class="dot"></i></li>
+          <li data-item tabindex="0"><span class="n" data-rank></span><span class="label">Clear messages</span><i class="dot"></i></li>
+        </ol>
+        <div class="submit"><button class="btn" type="button">Lock it in <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="3" fill="none"/></svg></button></div>
+      </div></div>
+      <figcaption>Ballot: drag the list, watch your podium rebuild.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="r-top">
+          <h2>Best morning ritual?</h2>
+          <p><span>Live podium</span><span><span data-votes></span> votes · <span data-method-name>Borda</span></span></p>
+        </div>
+        <div class="stand" id="stand">
+          <div class="step p2"><span class="who"></span><span class="medal">2</span><div class="block"><b>2</b><small></small></div></div>
+          <div class="step p1"><span class="who"></span><span class="medal">1</span><div class="block"><b>1</b><small></small></div></div>
+          <div class="step p3"><span class="who"></span><span class="medal">3</span><div class="block"><b>3</b><small></small></div></div>
+        </div>
+        <div class="floor"></div>
+        <div class="methods" role="group" aria-label="Counting method">
+          <button type="button" data-method="borda">Borda</button>
+          <button type="button" data-method="dowdall">Dowdall</button>
+          <button type="button" data-method="copeland">Copeland</button>
+        </div>
+        <p class="bench-h">The bench</p>
+        <ol class="bench" data-results data-seed="3" data-every="2400">
+          <li data-opt="walk" data-name="Morning walk" data-bias="4"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+          <li data-opt="coffee" data-name="Coffee first" data-bias="4.4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+          <li data-opt="write" data-name="Write for 20 min" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 min</span><span class="sc" data-score></span></li>
+          <li data-opt="stretch" data-name="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch</span><span class="sc" data-score></span></li>
+          <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+          <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+        </ol>
+      </div></div>
+      <figcaption>Results: step heights follow the live scores.</figcaption>
+    </figure>
+  </section>
+</main>
+<script src="../podium.js"></script>
+<script>
+// Fill a stand's steps (2-1-3 order in the DOM) and drop in names that changed.
+function fillStand(stand, names, extra) {
+  [1, 0, 2].forEach((place, col) => {
+    const step = stand.children[col];
+    const who = step.querySelector(".who");
+    if (who.textContent !== names[place]) {
+      who.textContent = names[place];
+      if (!window.Rankzap?.reduce) { who.classList.remove("swap"); void who.offsetWidth; who.classList.add("swap"); }
+    }
+    extra?.(step, place);
+  });
+}
+document.addEventListener("rank-change", (e) => {
+  const mini = document.getElementById("mini");
+  if (!mini || !e.target.matches?.(".list")) return;
+  fillStand(mini, [...e.target.children].slice(0, 3).map((li) => li.querySelector(".label").textContent));
+});
+document.addEventListener("tally", (e) => {
+  const stand = document.getElementById("stand");
+  if (!stand) return;
+  const { score, order } = e.detail;
+  const max = score[order[0]] || 1;
+  const row = (id) => document.querySelector(`.bench [data-opt="${id}"]`);
+  fillStand(stand, order.slice(0, 3).map((id) => row(id).dataset.name), (step, place) => {
+    const id = order[place];
+    step.querySelector(".block").style.setProperty("--h", `${Math.round(70 + (score[id] / max) * 90)}px`);
+    step.querySelector("small").textContent = row(id).querySelector("[data-score]")?.textContent || "";
+  });
+});
+</script>
+<script src="../../shared/rank.js"></script>
+</body>
+</html>

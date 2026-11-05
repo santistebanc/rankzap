@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Direction 4 · Tiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<style>
+/* Direction 4 · Tiles. Quiet and tactile: options are objects you pick up, and only your picks get ranked. */
+:root {
+  --ground: #eceef1;
+  --tile: #ffffff;
+  --sunk: #e1e4e8;
+  --ink: #15171a;
+  --muted: #5f656e;
+  --blue: #2b50e6;
+  --blue-soft: #dfe5fc;
+  --font: "Geist", -apple-system, system-ui, sans-serif;
+  --spring: cubic-bezier(.32,1.25,.5,1);
+  --board-bg: var(--ground); --board-ink: var(--ink); --board-muted: var(--muted); --bezel: #1b1d20;
+  --bg: var(--ground);
+}
+body { font-family: var(--font); }
+.board-head h1 { font: 600 clamp(64px, 8vw, 120px)/.92 var(--font); letter-spacing: -.055em; }
+.swatch i { border-radius: 12px; }
+
+.screen { background: var(--ground); color: var(--ink); font-family: var(--font); font-variant-numeric: tabular-nums; }
+.wrap { padding: 4px 16px 24px; }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 14px; font-size: 15px; color: var(--muted); }
+.nav b { color: var(--ink); font-weight: 600; }
+.pill { background: var(--tile); padding: 6px 12px; border-radius: 99px; font-weight: 600; color: var(--ink); font-size: 14px; }
+h2.t { font: 600 34px/1.02 var(--font); letter-spacing: -.035em; margin: 6px 4px 6px; }
+.sub { margin: 0 4px 18px; color: var(--muted); font-size: 15px; line-height: 1.45; }
+.btn { width: 100%; min-height: 54px; border: 0; border-radius: 16px; background: var(--ink); color: #fff; font: 600 17px/1 var(--font); cursor: pointer;
+  transition: transform .16s var(--spring); }
+.btn:active { transform: scale(.97); }
+.btn.blue { background: var(--blue); }
+.btn.soft { background: var(--tile); color: var(--ink); }
+
+/* ---------- home ---------- */
+.home-hero { background: var(--tile); border-radius: 28px; padding: 26px 22px 22px; margin-bottom: 10px; }
+.home-hero .stack { position: relative; height: 150px; margin: 4px 0 22px; }
+.home-hero .stack span { position: absolute; left: 0; right: 0; height: 46px; border-radius: 14px; display: flex; align-items: center; gap: 12px; padding: 0 14px; font-weight: 600; font-size: 15px; background: var(--ground); }
+.home-hero .stack span b { width: 24px; height: 24px; border-radius: 8px; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 13px; }
+.home-hero .stack span:nth-child(1) { top: 0; background: var(--blue-soft); rotate: -2deg; left: 14px; right: -6px; box-shadow: 0 12px 24px -12px rgb(43 80 230 / .45); }
+.home-hero .stack span:nth-child(1) b { background: var(--blue); }
+.home-hero .stack span:nth-child(2) { top: 52px; }
+.home-hero .stack span:nth-child(3) { top: 104px; opacity: .6; }
+.home-hero h2 { font: 600 38px/1 var(--font); letter-spacing: -.04em; margin: 0 0 10px; }
+.home-hero p { margin: 0 0 20px; color: var(--muted); font-size: 16px; line-height: 1.45; }
+.codebox { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 6px; background: var(--tile); border-radius: 22px; padding: 8px; margin-bottom: 22px; }
+.codebox span { height: 52px; border-radius: 14px; background: var(--ground); display: grid; place-items: center; font: 600 24px/1 var(--font); }
+.codebox span.on { box-shadow: inset 0 0 0 2px var(--blue); }
+.codebox .btn { width: auto; padding: 0 18px; min-height: 52px; border-radius: 14px; }
+.sec { font: 600 15px/1 var(--font); color: var(--muted); margin: 0 4px 10px; }
+.cards { display: grid; gap: 8px; }
+.card { background: var(--tile); border-radius: 20px; padding: 14px 16px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; }
+.card b { font-weight: 600; font-size: 16px; }
+.card small { color: var(--muted); font-size: 13px; }
+.card i { grid-row: span 2; font-style: normal; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 99px; background: var(--blue-soft); color: var(--blue); }
+.card i.done { background: var(--sunk); color: var(--muted); }
+
+/* ---------- ballot: tray + pile ---------- */
+.tray { background: var(--sunk); border-radius: 24px; padding: 6px; margin-bottom: 18px; }
+.tray-h, .pile-h { display: flex; justify-content: space-between; padding: 8px 10px 10px; font-size: 14px; color: var(--muted); font-weight: 500; }
+.tray-h b { color: var(--ink); font-weight: 600; }
+.picks, .pile { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; position: relative;
+  --swap-ms: 260; --swap-ease: var(--spring); --drop-ms: 420; --drop-ease: cubic-bezier(.3,1.4,.45,1); }
+.picks [data-item], .pile li {
+  display: grid; grid-template-columns: 34px 1fr 36px; align-items: center; gap: 12px; min-height: 58px; padding: 0 8px 0 12px;
+  background: var(--tile); border-radius: 16px; font-weight: 500; font-size: 16px; outline-offset: 2px;
+  transition: scale .25s var(--spring), box-shadow .25s ease-out;
+}
+.picks [data-item].is-dragging { scale: 1.04; box-shadow: 0 22px 40px -16px rgb(21 23 26 / .35); }
+.picks.is-sorting [data-item]:not(.is-dragging) { scale: .985; }
+.picks .r { width: 30px; height: 30px; border-radius: 10px; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 14px; }
+.picks [data-item]:first-child .r { background: var(--blue); }
+.pile li { background: transparent; box-shadow: inset 0 0 0 1.5px #cdd1d7; color: var(--muted); grid-template-columns: 1fr 36px; padding-left: 16px; }
+.icon { width: 36px; height: 36px; border-radius: 12px; border: 0; background: var(--ground); display: grid; place-items: center; cursor: pointer; color: var(--muted); }
+.icon svg { width: 16px; height: 16px; }
+.pile .icon { background: var(--tile); color: var(--blue); }
+.empty { text-align: center; color: var(--muted); font-size: 14px; padding: 14px 0 10px; }
+.dock { position: sticky; bottom: 0; padding: 14px 16px 22px; background: var(--ground); }
+
+/* ---------- results ---------- */
+.firsts { background: var(--tile); border-radius: 24px; padding: 18px; margin-bottom: 10px; }
+.firsts h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--muted); }
+.firsts .lead { font: 600 30px/1.05 var(--font); letter-spacing: -.035em; margin: 0 0 16px; }
+.split { display: flex; gap: 3px; height: 14px; border-radius: 99px; overflow: hidden; }
+.split i { flex: var(--n) 1 0; background: var(--c); transition: flex-grow .6s var(--spring); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 3px; background: var(--c); margin-right: 6px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--sunk); border-radius: 14px; padding: 3px; margin: 14px 0 10px; }
+.seg button { border: 0; background: none; border-radius: 11px; padding: 9px 0; font-weight: 600; font-size: 14px; color: var(--muted); cursor: pointer; transition: background-color .2s ease-out; }
+.seg button[aria-pressed="true"] { background: var(--tile); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / .08); }
+.ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; --swap-ms: 520; --swap-ease: var(--spring); }
+.ranks li { background: var(--tile); border-radius: 18px; padding: 12px 14px; display: grid; grid-template-columns: 30px 1fr auto; gap: 8px 10px; align-items: center; }
+.ranks .pl { width: 30px; height: 30px; border-radius: 10px; background: var(--ground); display: grid; place-items: center; font-weight: 600; font-size: 14px; }
+.ranks li[data-leading] .pl { background: var(--blue); color: #fff; }
+.ranks .nm { font-weight: 500; font-size: 16px; }
+.ranks .sc { font-weight: 600; font-size: 16px; }
+.ranks .meter { grid-column: 2 / 4; height: 6px; border-radius: 99px; background: var(--ground); overflow: hidden; }
+.ranks .meter i { display: block; height: 100%; width: calc(var(--share) * 100%); border-radius: 99px; background: var(--ink); transition: width .6s var(--spring); }
+.ranks li[data-leading] .meter i { background: var(--blue); }
+.ranks small { grid-column: 2 / 4; color: var(--muted); font-size: 13px; }
+.ranks li.is-bumped { animation: nudge .5s var(--spring); }
+@keyframes nudge { 40% { scale: 1.015; } }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All directions</a><span>Direction 4 of 5</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Tiles</h1>
+      <p class="thesis">Calm, tactile and one-handed. Options are physical tiles: you pick them up, they lift and the others make room. Only the ones you care about go into your tray, so a ballot with 15 options doesn't mean ranking all 15. Closest to a polished native app.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#eceef1"></i>Ground</span>
+        <span class="swatch"><i style="background:#ffffff"></i>Tile</span>
+        <span class="swatch"><i style="background:#e1e4e8"></i>Sunk</span>
+        <span class="swatch"><i style="background:#15171a"></i>Ink</span>
+        <span class="swatch"><i style="background:#2b50e6"></i>Cobalt</span>
+      </div>
+      <div><h2>Type</h2><p>Geist only, tight negative tracking on titles, tabular figures for scores. No uppercase anywhere.</p></div>
+      <div><h2>Interaction and motion</h2>
+        <ul>
+          <li>Picked-up tile scales to 1.04 with a real shadow (the only shadow in the system); the rest sink to 0.985. Spring curves, interruptible.</li>
+          <li>Tray and pile: tap + to rank, − to drop. Partial ballots use the existing "unranked = 0" rule.</li>
+          <li>Results open with "who people put first", then the full count. Light haptic tick on each slot change.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="wrap">
+          <div class="nav"><b>Rankzap</b><span>Light</span></div>
+          <div class="home-hero">
+            <div class="stack" aria-hidden="true"><span><b>1</b>Morning walk</span><span><b>2</b>Coffee first</span><span><b>3</b>Write for 20 minutes</span></div>
+            <h2>Rank it together.</h2>
+            <p>Make a poll, share the link, everyone drags their order. The count updates as they vote.</p>
+            <button class="btn blue" type="button">New poll</button>
+          </div>
+          <div class="codebox" aria-label="Join with a code"><span>A</span><span>3</span><span class="on"></span><span></span><button class="btn" type="button">Join</button></div>
+          <p class="sec">Recent on this phone</p>
+          <div class="cards">
+            <div class="card"><b>Best morning ritual?</b><i>Open</i><small>A3ZK · 15 votes · 2h ago</small></div>
+            <div class="card"><b>Team offsite city</b><i class="done">Closed</i><small>Q7PL · Lisbon won</small></div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: the hero shows the gesture itself; join code is one tap away.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="wrap">
+          <div class="nav"><span>‹ Back</span><span class="pill">A3ZK</span></div>
+          <h2 class="t">Best morning ritual?</h2>
+          <p class="sub">Add the ones you care about, then drag to order them.</p>
+          <div class="tray">
+            <div class="tray-h"><b>Your picks</b><span id="pickcount"></span></div>
+            <ol class="picks" data-rank-list aria-label="Your picks. Use arrow keys to reorder.">
+              <li data-item tabindex="0"><span class="r" data-rank></span><span>Morning walk</span><button class="icon" type="button" aria-label="Remove"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+              <li data-item tabindex="0"><span class="r" data-rank></span><span>Write for 20 minutes</span><button class="icon" type="button" aria-label="Remove"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+              <li data-item tabindex="0"><span class="r" data-rank></span><span>Coffee first</span><button class="icon" type="button" aria-label="Remove"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+            </ol>
+          </div>
+          <div class="pile-h"><span>Not ranked</span><span>count as 0</span></div>
+          <ul class="pile">
+            <li><span>Stretch for 10 minutes</span><button class="icon" type="button" aria-label="Add to picks"><svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+            <li><span>Big breakfast</span><button class="icon" type="button" aria-label="Add to picks"><svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+            <li><span>Clear messages</span><button class="icon" type="button" aria-label="Add to picks"><svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></li>
+          </ul>
+        </div>
+        <div class="dock"><button class="btn" type="button">Submit vote</button></div>
+      </div></div>
+      <figcaption>Ballot: a tray of picks above a pile. Tap +, then drag.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="wrap">
+          <div class="nav"><span>‹ Back</span><span class="pill"><span data-votes></span> votes</span></div>
+          <div class="firsts">
+            <h3>Leading · first choices below</h3>
+            <p class="lead" data-leader>Morning walk</p>
+            <div class="split" id="split"></div>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="seg" role="group" aria-label="Counting method">
+            <button type="button" data-method="borda">Borda</button>
+            <button type="button" data-method="dowdall">Dowdall</button>
+            <button type="button" data-method="copeland">Copeland</button>
+          </div>
+          <ol class="ranks" data-results data-seed="9">
+            <li data-opt="walk" data-name="Morning walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+            <li data-opt="coffee" data-name="Coffee first" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+            <li data-opt="write" data-name="Write for 20 minutes" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 minutes</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+            <li data-opt="stretch" data-name="Stretch for 10 minutes" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch for 10 minutes</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+            <li data-opt="breakfast" data-name="Big breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+            <li data-opt="messages" data-name="Clear messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span><span class="meter"><i></i></span><small><span data-firsts></span> put it first</small></li>
+          </ol>
+        </div>
+      </div></div>
+      <figcaption>Results: first choices at a glance, the full count below.</figcaption>
+    </figure>
+  </section>
+</main>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Tray and pile: + moves a tile into the picks, − sends it back.
+  const picks = document.querySelector(".picks"), pile = document.querySelector(".pile");
+  if (picks) {
+    const minus = '<svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    const plus = '<svg viewBox="0 0 16 16"><path d="M3 8h10M8 3v10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    const count = () => (document.getElementById("pickcount").textContent = `${picks.children.length} of ${picks.children.length + pile.children.length}`);
+    const all = () => [...picks.children, ...pile.children];
+    pile.addEventListener("click", (e) => {
+      const li = e.target.closest("button")?.closest("li"); if (!li) return;
+      const name = li.querySelector("span").textContent;
+      Rankzap.flip(all(), () => {
+        li.remove();
+        picks.insertAdjacentHTML("beforeend", `<li data-item tabindex="0"><span class="r" data-rank></span><span>${name}</span><button class="icon" type="button" aria-label="Remove">${minus}</button></li>`);
+        Rankzap.renumber(picks);
+      }, { duration: 320, easing: "cubic-bezier(.32,1.25,.5,1)" });
+      count(); navigator.vibrate?.(8);
+    });
+    picks.addEventListener("click", (e) => {
+      const li = e.target.closest("button")?.closest("li"); if (!li) return;
+      const name = li.children[1].textContent;
+      Rankzap.flip(all(), () => {
+        li.remove();
+        pile.insertAdjacentHTML("afterbegin", `<li><span>${name}</span><button class="icon" type="button" aria-label="Add to picks">${plus}</button></li>`);
+        Rankzap.renumber(picks);
+      }, { duration: 320, easing: "cubic-bezier(.32,1.25,.5,1)" });
+      count();
+    });
+    count();
+  }
+
+  // First-choice split bar, fed by the live tally.
+  const colours = ["#2b50e6", "#15171a", "#7d8590", "#a9b0b9", "#c8cdd3", "#dadde2"];
+  document.addEventListener("tally", (e) => {
+    const split = document.getElementById("split"), legend = document.getElementById("legend");
+    if (!split) return;
+    const { order, ballots } = e.detail;
+    const firsts = order.map((id) => [id, ballots.filter((b) => b[0] === id).length]);
+    const name = (id) => document.querySelector(`.ranks [data-opt="${id}"]`).dataset.name;
+    split.innerHTML = firsts.map(([id, n], i) => `<i style="--n:${n};--c:${colours[i]}"></i>`).join("");
+    legend.innerHTML = firsts.slice(0, 3).map(([id, n], i) => `<span style="--c:${colours[i]}">${name(id)} ${n}</span>`).join("");
+  });
+});
+</script>
+<script src="../shared/rank.js"></script>
+</body>
+</html>

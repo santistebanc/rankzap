@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rankzap · Direction 5 · Head to Head</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/frame.css">
+<style>
+/* Direction 5 · Head to Head. Ranking by matchups: pick one of two, the app builds your order. */
+:root {
+  --paper: #fafaf8;
+  --ink: #111214;
+  --muted: #5d6066;
+  --line: #e6e6e1;
+  --red: #e2392b;     /* red corner */
+  --blue: #2152e3;    /* blue corner */
+  --red-soft: #fde4e1;
+  --blue-soft: #e1e8fd;
+  --serif: "Instrument Serif", Georgia, serif;
+  --sans: "Instrument Sans", system-ui, sans-serif;
+  --board-bg: #f1f1ed; --board-ink: var(--ink); --board-muted: var(--muted); --bezel: #16171a;
+  --bg: var(--paper);
+}
+body { font-family: var(--sans); }
+.board-head h1 { font: 400 clamp(72px, 9vw, 140px)/.88 var(--serif); letter-spacing: -.02em; }
+
+.screen { background: var(--paper); color: var(--ink); font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.pad { padding: 6px 20px 24px; }
+.nav { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); margin-bottom: 18px; }
+.nav b { color: var(--ink); }
+.btn { width: 100%; min-height: 54px; border: 0; border-radius: 999px; background: var(--ink); color: #fff; font: 600 17px/1 var(--sans); cursor: pointer; transition: transform .12s ease-out; }
+.btn:active { transform: scale(.97); }
+
+/* ---------- home ---------- */
+.versus { display: grid; grid-template-columns: 1fr 1fr; height: 210px; margin: 0 -20px 24px; }
+.versus div { display: grid; align-content: end; padding: 16px 20px; color: #fff; font: 400 38px/.95 var(--serif); }
+.versus div:first-child { background: var(--red); }
+.versus div:last-child { background: var(--blue); text-align: right; }
+.versus small { font: 600 13px/1 var(--sans); opacity: .85; margin-bottom: 8px; }
+.home h2 { font: 400 50px/.95 var(--serif); letter-spacing: -.015em; margin: 0 0 12px; }
+.home p { color: var(--muted); font-size: 16px; line-height: 1.45; margin: 0 0 22px; }
+.join { display: flex; gap: 8px; margin-top: 10px; }
+.join input { flex: 1; min-width: 0; height: 54px; border-radius: 999px; border: 0; background: #efefeb; padding: 0 22px; font: 600 20px/1 var(--sans); letter-spacing: .2em; color: var(--ink); }
+.join .btn { width: 96px; background: #efefeb; color: var(--ink); }
+.hist { margin-top: 26px; }
+.hist h3 { font: 400 26px/1 var(--serif); margin: 0 0 8px; }
+.hist div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; font-size: 15px; box-shadow: 0 -1px 0 var(--line); }
+.hist span { color: var(--muted); }
+
+/* ---------- matchup ballot ---------- */
+.prog { display: flex; gap: 4px; margin-bottom: 14px; }
+.prog i { flex: 1; height: 4px; border-radius: 4px; background: var(--line); transition: background-color .3s ease-out; }
+.prog i.on { background: var(--ink); }
+.ask { font: 400 32px/1 var(--serif); margin: 0 0 14px; }
+.duel { display: grid; gap: 8px; position: relative; margin-bottom: 18px; }
+.side {
+  min-height: 132px; border: 0; border-radius: 22px; padding: 18px 20px; text-align: left; cursor: pointer;
+  display: grid; align-content: space-between; color: #fff; font: 400 34px/1 var(--serif);
+  transition: transform .18s cubic-bezier(.3,1.4,.5,1), opacity .18s ease-out;
+}
+.side small { font: 600 13px/1 var(--sans); opacity: .85; }
+.side.a { background: var(--red); }
+.side.b { background: var(--blue); }
+.side:hover { transform: scale(1.01); }
+.side:active { transform: scale(.98); }
+.vs { position: absolute; left: 50%; top: 50%; translate: -50% -50%; width: 46px; height: 46px; border-radius: 50%; background: var(--paper); display: grid; place-items: center; font: 400 22px/1 var(--serif); font-style: italic; pointer-events: none; }
+.duel.won-a .side.a, .duel.won-b .side.b { transform: scale(1.03); }
+.duel.won-a .side.b, .duel.won-b .side.a { opacity: 0; transform: translateX(40px) rotate(4deg); }
+.duel.enter .side { animation: enter .3s cubic-bezier(.2,.8,.2,1) both; }
+.duel.enter .side.b { animation-delay: .05s; }
+@keyframes enter { from { opacity: 0; transform: translateY(16px); } }
+.sofar h3 { font: 600 14px/1 var(--sans); color: var(--muted); margin: 0 0 8px; display: flex; justify-content: space-between; }
+.sofar ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sofar li { display: grid; grid-template-columns: 28px 1fr; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 12px; background: #f0f0ec; font-size: 15px; }
+.sofar li b { font: 400 20px/1 var(--serif); }
+.sofar li.new { background: var(--ink); color: #fff; }
+.sofar li.slot { background: none; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); grid-template-columns: 1fr; font-size: 13px; justify-items: center; min-height: 34px; }
+.skip { display: block; margin: 16px auto 0; background: none; border: 0; color: var(--muted); font-size: 14px; text-decoration: underline; cursor: pointer; }
+
+/* ---------- results: grid of matchups ---------- */
+.res-h { font: 400 40px/1 var(--serif); margin: 0 0 4px; }
+.res-s { color: var(--muted); margin: 0 0 16px; font-size: 15px; }
+.matrix { display: grid; grid-template-columns: 84px repeat(6, 1fr); gap: 3px; margin-bottom: 8px; font-size: 11px; }
+.matrix span { display: grid; place-items: center; aspect-ratio: 1; border-radius: 6px; font-weight: 600; }
+.matrix .h { aspect-ratio: auto; color: var(--muted); font-weight: 500; justify-items: start; text-align: left; padding-right: 4px; line-height: 1.1; }
+.matrix .top { aspect-ratio: auto; height: 22px; color: var(--muted); }
+.matrix .w { background: var(--ink); color: #fff; }
+.matrix .l { background: #ecece8; color: var(--muted); }
+.matrix .t { background: #d8d8d2; }
+.matrix .x { background: none; }
+.key { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+.key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.seg { display: flex; gap: 6px; margin-bottom: 10px; }
+.seg button { border: 0; border-radius: 999px; padding: 8px 14px; background: #efefeb; font: 600 14px/1 var(--sans); cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.standings { list-style: none; margin: 0; padding: 0; --swap-ms: 500; }
+.standings li { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: baseline; padding: 11px 0; box-shadow: 0 -1px 0 var(--line); }
+.standings .pl { font: 400 24px/1 var(--serif); }
+.standings li[data-leading] .pl { color: var(--red); }
+.standings .nm { font-weight: 500; }
+.standings .sc { font-weight: 600; }
+</style>
+</head>
+<body>
+<main class="board">
+  <nav class="board-nav"><a href="../index.html">All directions</a><span>Direction 5 of 5</span></nav>
+  <header class="board-head">
+    <div>
+      <h1>Head to Head</h1>
+      <p class="thesis">Ranking eight things on a phone is work. Choosing between two is easy. Voters answer a few "this or that?" matchups and Rankzap sorts their ballot for them, about n·log n questions instead of a long drag. Results show the actual matchups, which is what Copeland counts anyway.</p>
+    </div>
+    <div class="notes">
+      <div class="swatches" aria-label="Palette">
+        <span class="swatch"><i style="background:#fafaf8"></i>Paper</span>
+        <span class="swatch"><i style="background:#111214"></i>Ink</span>
+        <span class="swatch"><i style="background:#e2392b"></i>Red corner</span>
+        <span class="swatch"><i style="background:#2152e3"></i>Blue corner</span>
+      </div>
+      <div><h2>Type</h2><p>Instrument Serif for options and headlines (options become the stars), Instrument Sans for interface text.</p></div>
+      <div><h2>Interaction and motion</h2>
+        <ul>
+          <li>Tap or swipe toward a side. The winner swells, the other slides off, the next pair rises in about 300ms.</li>
+          <li>"Your ranking so far" builds below with a dashed slot showing where the current option is being placed.</li>
+          <li>Drag mode stays one tap away for people who'd rather order the list directly. Same ballot data either way.</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="phones">
+    <figure class="phone-wrap" data-screen="home">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="pad home">
+          <div class="nav"><b>Rankzap</b><span>Recent</span></div>
+          <div class="versus" aria-hidden="true"><div><small>Red corner</small>Morning walk</div><div><small>Blue corner</small>Coffee first</div></div>
+          <h2>Settle it one matchup at a time.</h2>
+          <p>Add the options, share the link. Everyone picks between pairs and the group ranking falls out.</p>
+          <button class="btn" type="button">Start a poll</button>
+          <form class="join" onsubmit="return false"><input aria-label="Poll code" placeholder="CODE" maxlength="4"><button class="btn" type="submit">Join</button></form>
+          <div class="hist">
+            <h3>Recent</h3>
+            <div>Best morning ritual? <span>A3ZK · open</span></div>
+            <div>Team offsite city <span>Q7PL · Lisbon</span></div>
+          </div>
+        </div>
+      </div></div>
+      <figcaption>Home: the matchup itself is the hero image.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="ballot">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="pad">
+          <div class="nav"><span>Best morning ritual?</span><b>A3ZK</b></div>
+          <div class="prog" id="prog"></div>
+          <h2 class="ask" id="ask">Which would you rather?</h2>
+          <div class="duel" id="duel">
+            <button class="side a" type="button" data-pick="a"><small>Tap to choose</small><span></span></button>
+            <button class="side b" type="button" data-pick="b"><small>Tap to choose</small><span></span></button>
+            <span class="vs">vs</span>
+          </div>
+          <div class="sofar"><h3><span>Your ranking so far</span><span id="left"></span></h3><ol id="sofar"></ol></div>
+          <button class="skip" type="button">Rank by dragging instead</button>
+        </div>
+      </div></div>
+      <figcaption>Ballot: pick one of two; the list sorts itself. Try it.</figcaption>
+    </figure>
+
+    <figure class="phone-wrap" data-screen="results">
+      <div class="phone"><div class="screen">
+        <div class="statusbar"><span>9:41</span></div>
+        <div class="pad">
+          <div class="nav"><span><span data-votes></span> ballots</span><b>A3ZK</b></div>
+          <h2 class="res-h"><span data-leader>Morning walk</span> leads</h2>
+          <p class="res-s">Each square is a matchup: did the row beat the column on more ballots?</p>
+          <div class="matrix" id="matrix"></div>
+          <div class="key"><span><i style="background:#111214"></i>Wins</span><span><i style="background:#d8d8d2"></i>Tie</span><span><i style="background:#ecece8"></i>Loses</span></div>
+          <div class="seg" role="group" aria-label="Counting method">
+            <button type="button" data-method="copeland">Copeland</button>
+            <button type="button" data-method="borda">Borda</button>
+            <button type="button" data-method="dowdall">Dowdall</button>
+          </div>
+          <ol class="standings" data-results data-method="copeland" data-seed="21" data-every="3200">
+            <li data-opt="walk" data-name="Morning walk" data-short="Walk" data-bias="5"><span class="pl" data-place></span><span class="nm">Morning walk</span><span class="sc" data-score></span></li>
+            <li data-opt="coffee" data-name="Coffee first" data-short="Coffee" data-bias="4"><span class="pl" data-place></span><span class="nm">Coffee first</span><span class="sc" data-score></span></li>
+            <li data-opt="write" data-name="Write for 20 minutes" data-short="Write" data-bias="3"><span class="pl" data-place></span><span class="nm">Write for 20 minutes</span><span class="sc" data-score></span></li>
+            <li data-opt="stretch" data-name="Stretch for 10 minutes" data-short="Stretch" data-bias="1.6"><span class="pl" data-place></span><span class="nm">Stretch for 10 minutes</span><span class="sc" data-score></span></li>
+            <li data-opt="breakfast" data-name="Big breakfast" data-short="Breakfast" data-bias="2"><span class="pl" data-place></span><span class="nm">Big breakfast</span><span class="sc" data-score></span></li>
+            <li data-opt="messages" data-name="Clear messages" data-short="Messages" data-bias="1"><span class="pl" data-place></span><span class="nm">Clear messages</span><span class="sc" data-score></span></li>
+          </ol>
+        </div>
+      </div></div>
+      <figcaption>Results: the matchup grid, then the standings.</figcaption>
+    </figure>
+  </section>
+</main>
+<script>
+// Head-to-head matrix, redrawn on every tally (registered before rank.js runs).
+document.addEventListener("tally", (e) => {
+  const m = document.getElementById("matrix");
+  if (!m) return;
+  const { order, ballots } = e.detail;
+  const short = (id) => document.querySelector(`.standings [data-opt="${id}"]`).dataset.short;
+  let html = '<span class="top"></span>' + order.map((id) => `<span class="top">${short(id).slice(0, 3)}</span>`).join("");
+  order.forEach((a) => {
+    html += `<span class="h">${short(a)}</span>`;
+    order.forEach((b) => {
+      if (a === b) { html += '<span class="x"></span>'; return; }
+      const wa = ballots.filter((v) => v.indexOf(a) < v.indexOf(b)).length;
+      const wb = ballots.length - wa;
+      html += `<span class="${wa > wb ? "w" : wa < wb ? "l" : "t"}" title="${wa}–${wb}">${wa}</span>`;
+    });
+  });
+  m.innerHTML = html;
+});
+
+// Matchup ballot: binary insertion sort driven by the voter's picks.
+document.addEventListener("DOMContentLoaded", () => {
+  const duel = document.getElementById("duel");
+  if (!duel) return;
+  const queue = ["Big breakfast", "Stretch for 10 minutes", "Clear messages"];
+  const sorted = ["Morning walk", "Write for 20 minutes", "Coffee first"]; // mid-ballot: 4 matchups already answered
+  let current, lo, hi, asked = 4;
+  const estimate = 10; // ~ log2(n!) for 6 options
+  const prog = document.getElementById("prog");
+  prog.innerHTML = "<i class=\"on\"></i>".repeat(asked) + "<i></i>".repeat(estimate - asked);
+  const sofar = document.getElementById("sofar");
+
+  function drawSofar(slotAt) {
+    const items = sorted.map((s, i) => `<li><b>${i + 1}</b>${s}</li>`);
+    if (slotAt !== undefined) items.splice(slotAt, 0, `<li class="slot">${current} lands somewhere around here</li>`);
+    sofar.innerHTML = items.join("");
+    document.getElementById("left").textContent = queue.length ? `${queue.length + (current ? 1 : 0)} to place` : "";
+  }
+  function next() {
+    if (!current) {
+      current = queue.shift();
+      if (!current) return finish();
+      lo = 0; hi = sorted.length;
+    }
+    const mid = Math.floor((lo + hi) / 2);
+    duel.querySelector(".a span").textContent = current;
+    duel.querySelector(".b span").textContent = sorted[mid];
+    duel.dataset.mid = mid;
+    duel.classList.remove("won-a", "won-b", "enter"); void duel.offsetWidth; duel.classList.add("enter");
+    drawSofar(lo === hi ? lo : Math.floor((lo + hi) / 2));
+  }
+  function finish() {
+    document.getElementById("ask").textContent = "Done. Here's your ballot.";
+    duel.style.display = "none";
+    drawSofar();
+    sofar.insertAdjacentHTML("afterend", '<button class="btn" type="button" style="margin-top:14px">Submit vote</button>');
+    [...prog.children].forEach((i) => i.classList.add("on"));
+  }
+  duel.addEventListener("click", (e) => {
+    const pick = e.target.closest("[data-pick]")?.dataset.pick;
+    if (!pick || duel.classList.contains("won-a") || duel.classList.contains("won-b")) return;
+    const mid = +duel.dataset.mid;
+    if (pick === "a") hi = mid; else lo = mid + 1;
+    asked++;
+    prog.children[Math.min(asked, estimate) - 1]?.classList.add("on");
+    duel.classList.add(pick === "a" ? "won-a" : "won-b");
+    navigator.vibrate?.(8);
+    setTimeout(() => {
+      if (lo >= hi) { sorted.splice(lo, 0, current); current = null; }
+      next();
+    }, Rankzap.reduce ? 0 : 260);
+  });
+  next();
+});
+</script>
+<script src="../shared/rank.js"></script>
+</body>
+</html>

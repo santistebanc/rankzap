@@ -6,7 +6,7 @@
 
 ![Rankzap ballot, results and host controls](./public/rankzap-screenshot.png)
 
-Screenshots use demo data rendered by the real app components. [Desktop host view](./public/rankzap-admin.png).
+Screenshots are the real app with demo polls, captured by `design-explorations/_harness/capture-screens.mjs`. [Desktop host view](./public/rankzap-admin.png).
 
 Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. The Podium design uses condensed Archivo type, a staircase ballot, and bold colour. Home stays brand yellow; hosts can choose from eight poll colours when creating a poll or change the colour later. The current design uses a light theme.
 
@@ -59,7 +59,9 @@ npm run deploy       # build, then wrangler deploy
 
 From GitHub: `.github/workflows/deploy.yml` deploys on every push to `main`. Add two repository secrets under **Settings → Secrets and variables → Actions**: `CLOUDFLARE_API_TOKEN` (a token from the "Edit Cloudflare Workers" template) and `CLOUDFLARE_ACCOUNT_ID`.
 
-To use your own domain, add it to the Worker under **Workers & Pages → rankzap → Settings → Domains & Routes** in the Cloudflare dashboard.
+The workflow skips the deploy until `CLOUDFLARE_API_TOKEN` is set.
+
+The Worker answers at `rankzap.santistebanc94.workers.dev`. To serve it on your own domain, the domain must be a zone in the same Cloudflare account, with its nameservers pointing at Cloudflare. Then add it to `wrangler.jsonc` as `"routes": [{ "pattern": "rankzap.site", "custom_domain": true }]` and deploy again.
 
 ## How it works
 
@@ -161,7 +163,7 @@ src/
     RankzapPage.tsx
     poll/
       AdminView.tsx              # Responsive host panels and poll actions
-      VoterView.tsx              # Name and ballot flows
+      VoterView.tsx              # Ballot, with the name asked at lock-in
       VoterResults.tsx           # Submitted/closed results, ties and sharing
       shared.tsx                 # Shared poll data type, modal, header and footer
   components/
