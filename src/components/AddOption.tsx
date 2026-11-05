@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Plus } from "lucide-react";
 import { nanoid } from "nanoid";
 import { SET_OPTS, useRoom } from "../lib/room";
 import { clampOption, OPTION_MAX, PASTE_THROTTLE_MS } from "../lib/types";
@@ -60,21 +59,23 @@ export function AddOption({ addedBy, onAddOption }: AddOptionProps) {
   };
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-2 border-t border-border/20 px-4 py-3">
-      <span className="flex size-6 shrink-0 items-center justify-center text-muted/60" aria-hidden="true">
-        <Plus className="size-4" strokeWidth={2} aria-hidden />
-      </span>
+    <form
+      onSubmit={submit}
+      className="grid min-h-[52px] grid-cols-[74px_1fr] items-center text-ink shadow-[inset_0_0_0_3px_currentColor] focus-within:bg-step focus-within:text-step-ink focus-within:shadow-none"
+    >
+      <span className="display text-center text-[34px]" aria-hidden="true">+</span>
       <input
         value={text}
         onChange={(e: ChangeEvent<HTMLInputElement>) => setText(e.target.value)}
         onPaste={onPaste}
         maxLength={OPTION_MAX}
-        placeholder={batchMessage ?? "Add an item…"}
+        placeholder={batchMessage ?? "Add an option"}
         aria-label="Add an option"
         disabled={busy}
-        style={{ fontSize: adaptiveSize(text, 14, 18, 20, 80), transition: "font-size 150ms, background-color 150ms" }}
-        className="-mx-2 min-h-0 flex-1 rounded-md bg-transparent px-2 py-1 text-text outline-none placeholder:text-muted/70 focus:bg-surface-2 disabled:opacity-50"
+        style={{ fontSize: adaptiveSize(text, 15, 17, 20, 80) }}
+        className="min-h-[52px] min-w-0 bg-transparent pr-4 font-bold outline-none placeholder:text-current placeholder:opacity-100 focus:placeholder:opacity-40 disabled:opacity-50"
       />
     </form>
   );
+
 }

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useRoomList } from "../lib/room";
 import { fallbackVoterName } from "../lib/identity";
 import type { UserRecord } from "../lib/types";
-import { UserPill, type PillState } from "./UserPill";
+import { UserPill, pillStateFor } from "./UserPill";
 
 interface UsersListProps {
   selfUserId?: string;
@@ -161,19 +161,6 @@ export function UsersList({
       )}
     </div>
   );
-}
-
-function pillStateFor(
-  user: UserRecord,
-  online: boolean,
-  hasVoted: boolean,
-): PillState {
-  if (!online && hasVoted) return "voted-offline";
-  if (!online) return "offline";
-  if (user.mode === "editing") return "changing";
-  if (user.mode === "voting") return "voting";
-  if (hasVoted) return "voted";
-  return "online";
 }
 
 function fallbackDisplayName(userId: string): string {

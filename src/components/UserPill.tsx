@@ -79,3 +79,17 @@ export const UserPill = memo(UserPillRaw, (a, b) => {
     a.showIgnoredBadge === b.showIgnoredBadge
   );
 });
+
+/** Which tag a voter gets, from presence, their mode and whether they've voted. */
+export function pillStateFor(
+  user: UserRecord,
+  online: boolean,
+  hasVoted: boolean,
+): PillState {
+  if (!online && hasVoted) return "voted-offline";
+  if (!online) return "offline";
+  if (user.mode === "editing") return "changing";
+  if (user.mode === "voting") return "voting";
+  if (hasVoted) return "voted";
+  return "online";
+}
