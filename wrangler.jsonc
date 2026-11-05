@@ -17,6 +17,7 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PollRoom"] }],
   "observability": { "enabled": true },
+  "workers_dev": true,
   // rankzap.site is a zone in the same Cloudflare account.
   "routes": [
     { "pattern": "rankzap.site", "custom_domain": true },
