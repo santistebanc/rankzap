@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { PollProvider, usePoll } from "../lib/poll";
 import { clampTitle, pollColourOf, type Meta, type Option, type UserRecord, type Vote } from "../lib/types";
-import { usePollColour } from "../lib/pollColour";
+import { floodReveal, usePollColour } from "../lib/pollColour";
 import { getOrCreateVoterIdentity, type VoterIdentity } from "../lib/identity";
 import { getHostKey } from "../lib/storage";
 import { AdminView } from "./poll/AdminView";
@@ -51,7 +52,17 @@ export function Layout({ isAdmin }: LayoutProps) {
  */
 function LayoutContent({ roomId, identity }: { roomId: string; identity: VoterIdentity | null }) {
   const { status, poll: snapshot, missing } = usePoll();
-  usePollColour(pollColourOf(snapshot?.settings.colour));
+  // Black while loading; once the poll arrives its colour floods in from the middle.
+  const [revealed, setRevealed] = useState(false);
+  const revealStarted = useRef(false);
+  usePollColour(revealed && snapshot ? pollColourOf(snapshot.settings.colour) : "loading");
+
+  useEffect(() => {
+    if (!snapshot || revealStarted.current) return;
+    revealStarted.current = true;
+    // Next frame: the black screen paints first, and flushSync stays out of the effect phase.
+    requestAnimationFrame(() => floodReveal(() => flushSync(() => setRevealed(true)), innerWidth / 2, innerHeight / 2));
+  }, [snapshot]);
 
   const poll = useMemo<PollData | null>(() => {
     if (!snapshot) return null;
@@ -89,7 +100,7 @@ function LayoutContent({ roomId, identity }: { roomId: string; identity: VoterId
     );
   }
 
-  if (!poll) {
+  if (!poll || !revealed) {
     const label = status === "reconnecting" ? "Reconnecting…" : status === "closed" ? "Disconnected" : "Connecting…";
     return (
       <main className="flex min-h-dvh w-full items-center justify-center px-4 py-10">
