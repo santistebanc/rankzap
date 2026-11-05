@@ -5,6 +5,8 @@ import { POLL_COLOUR_IDS, POLL_COLOURS, type PollColour } from "../lib/types";
 interface ColourPickerProps {
   value: PollColour;
   className?: string;
+  /** Home picks a future poll's colour without repainting the page. */
+  previewPage?: boolean;
   /** Resolves once saved; a rejection puts the previous colour back. */
   onChange: (next: PollColour) => Promise<unknown>;
 }
@@ -14,7 +16,7 @@ interface ColourPickerProps {
  * colour from the swatch outwards (View Transitions), or switches instantly
  * when the API is missing or reduced motion is on.
  */
-export function ColourPicker({ value, onChange, className = "grid-cols-8" }: ColourPickerProps) {
+export function ColourPicker({ value, onChange, className = "grid-cols-8", previewPage = true }: ColourPickerProps) {
   const refs = useRef(new Map<PollColour, HTMLButtonElement>());
   // The room only reports the new colour after a round trip, so show the pick right away.
   const [pending, setPending] = useState<{ from: PollColour; to: PollColour } | null>(null);
@@ -24,15 +26,15 @@ export function ColourPicker({ value, onChange, className = "grid-cols-8" }: Col
     if (next === shown) return;
     const button = refs.current.get(next);
     const commit = () => {
-      applyPollColour(next);
+      if (previewPage) applyPollColour(next);
       setPending({ from: value, to: next });
       onChange(next).catch(() => {
         setPending(null);
-        applyPollColour(value);
+        if (previewPage) applyPollColour(value);
       });
     };
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!document.startViewTransition || reduced || !button) {
+    if (!previewPage || !document.startViewTransition || reduced || !button) {
       commit();
       return;
     }
