@@ -4,6 +4,7 @@ import { POLL_COLOUR_IDS, POLL_COLOURS, type PollColour } from "../lib/types";
 
 interface ColourPickerProps {
   value: PollColour;
+  className?: string;
   /** Resolves once saved; a rejection puts the previous colour back. */
   onChange: (next: PollColour) => Promise<unknown>;
 }
@@ -13,7 +14,7 @@ interface ColourPickerProps {
  * colour from the swatch outwards (View Transitions), or switches instantly
  * when the API is missing or reduced motion is on.
  */
-export function ColourPicker({ value, onChange }: ColourPickerProps) {
+export function ColourPicker({ value, onChange, className = "grid-cols-8" }: ColourPickerProps) {
   const refs = useRef(new Map<PollColour, HTMLButtonElement>());
   // The room only reports the new colour after a round trip, so show the pick right away.
   const [pending, setPending] = useState<{ from: PollColour; to: PollColour } | null>(null);
@@ -58,7 +59,7 @@ export function ColourPicker({ value, onChange }: ColourPickerProps) {
   };
 
   return (
-    <div role="radiogroup" aria-label="Poll colour" className="grid grid-cols-8 gap-1.5">
+    <div role="radiogroup" aria-label="Poll colour" className={`grid gap-1.5 ${className}`}>
       {POLL_COLOUR_IDS.map((id) => {
         const c = POLL_COLOURS[id];
         const checked = id === shown;
