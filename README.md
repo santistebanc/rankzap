@@ -4,10 +4,13 @@
 
 [Live app](https://rankzap.site)
 
-![Rankzap app screenshot](./public/rankzap-screenshot.png)
+![Rankzap ballot, results and host controls](./public/rankzap-screenshot.png)
 
-Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. Clean, bold look: cool grey palette with Space Grotesk and Space Mono, and automatic light and dark themes.
+Screenshots use demo data rendered by the real app components. [Desktop host view](./public/rankzap-admin.png).
 
+Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. The Podium design uses condensed Archivo type, a staircase ballot, and bold colour. Home stays brand yellow; hosts can choose from eight poll colours when creating a poll or change the colour later. The current design uses a light theme.
+
+- Create a poll, join with a four-character code, or reopen your recent polls from Home.
 - Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
 - Three tally modes: **Borda Count**, **Dowdall**, **Copeland**.
 - Real-time sync, presence (online / voting / editing / voted indicators), and persistence via [`santistebanc/room-server`](https://github.com/santistebanc/room-server).
@@ -19,7 +22,7 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - Vite 8 + React 19 + TypeScript 6
 - `react-router-dom` 7 (`BrowserRouter`)
 - `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
-- `tailwindcss` v4 with CSS-variable palette (auto light/dark, manual toggle)
+- `tailwindcss` v4 with semantic colour tokens, eight per-poll palettes, and reduced-motion support
 - `nanoid` (`customAlphabet`) for room IDs
 - `qrcode` for the admin's share QR
 - [`room-server`](https://github.com/santistebanc/room-server) **v3.2.0** (typed `RoomClient`, schema version at `ready()`, delete events include `priorValue`)
@@ -63,9 +66,9 @@ npm run preview    # serve the built bundle locally
 
 | Path | Page |
 |---|---|
-| `/` | **Home** — start a new poll or reopen a recent one from this device. |
-| `/:roomId/admin` | Admin — title, options, settings, poll state, share link with QR. |
-| `/:roomId` | Voter — name, drag-to-rank, submit, results. |
+| `/` | **Home** — create a poll with a colour, join by code, or reopen a recent poll from this device. |
+| `/:roomId/admin` | Admin — edit title/options, inspect voters, change colour/scoring/settings, close/reset, share link and full-screen QR. |
+| `/:roomId` | Voter — enter a name, drag to rank, lock in a vote, watch results, see the final winner. |
 
 Anything else redirects to `/`. Lowercase room IDs in the URL are silently redirected to their uppercase canonical form.
 
@@ -73,12 +76,14 @@ Anything else redirects to `/`. Lowercase room IDs in the URL are silently redir
 
 ```
 meta                  { title, state: "open" | "closed", createdAt }
-settings              { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes }
+settings              { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes, colour? }
 options/{optionId}    { id, text, addedBy, addedAt }
 users/{userId}        { id, name, mode: "idle" | "voting" | "editing", ignored? }
 votes/{userId}        { userId, ranking: string[], submittedAt, ignored? }
 presence/{connId}     managed by server — { userId } — tracks live sockets
 ```
+
+Schema version 9 adds optional `settings.colour`: `yellow`, `lime`, `mint`, `sky`, `cobalt`, `pink`, `tomato`, or `orange`. Older polls without a colour use yellow. Changing a poll colour updates every connected view; colour changes animate where supported and respect reduced motion.
 
 `mode` semantics:
 - `"voting"` — voter is on the compose tab and has never submitted a vote
@@ -90,7 +95,8 @@ Every write uses a 30-day TTL. An explicit `touchKey` on connect refreshes `meta
 ### localStorage layout (admin/voter strictly isolated)
 
 ```
-rankzap:admin:lastRoomId             # last poll this browser created — only Home reads/writes
+rankzap:admin:lastRoomId           # last poll this browser created
+rankzap:admin:recentPolls          # recent host polls on this device ({ roomId, savedAt }[])
 rankzap:vote:userId                  # global voter identity
 rankzap:vote:name                    # last entered display name
 rankzap:room:{roomId}:vote:rank      # voter's local drag order (saved on every drag-end)
@@ -112,44 +118,48 @@ All three modes filter votes against the current option set on read. Results are
 
 ## Project layout
 
-```
+```text
 src/
-  main.tsx
-  App.tsx                       # Router setup
-  styles/index.css              # Tailwind + CSS-variable palette + paper-card styles
+  main.tsx                       # React root and router
+  App.tsx                        # Lazy-loaded routes
+  styles/index.css               # Podium colour/type/motion tokens
   lib/
-    room.tsx                    # RoomProvider + useRoom / useRoomValue / useRoomList
-    adaptiveSize.ts             # font-size curve: big text for short strings, shrinks as length grows
-    storage.ts                  # localStorage helpers (try/catch wrapped)
-    identity.ts                 # voter userId/name
-    types.ts                    # Settings, Meta, Option, Vote, UserRecord + length caps
-    tally.ts                    # borda / dowdall / copeland
-    schemas.ts                  # JSON schemas + SCHEMA_VERSION for room-server
-    url.ts                      # buildVoterUrl / buildAdminUrl
+    roomClient.ts                # Typed room-server client and configuration
+    room.tsx                     # RoomProvider, subscriptions and live state hooks
+    pollColour.ts                # Applies a poll's palette; restores yellow on Home
+    types.ts                     # Data types, palette table and length limits
+    schemas.ts                   # JSON schemas and schema version
+    tally.ts                     # Borda, Dowdall and Copeland
+    storage.ts                   # Admin/voter localStorage helpers
+    identity.ts                  # Voter identity and display name
+    adaptiveSize.ts              # Fits type to the length of an option or question
+    url.ts                       # Voter/admin URL builders
   pages/
-    Home.tsx                    # Start poll or reopen recent
-    Layout.tsx                  # Shared admin + voter shell (RoomProvider, all live state)
+    Home.tsx                     # Create, join by code and recent host polls
+    Layout.tsx                   # Loads room data and applies the poll colour
     AdminPage.tsx
     RankzapPage.tsx
+    poll/
+      AdminView.tsx              # Responsive host panels and poll actions
+      VoterView.tsx              # Name and ballot flows
+      VoterResults.tsx           # Submitted/closed results, ties and sharing
+      shared.tsx                 # Shared poll data type, modal, header and footer
   components/
-    ConnectionStatus.tsx        # Top-of-screen pill: connecting / reconnecting / fatal
-    ThemeToggle.tsx             # Light/dark toggle (top-right corner on all pages)
-    ShareLink.tsx               # Voter URL + Copy + QR code
-    RankzapLogo.tsx
-    Scribble.tsx                # SVG squiggle underline accent
-    RankCircle.tsx              # Rank number badge
-    UsersList.tsx               # Participants with presence + vote status
-    UserPill.tsx                # React.memo'd state pill (voting / editing / voted / offline …)
-    LiveOptions.tsx             # Score bars + inline-edit + remove (admin)
-    ArrangeOptions.tsx          # @dnd-kit sortable drag-to-rank
-    AddOption.tsx               # Single-add + multi-line paste (throttled); adaptive font size
-    AccordionSection.tsx        # Collapsible section wrapper
-    Settings.tsx
-    VoterRankingPanel.tsx       # Admin: inspect individual voter's ranking
-    Username.tsx
-    SubmitVote.tsx
-    TallyModeSelector.tsx
+    ColourPicker.tsx            # Eight accessible colour swatches
+    ArrangeOptions.tsx          # dnd-kit staircase ballot
+    LiveOptions.tsx             # Live score bands, inline edit and option removal
+    AddOption.tsx               # Single-add and multiline paste
+    SubmitVote.tsx              # Vote submission, progress and errors
+    UsersList.tsx               # Participants and selectable voter tags
+    UserPill.tsx                # Presence/vote status tags
+    VoterRankingPanel.tsx       # Individual ranking list
+    Settings.tsx               # Host panels, scoring and switches
+    ShareLink.tsx              # Share panel and full-screen QR
+    Arrow.tsx
+    Punch.tsx                   # Feedback when a score or rank changes
 ```
+
+`design-explorations/` contains the original directions, the approved Podium mockup, and local preview harnesses. Harness data is fake and is not included in the production app.
 
 ## License
 

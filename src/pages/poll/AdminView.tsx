@@ -293,7 +293,7 @@ function PollTitle({ settings }: { settings: Settings }) {
           }
         }}
         style={{ fontSize: `min(${adaptiveSize(draft, 44, 84, 12, 60)}px, 14vw)` }}
-        className="display block w-full resize-none overflow-hidden rounded-none border-b-4 border-current bg-transparent pt-1 pb-2 text-ink outline-none placeholder:text-current placeholder:opacity-35 focus:shadow-[0_3px_0_currentColor]"
+        className="display block w-full resize-none overflow-hidden rounded-none border-b-4 border-current bg-transparent pt-1 pb-2 text-ink outline-none placeholder:text-current placeholder:opacity-60 focus:shadow-[0_3px_0_currentColor]"
       />
     </div>
   );

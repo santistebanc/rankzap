@@ -367,7 +367,7 @@ function ArriveScreen({
           maxLength={32}
           placeholder={placeholder}
           autoComplete="name"
-          className="display w-full rounded-none border-b-4 border-current bg-transparent pt-1 pb-2 text-[44px] text-ink outline-none placeholder:text-current placeholder:opacity-35"
+          className="display w-full rounded-none border-b-4 border-current bg-transparent pt-1 pb-2 text-[44px] text-ink outline-none placeholder:text-current placeholder:opacity-60"
         />
         <button
           type="submit"

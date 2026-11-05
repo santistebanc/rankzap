@@ -7,7 +7,7 @@ const RankzapPage = lazy(() => import("./pages/RankzapPage").then((m) => ({ defa
 
 export function App() {
   return (
-    <Suspense fallback={<div className="flex min-h-dvh items-center justify-center"><span className="text-sm text-muted">Loading…</span></div>}>
+    <Suspense fallback={<div className="flex min-h-dvh items-center justify-center"><span className="text-sm font-semibold text-ink">Loading…</span></div>}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/:roomId/admin" element={<AdminPage />} />
