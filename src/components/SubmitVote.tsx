@@ -1,39 +1,28 @@
 import { useState } from "react";
-import { RoomError } from "room-server/client";
-import { SET_OPTS, useRoom } from "../lib/room";
-import { SUBMIT_TIMEOUT_MS } from "../lib/types";
+import { PollActionError, usePoll } from "../lib/poll";
 import { Arrow } from "./Arrow";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
 interface SubmitVoteProps {
-  userId: string;
   ranking: string[];
+  /** Options this voter added while ranking. They are saved together with the vote. */
+  newOptions: { id: string; text: string }[];
   hasVoted: boolean;
   disabled: boolean;
   disabledReason?: string;
-  beforeSubmit?: () => Promise<void>;
   onSubmitted: () => void;
 }
 
-const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
-  Promise.race([
-    p,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error("Timed out")), ms),
-    ),
-  ]);
-
 export function SubmitVote({
-  userId,
   ranking,
+  newOptions,
   hasVoted,
   disabled,
   disabledReason,
-  beforeSubmit,
   onSubmitted,
 }: SubmitVoteProps) {
-  const { client } = useRoom();
+  const { send } = usePoll();
   const [state, setState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -42,17 +31,7 @@ export function SubmitVote({
     setState("submitting");
     setErrorMsg(null);
     try {
-      if (beforeSubmit) {
-        await withTimeout(beforeSubmit(), SUBMIT_TIMEOUT_MS);
-      }
-      await withTimeout(
-        client.set(
-          `votes/${userId}`,
-          { userId, ranking, submittedAt: Date.now(), ignored: false },
-          SET_OPTS,
-        ),
-        SUBMIT_TIMEOUT_MS,
-      );
+      await send({ type: "vote", ranking, newOptions });
       setState("success");
       setTimeout(() => setState("idle"), 1500);
       onSubmitted();
@@ -96,21 +75,6 @@ export function SubmitVote({
 
 
 function describeError(e: unknown): string {
-  if (e instanceof RoomError) {
-    switch (e.kind) {
-      case "transient":
-        return "Network hiccup, try again.";
-      case "rateLimit":
-        return "Slow down, too many writes.";
-      case "validation":
-        return "Vote rejected by server validation.";
-      case "auth":
-      case "schemaConflict":
-        return "Session expired, refresh the page.";
-      default:
-        return e.message || "Couldn't submit your vote.";
-    }
-  }
-  if (e instanceof Error) return e.message;
+  if (e instanceof PollActionError) return e.message;
   return "Couldn't submit your vote.";
 }

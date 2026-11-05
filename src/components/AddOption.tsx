@@ -1,42 +1,25 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { nanoid } from "nanoid";
-import { SET_OPTS, useRoom } from "../lib/room";
-import { clampOption, OPTION_MAX, PASTE_THROTTLE_MS } from "../lib/types";
+import { usePoll } from "../lib/poll";
+import { clampOption, OPTION_MAX } from "../lib/types";
 import { adaptiveSize } from "../lib/adaptiveSize";
 
 interface AddOptionProps {
-  addedBy: string;
+  /** Voters stage options here; they are saved with the vote. Without it, options are added straight away (host). */
   onAddOption?: (texts: string[]) => Promise<void> | void;
   /** `row`: an outlined row under the ballot. `field`: an input and an Add button, for admin panels. */
   variant?: "row" | "field";
 }
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-export function AddOption({ addedBy, onAddOption, variant = "row" }: AddOptionProps) {
-  const { client } = useRoom();
+export function AddOption({ onAddOption, variant = "row" }: AddOptionProps) {
+  const { send } = usePoll();
   const [text, setText] = useState("");
   const [batchMessage, setBatchMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const writeOne = async (raw: string) => {
-    const clamped = clampOption(raw);
-    if (!clamped) return;
-    const id = nanoid(10);
-    try {
-      await client.set(`options/${id}`, { id, text: clamped, addedBy, addedAt: Date.now() }, SET_OPTS);
-    } catch (e) {
-      console.warn("[rankzap] failed to add option:", e);
-    }
-  };
-
   const addTexts = async (texts: string[]) => {
     if (texts.length === 0) return;
     if (onAddOption) { await onAddOption(texts); return; }
-    for (let i = 0; i < texts.length; i++) {
-      await writeOne(texts[i]);
-      if (i < texts.length - 1) await sleep(PASTE_THROTTLE_MS);
-    }
+    await send({ type: "addOptions", texts }).catch((e) => console.warn("[rankzap] failed to add options:", e));
   };
 
   const submit = async (e: FormEvent) => {

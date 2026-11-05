@@ -34,7 +34,7 @@ export function VoterResults({
   onToggleVoter,
   onClearVoter,
 }: VoterResultsProps) {
-  const { meta, settings, options, optionById, optionsMap, votesMap, usersMap } = poll;
+  const { meta, settings, options, optionById, votesMap, usersMap } = poll;
   const closed = meta.state === "closed";
   const hasVoted = Boolean(myVote?.ranking?.length);
 
@@ -48,7 +48,7 @@ export function VoterResults({
   );
 
   const voteSummary = `${countedVotes.length} ${countedVotes.length === 1 ? "vote" : "votes"} · ${TALLY_MODE_LABELS[settings.tallyMode]}`;
-  const selectedName = selectedVoterId ? usersMap.get(`users/${selectedVoterId}`)?.name || "Voter" : "Voter";
+  const selectedName = selectedVoterId ? usersMap.get(selectedVoterId)?.name || "Voter" : "Voter";
 
   return (
     <section aria-label={closed ? "Final results" : "Results"} className="grid">
@@ -92,9 +92,6 @@ export function VoterResults({
               removable={false}
               showResults
               tallyMode={settings.tallyMode}
-              optionsMap={optionsMap}
-              votesMap={votesMap}
-              usersMap={usersMap}
             />
           </div>
         </>
@@ -133,7 +130,7 @@ export function VoterResults({
             {selectedVoterId ? (
               <VoterRankingPanel
                 voterName={selectedName}
-                ranking={votesMap.get(`votes/${selectedVoterId}`)?.ranking}
+                ranking={votesMap.get(selectedVoterId)?.ranking}
                 optionById={optionById}
               />
             ) : null}

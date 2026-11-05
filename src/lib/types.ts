@@ -3,8 +3,6 @@ export const OPTION_MAX = 200;
 export const NAME_MAX = 32;
 export const SUBMIT_TIMEOUT_MS = 10_000;
 export const HOME_TIMEOUT_MS = 8_000;
-export const ROOM_TTL_SEC = 30 * 24 * 60 * 60;
-export const PASTE_THROTTLE_MS = 50;
 
 export type TallyMode = "borda" | "dowdall" | "copeland";
 export const TALLY_MODES: TallyMode[] = ["borda", "dowdall", "copeland"];
@@ -68,19 +66,15 @@ export function pollColourOf(value: unknown): PollColour {
     : DEFAULT_POLL_COLOUR;
 }
 
-/** Optional poll title from room bootstrap; prefer `Settings.ballotTitle` for the heading. */
+/** Whether the poll is open, and when it was made. */
 export interface Meta {
-  title: string;
   state: PollState;
   createdAt: number;
 }
 
 export interface Settings {
   tallyMode: TallyMode;
-  /**
-   * Poll heading shown to admins and voters (optional).
-   * Stored under the key `ballotTitle` for backward compatibility with existing rooms.
-   */
+  /** The poll question shown to the host and voters. Empty until the host writes one. */
   ballotTitle: string;
   showLiveResults: boolean;
   allowRevote: boolean;
@@ -115,12 +109,6 @@ export interface Vote {
   submittedAt: number;
   ignored?: boolean;
 }
-
-export const DEFAULT_META = (): Meta => ({
-  title: "",
-  state: "open",
-  createdAt: Date.now(),
-});
 
 export const DEFAULT_SETTINGS = (): Settings => ({
   tallyMode: "borda",

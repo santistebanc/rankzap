@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { SET_OPTS, useRoom, useRoomList } from "../lib/room";
-import {
-  clampOption,
-  type Option,
-  type TallyMode,
-  type UserRecord,
-  type Vote,
-} from "../lib/types";
+import { useSendAction } from "../lib/poll";
+import { usePollData } from "../pages/poll/shared";
+import { clampOption, type Option, type TallyMode, type Vote } from "../lib/types";
 import { X } from "lucide-react";
 import { adaptiveSize } from "../lib/adaptiveSize";
 import { computeTally } from "../lib/tally";
@@ -20,9 +15,6 @@ interface LiveOptionsProps {
   highlightWinner?: boolean;
   /** `panel` sits on a white admin panel, so the bars fill with the poll colour instead of white. */
   surface?: "ground" | "panel";
-  optionsMap?: Map<string, Option>;
-  votesMap?: Map<string, Vote>;
-  usersMap?: Map<string, UserRecord>;
 }
 
 export function LiveOptions({
@@ -32,22 +24,8 @@ export function LiveOptions({
   editable = false,
   highlightWinner = false,
   surface = "ground",
-  optionsMap: optionsMapProp,
-  votesMap: votesMapProp,
-  usersMap: usersMapProp,
 }: LiveOptionsProps) {
-  const ownOptionsMap = useRoomList("options/");
-  const ownVotesMap = useRoomList("votes/");
-  const ownUsersMap = useRoomList("users/");
-
-  const optionsMap = optionsMapProp ?? ownOptionsMap;
-  const votesMap = votesMapProp ?? ownVotesMap;
-  const usersMap = usersMapProp ?? ownUsersMap;
-
-  const options = useMemo<Option[]>(
-    () => [...optionsMap.values()].sort((a, b) => a.addedAt - b.addedAt),
-    [optionsMap],
-  );
+  const { options, optionById, votesMap, usersMap } = usePollData();
 
   const votes = useMemo<Vote[]>(() => {
     const ignoredUserIds = new Set(
@@ -63,7 +41,6 @@ export function LiveOptions({
 
   const orderedIds = showResults ? tally.map((t) => t.optionId) : options.map((o) => o.id);
   const tallyByOption = new Map(tally.map((t) => [t.optionId, t]));
-  const optionById = useMemo(() => new Map(options.map((o) => [o.id, o])), [options]);
   const maxScore = Math.max(0, ...tally.map((t) => t.score));
 
   if (options.length === 0) return null;
@@ -125,7 +102,7 @@ function OptionRow({
   removable,
   editable,
 }: OptionRowProps) {
-  const { client } = useRoom();
+  const sendAction = useSendAction();
   const [draft, setDraft] = useState(option.text);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -138,15 +115,11 @@ function OptionRow({
   const commit = (next: string) => {
     const clamped = clampOption(next);
     if (!clamped || clamped === option.text) { setDraft(option.text); return; }
-    void client
-      .set(`options/${option.id}`, { ...option, text: clamped }, SET_OPTS)
-      .catch((e) => console.warn("[rankzap] failed to update option:", e));
+    sendAction({ type: "editOption", id: option.id, text: clamped });
   };
 
   const remove = () => {
-    void client
-      .delete(`options/${option.id}`)
-      .catch((e) => console.warn("[rankzap] failed to delete option:", e));
+    sendAction({ type: "removeOption", id: option.id });
   };
 
   const share = maxScore > 0 ? Math.max(0.02, score / maxScore) : 0;

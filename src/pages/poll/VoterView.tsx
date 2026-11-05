@@ -1,7 +1,7 @@
 import { Activity, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { nanoid } from "nanoid";
-import { SET_OPTS, useRoom } from "../../lib/room";
+import { usePoll } from "../../lib/poll";
 import { clampOption, type Option, type UserMode } from "../../lib/types";
 import { adaptiveSize } from "../../lib/adaptiveSize";
 import { fallbackVoterName, persistVoterName, type VoterIdentity } from "../../lib/identity";
@@ -26,7 +26,7 @@ type Screen = "compose" | "results";
 export function VoterView({ poll, identity }: { poll: PollData; identity: VoterIdentity }) {
   const { roomId, meta, settings, pollHeading, options, votesMap, usersMap } = poll;
   const navigate = useNavigate();
-  const { client, status } = useRoom();
+  const { send, status } = usePoll();
 
   const [name, setName] = useState(identity.name);
   // First visit to any poll: ask for a name before the ballot. Remembered after.
@@ -48,7 +48,7 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
   );
 
   const myVote = useMemo(
-    () => votesMap.get(`votes/${identity.userId}`) ?? null,
+    () => votesMap.get(identity.userId) ?? null,
     [votesMap, identity.userId],
   );
 
@@ -92,13 +92,6 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
     [identity.userId],
   );
 
-  const persistPendingAddedOptions = useCallback(async () => {
-    if (pendingAddedOptions.length === 0) return;
-    for (const option of pendingAddedOptions) {
-      await client.set(`options/${option.id}`, option, SET_OPTS);
-    }
-  }, [client, pendingAddedOptions]);
-
   const cancelVoteEdit = useCallback(() => {
     const submittedRanking = myVote?.ranking ?? [];
     const known = new Set(voterVisibleOptions.map((o) => o.id));
@@ -124,16 +117,12 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
   useEffect(() => {
     if (status !== "ready") return;
     const displayName = name.trim() || fallbackVoterName(identity.userId);
-    const existingUser = usersMap.get(`users/${identity.userId}`);
+    const existingUser = usersMap.get(identity.userId);
     if (existingUser && existingUser.name === displayName && existingUser.mode === mode) return;
-    void client
-      .set(
-        `users/${identity.userId}`,
-        { id: identity.userId, name: displayName, mode, ignored: existingUser?.ignored ?? false },
-        SET_OPTS,
-      )
-      .catch((e) => console.warn("[rankzap] failed to update user record:", e));
-  }, [client, status, identity.userId, name, mode, usersMap]);
+    send({ type: "join", name: displayName, mode }).catch((e) =>
+      console.warn("[rankzap] failed to update user record:", e),
+    );
+  }, [send, status, identity.userId, name, mode, usersMap]);
 
   useEffect(() => {
     if (!settings.showUsers || !settings.showVoterVotes) setSelectedVoterId(null);
@@ -246,13 +235,13 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
             />
             {settings.allowAdd && meta.state === "open" && (
               <div className="mt-1">
-                <AddOption addedBy={identity.userId} onAddOption={stageVoterOptions} />
+                <AddOption onAddOption={stageVoterOptions} />
               </div>
             )}
             <div className="grid gap-1 px-[18px] pt-4 pb-6">
               <SubmitVote
-                userId={identity.userId}
                 ranking={ranking}
+                newOptions={pendingAddedOptions.map(({ id, text }) => ({ id, text }))}
                 hasVoted={hasVoted}
                 disabled={meta.state === "closed" || (!settings.allowRevote && hasVoted) || !canSubmitVote}
                 disabledReason={
@@ -262,7 +251,6 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
                       ? "Revoting is turned off for this poll."
                       : undefined
                 }
-                beforeSubmit={persistPendingAddedOptions}
                 onSubmitted={() => {
                   setPendingAddedOptions([]);
                   voterOpenedEditRef.current = false;

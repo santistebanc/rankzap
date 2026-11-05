@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { useRoomList } from "../lib/room";
-import { fallbackVoterName } from "../lib/identity";
+import { usePollData } from "../pages/poll/shared";
 import type { UserRecord } from "../lib/types";
 import { UserPill, pillStateFor } from "./UserPill";
 
@@ -27,59 +26,16 @@ export function UsersList({
   onToggleVoter,
   onInvalidateVoterSelection,
 }: UsersListProps) {
-  const usersMap = useRoomList("users/");
-  const votesMap = useRoomList("votes/");
-  const presenceMap = useRoomList("presence/");
+  const { usersMap, onlineUserIds, votedUserIds } = usePollData();
 
-  // Set of userIds with at least one live socket. Server manages presence/
-  // entries via WS lifetime — no client-side timeouts or tick intervals.
-  const onlineUserIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const info of presenceMap.values()) {
-      if (info?.userId) set.add(info.userId);
-    }
-    return set;
-  }, [presenceMap]);
-
-  const votedUserIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const [key, vote] of votesMap.entries()) {
-      if (!key.startsWith("votes/")) continue;
-      if (vote?.ranking?.length) set.add(key.replace(/^votes\//, ""));
-    }
-    return set;
-  }, [votesMap]);
-
+  // Voters who are here now or have voted. Everyone who connects joins with a name first.
   const visible = useMemo(() => {
     const arr: UserRecord[] = [];
-    const inMap = new Set<string>();
     for (const u of usersMap.values()) {
-      inMap.add(u.id);
       if (!includeSelf && u.id === selfUserId) continue;
       const online = onlineUserIds.has(u.id);
       const voted = votedUserIds.has(u.id);
       if (online || voted) arr.push(u);
-    }
-    const syntheticSeen = new Set(arr.map((u) => u.id));
-    for (const uid of onlineUserIds) {
-      if (!includeSelf && uid === selfUserId) continue;
-      if (inMap.has(uid) || syntheticSeen.has(uid)) continue;
-      syntheticSeen.add(uid);
-      arr.push({
-        id: uid,
-        name: fallbackDisplayName(uid),
-        mode: "idle",
-      });
-    }
-    for (const uid of votedUserIds) {
-      if (!includeSelf && uid === selfUserId) continue;
-      if (syntheticSeen.has(uid)) continue;
-      syntheticSeen.add(uid);
-      arr.push({
-        id: uid,
-        name: fallbackDisplayName(uid),
-        mode: "idle",
-      });
     }
     arr.sort((a, b) => {
       // Self first, then voters, then by name.
@@ -160,8 +116,4 @@ export function UsersList({
       )}
     </div>
   );
-}
-
-function fallbackDisplayName(userId: string): string {
-  return fallbackVoterName(userId);
 }

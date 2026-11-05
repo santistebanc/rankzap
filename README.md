@@ -13,9 +13,9 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - Create a poll, join with a four-character code, or reopen your recent polls from Home.
 - Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
 - Three tally modes: **Borda Count**, **Dowdall**, **Copeland**.
-- Real-time sync, presence (online / voting / editing / voted indicators), and persistence via [`santistebanc/room-server`](https://github.com/santistebanc/room-server).
+- Real-time sync, presence (online / voting / editing / voted indicators) and storage through its own small server: one Cloudflare Durable Object per poll (`worker/`).
 - Poll IDs are 4-character uppercase alphanumeric (e.g. `A3ZK`). URLs are normalised to uppercase on load.
-- Static SPA — deploys to GitHub Pages with BrowserRouter + SPA 404 fallback.
+- The app and the poll server deploy together as one Cloudflare Worker.
 
 ## Stack
 
@@ -23,49 +23,43 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - `react-router-dom` 7 (`BrowserRouter`)
 - `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
 - `tailwindcss` v4 with semantic colour tokens, eight per-poll palettes, and reduced-motion support
-- `nanoid` (`customAlphabet`) for room IDs
+- `nanoid` for voter IDs
 - `qrcode` for the admin's share QR
-- [`room-server`](https://github.com/santistebanc/room-server) **v3.2.0** (typed `RoomClient`, schema version at `ready()`, delete events include `priorValue`)
+- Cloudflare Workers + Durable Objects for the poll server, with `@cloudflare/vite-plugin` running it inside `npm run dev`
 
 ## Local development
 
 ```bash
 npm install
-cp .env.example .env
-npm run dev:server        # terminal 1: local room server on port 1999
-npm run dev               # terminal 2: Vite frontend
+npm run dev        # the app and the poll server, on one port
 ```
 
-Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will skip the Rolldown native bindings and `npm run dev` may fail.
+Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown).
 
-`.env`:
+There's nothing to configure. `npm run dev` runs the Worker in `worker/` (the poll server) inside Vite, using Cloudflare's local runtime. Local polls are stored in `.wrangler/` and survive restarts.
 
-```
-VITE_HOST=same-origin
-VITE_API_KEY=voting-app
-```
-
-Local polls are stored in `.partykit/` and survive server restarts. They are separate from hosted polls. `.env.local`, if present, overrides `.env`.
-
-`same-origin` sends room connections through Vite's HTTP/WebSocket proxy to the local backend on port 1999. Desktop and phone clients use the same frontend address instead of trying to connect to their own loopback address.
-
-For private phone access with Tailscale, add the computer's Tailscale hostname to `VITE_DEV_ALLOWED_HOSTS` in `.env.local`, restart Vite, and run `tailscale serve --bg --https=8443 http://127.0.0.1:5173` (use the actual Vite port). Open the printed HTTPS link on a phone connected to the same tailnet. This shares the app privately through Tailscale Serve.
-
-For a hosted build, set `VITE_HOST` to a reachable deployed room-server hostname and `VITE_API_KEY` to its app key. Both must be set as GitHub repository **secrets** (or **variables**) so the deploy workflow can inject them at build time. The former default `room-server.santistebanc.partykit.dev` no longer resolves; local development uses the included server instead.
+To try it on a phone privately with Tailscale, add the computer's Tailscale hostname to `VITE_DEV_ALLOWED_HOSTS` in `.env.local` (see `.env.example`), restart `npm run dev`, and run `tailscale serve --bg --https=8443 http://127.0.0.1:5173` (use the port Vite prints). Open the HTTPS link on a phone signed in to the same tailnet. Polls connect over that same address.
 
 ```bash
-npm run build      # → dist/
-npm run preview    # serve the built bundle locally
+npm run build        # → dist/client (app) and dist/rankzap (Worker)
+npm run preview      # serve the built bundle locally, Worker included
+npm run cf-typegen   # regenerate worker/worker-configuration.d.ts after editing wrangler.jsonc
 ```
 
-## Deployment to GitHub Pages
+## Deployment to Cloudflare
 
-1. Push the repo to GitHub.
-2. **Settings → Pages → Source: GitHub Actions**.
-3. **Settings → Secrets and variables → Actions** → add `VITE_HOST` and `VITE_API_KEY`.
-4. Push to `main`. The workflow at `.github/workflows/deploy.yml` builds and publishes automatically.
+The app and the poll server are one Worker, configured in `wrangler.jsonc`: the Worker answers `/api/*`, and every other path is the built app (unknown paths get `index.html`, so deep links work).
 
-`vite.config.ts` uses `base: "/"` and the repo includes `public/404.html` + an `index.html` restore script so deep links and refreshes work on GitHub Pages with clean URLs.
+From your machine:
+
+```bash
+npx wrangler login   # once
+npm run deploy       # build, then wrangler deploy
+```
+
+From GitHub: `.github/workflows/deploy.yml` deploys on every push to `main`. Add two repository secrets under **Settings → Secrets and variables → Actions**: `CLOUDFLARE_API_TOKEN` (a token from the "Edit Cloudflare Workers" template) and `CLOUDFLARE_ACCOUNT_ID`.
+
+To use your own domain, add it to the Worker under **Workers & Pages → rankzap → Settings → Domains & Routes** in the Cloudflare dashboard.
 
 ## How it works
 
@@ -79,25 +73,36 @@ npm run preview    # serve the built bundle locally
 
 Anything else redirects to `/`. Lowercase room IDs in the URL are silently redirected to their uppercase canonical form.
 
-### Room data model (PartyKit KV)
+### Poll server
+
+Each poll is one Durable Object (`worker/pollRoom.ts`), named by its code. It keeps the whole poll in memory and in its storage:
 
 ```
-meta                  { title, state: "open" | "closed", createdAt }
-settings              { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes, colour? }
-options/{optionId}    { id, text, addedBy, addedAt }
-users/{userId}        { id, name, mode: "idle" | "voting" | "editing", ignored? }
-votes/{userId}        { userId, ranking: string[], submittedAt, ignored? }
-presence/{connId}     managed by server — { userId } — tracks live sockets
+state       "open" | "closed"
+settings    { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes, colour? }
+options     { id, text, addedBy, addedAt }[]
+users       { id, name, mode: "idle" | "voting" | "editing", ignored? } by user id
+votes       { userId, ranking: string[], submittedAt, ignored? } by user id
 ```
 
-Schema version 9 adds optional `settings.colour`: `yellow`, `lime`, `mint`, `sky`, `cobalt`, `pink`, `tomato`, or `orange`. Older polls without a colour use yellow. Changing a poll colour updates every connected view; colour changes animate where supported and respect reduced motion.
+Who's online isn't stored: it's the set of voters with an open WebSocket.
+
+Browsers connect with a WebSocket (`/api/polls/:id/ws`) and send actions (`join`, `vote`, `addOptions`, `updateSettings`, `setState`, …; see `src/lib/protocol.ts`). The server checks each action, saves the change, and sends every connection a fresh snapshot. Options a voter adds while ranking are saved together with their vote.
+
+HTTP endpoints cover what doesn't need a live connection:
+
+| Request | Does |
+|---|---|
+| `POST /api/polls` | Create a poll. Returns its code and a host key. |
+| `GET /api/polls/:id` | Title, colour, state and first options, for Home's recent polls. |
+| `DELETE /api/polls/:id` | Delete a poll. Needs the host key. |
+
+A poll nobody has touched for 30 days deletes itself, and a poll that was created but never set up deletes itself after a day.
 
 `mode` semantics:
 - `"voting"` — voter is on the compose tab and has never submitted a vote
 - `"editing"` — voter is on the compose tab, has submitted before, and their current ranking differs from the submitted one (submit button re-enabled)
 - `"idle"` — everything else
-
-Every write uses a 30-day TTL. An explicit `touchKey` on connect refreshes `meta`. Abandoned polls auto-clean after 30 days of no activity.
 
 ### localStorage layout (admin/voter strictly isolated)
 
@@ -106,6 +111,7 @@ rankzap:admin:lastRoomId           # last poll this browser created
 rankzap:admin:recentPolls          # recent host polls on this device ({ roomId, savedAt }[])
 rankzap:vote:userId                  # global voter identity
 rankzap:vote:name                    # last entered display name
+rankzap:host:keys                    # host keys for polls this browser created ({ [pollId]: key })
 rankzap:room:{roomId}:vote:rank      # voter's local drag order (saved on every drag-end)
 ```
 
@@ -121,21 +127,28 @@ All three modes filter votes against the current option set on read. Results are
 
 ### Privacy / trust model
 
-**No auth gate.** Anyone with the admin URL can edit settings; anyone with the voter URL can vote. The API key ships in the client bundle. Don't use this for sensitive or anonymous ballots.
+Creating a poll returns a secret host key, kept in that browser's localStorage. Only connections with the key can change the poll, and `/:id/admin` shows "Not your poll" without it. Clearing the browser's storage loses host access.
+
+Voters aren't authenticated: anyone with the link can vote, and voter IDs live in localStorage, so a voter can vote again from another browser. Don't use this for sensitive or binding ballots.
 
 ## Project layout
 
 ```text
+worker/
+  index.ts                       # Routes /api/polls to each poll's Durable Object
+  pollRoom.ts                    # One poll: storage, actions, WebSockets, expiry
+  worker-configuration.d.ts      # Generated by `npm run cf-typegen`
 src/
   main.tsx                       # React root and router
   App.tsx                        # Lazy-loaded routes
   styles/index.css               # Podium colour/type/motion tokens
   lib/
-    roomClient.ts                # Typed room-server client and configuration
-    room.tsx                     # RoomProvider, subscriptions and live state hooks
+    protocol.ts                  # Messages and types shared with the poll server
+    pollConnection.ts            # WebSocket to one poll: reconnects, snapshots, actions
+    poll.tsx                     # PollProvider and usePoll
+    pollApi.ts                   # HTTP calls: create, summary, delete
     pollColour.ts                # Applies a poll's palette; restores yellow on Home
     types.ts                     # Data types, palette table and length limits
-    schemas.ts                   # JSON schemas and schema version
     tally.ts                     # Borda, Dowdall and Copeland
     storage.ts                   # Admin/voter localStorage helpers
     identity.ts                  # Voter identity and display name
@@ -143,7 +156,7 @@ src/
     url.ts                       # Voter/admin URL builders
   pages/
     Home.tsx                     # Create, join by code and recent host polls
-    Layout.tsx                   # Loads room data and applies the poll colour
+    Layout.tsx                   # Connects to the poll, builds poll data, applies the colour
     AdminPage.tsx
     RankzapPage.tsx
     poll/

@@ -161,3 +161,28 @@ export const clearPollLocalStorage = (roomId: string): void => {
   safeRemove(rankKey(roomId));
   safeRemove(tallyKey(roomId));
 };
+
+// ── Host keys ──────────────────────────────────────────────────────────────
+// The server hands out a secret key when a poll is created. Only a browser
+// holding it can open /:id/admin and make host changes.
+const K_HOST_KEYS = withNs("host:keys");
+
+function readHostKeys(): Record<string, string> {
+  try {
+    const parsed = JSON.parse(safeGet(K_HOST_KEYS) ?? "{}");
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export const getHostKey = (pollId: string): string | null => readHostKeys()[pollId] ?? null;
+
+export const setHostKey = (pollId: string, key: string): void =>
+  safeSet(K_HOST_KEYS, JSON.stringify({ ...readHostKeys(), [pollId]: key }));
+
+export const removeHostKey = (pollId: string): void => {
+  const keys = readHostKeys();
+  delete keys[pollId];
+  safeSet(K_HOST_KEYS, JSON.stringify(keys));
+};
