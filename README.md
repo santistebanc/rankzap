@@ -41,11 +41,15 @@ Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown); older Node will
 `.env`:
 
 ```
-VITE_HOST=127.0.0.1:1999
+VITE_HOST=same-origin
 VITE_API_KEY=voting-app
 ```
 
 Local polls are stored in `.partykit/` and survive server restarts. They are separate from hosted polls. `.env.local`, if present, overrides `.env`.
+
+`same-origin` sends room connections through Vite's HTTP/WebSocket proxy to the local backend on port 1999. Desktop and phone clients use the same frontend address instead of trying to connect to their own loopback address.
+
+For private phone access with Tailscale, add the computer's Tailscale hostname to `VITE_DEV_ALLOWED_HOSTS` in `.env.local`, restart Vite, and run `tailscale serve --bg --https=8443 http://127.0.0.1:5173` (use the actual Vite port). Open the printed HTTPS link on a phone connected to the same tailnet. This shares the app privately through Tailscale Serve.
 
 For a hosted build, set `VITE_HOST` to a reachable deployed room-server hostname and `VITE_API_KEY` to its app key. Both must be set as GitHub repository **secrets** (or **variables**) so the deploy workflow can inject them at build time. The former default `room-server.santistebanc.partykit.dev` no longer resolves; local development uses the included server instead.
 

@@ -1,7 +1,9 @@
 import { RoomClient } from "room-server/client";
 import { ROOM_SCHEMAS, SCHEMA_VERSION, type RoomSchema } from "./schemas";
 
-const HOST = import.meta.env.VITE_HOST;
+const configuredHost = import.meta.env.VITE_HOST;
+// A proxy keeps phone clients on their reachable frontend address, including HTTPS.
+const HOST = configuredHost === "same-origin" ? window.location.host : configuredHost;
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 if (!HOST || !API_KEY) {
