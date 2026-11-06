@@ -35,11 +35,19 @@ export type PollColour =
   | "yellow"
   | "lime"
   | "mint"
+  | "teal"
+  | "forest"
   | "sky"
   | "cobalt"
+  | "navy"
+  | "violet"
+  | "lavender"
   | "pink"
+  | "cherry"
   | "tomato"
-  | "orange";
+  | "orange"
+  | "peach"
+  | "sand";
 export const DEFAULT_POLL_COLOUR: PollColour = "yellow";
 /**
  * `sig` fills the page, `ink` is text on `sig`, `fg` is the colour used as
@@ -52,11 +60,19 @@ export const POLL_COLOURS: Record<
   yellow: { name: "Yellow", sig: "#ffdd1f", ink: "#0b0b0b", fg: "#ffdd1f" },
   lime: { name: "Lime", sig: "#c8f031", ink: "#0b0b0b", fg: "#c8f031" },
   mint: { name: "Mint", sig: "#2fdc8e", ink: "#0b0b0b", fg: "#2fdc8e" },
+  teal: { name: "Teal", sig: "#14c4b0", ink: "#0b0b0b", fg: "#14c4b0" },
+  forest: { name: "Forest", sig: "#1e7d4f", ink: "#ffffff", fg: "#4fd08b" },
   sky: { name: "Sky", sig: "#4db6ff", ink: "#0b0b0b", fg: "#4db6ff" },
   cobalt: { name: "Cobalt", sig: "#2d4bff", ink: "#ffffff", fg: "#8b9bff" },
+  navy: { name: "Navy", sig: "#1b2a6b", ink: "#ffffff", fg: "#8b9bff" },
+  violet: { name: "Violet", sig: "#7c4dff", ink: "#ffffff", fg: "#ab94ff" },
+  lavender: { name: "Lavender", sig: "#c6a8ff", ink: "#0b0b0b", fg: "#c6a8ff" },
   pink: { name: "Pink", sig: "#ff6ac1", ink: "#0b0b0b", fg: "#ff6ac1" },
+  cherry: { name: "Cherry", sig: "#e3194b", ink: "#ffffff", fg: "#ff6b8c" },
   tomato: { name: "Tomato", sig: "#ff4a2b", ink: "#0b0b0b", fg: "#ff6a50" },
   orange: { name: "Orange", sig: "#ff8a1f", ink: "#0b0b0b", fg: "#ff8a1f" },
+  peach: { name: "Peach", sig: "#ffb08f", ink: "#0b0b0b", fg: "#ffb08f" },
+  sand: { name: "Sand", sig: "#ead9b6", ink: "#0b0b0b", fg: "#ead9b6" },
 };
 export const POLL_COLOUR_IDS = Object.keys(POLL_COLOURS) as PollColour[];
 

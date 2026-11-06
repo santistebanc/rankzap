@@ -10,7 +10,7 @@ interface ColourPickerProps {
 }
 
 /**
- * Eight swatches as a radio group. Picking one floods the page with the new
+ * The poll colours as a radio group of swatches. Picking one floods the page with the new
  * colour from the swatch outwards (View Transitions), or switches instantly
  * when the API is missing or reduced motion is on.
  */

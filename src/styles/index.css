@@ -46,13 +46,13 @@
   color-scheme: light;
 
   /*
-   * Podium. The poll colour (`--sig*`) is brand yellow by default;
-   * usePollColour() overrides it on <html> while a poll is open.
+   * Podium. The poll colour (`--sig*`) is neutral black until
+   * usePollColour() sets one on <html> (Home and every poll do).
    * `--sig-ink` is text on the colour, `--sig-fg` is the colour used on black.
    */
-  --sig:      #ffdd1f;
-  --sig-ink:  #0b0b0b;
-  --sig-fg:   #ffdd1f;
+  --sig:      #0b0b0b;
+  --sig-ink:  #ffffff;
+  --sig-fg:   #ffffff;
 
   --ground:   var(--sig);
   --ink:      var(--sig-ink);

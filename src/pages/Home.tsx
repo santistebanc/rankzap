@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { createPoll, deletePoll as deletePollRequest, fetchPollSummary } from "../lib/pollApi";
-import { HOME_TIMEOUT_MS, POLL_COLOURS, pollColourOf, type PollColour } from "../lib/types";
+import { HOME_TIMEOUT_MS, POLL_COLOURS, POLL_COLOUR_IDS, pollColourOf, type PollColour } from "../lib/types";
 import {
   addRecentPoll,
+  getHomeColour,
+  setHomeColour,
   clearPollLocalStorage,
   getRecentPolls,
   removeRecentPoll,
@@ -99,7 +101,14 @@ export function Home() {
     () => initialCachedRecentPolls === null,
   );
   const [creatingPoll, setCreatingPoll] = useState(false);
-  const [colour, setColour] = useState<PollColour>("yellow");
+  // The last colour picked here, or a random one on a first visit.
+  const [colour, setColour] = useState<PollColour>(() => {
+    const saved = getHomeColour();
+    return saved && saved in POLL_COLOURS
+      ? (saved as PollColour)
+      : POLL_COLOUR_IDS[Math.floor(Math.random() * POLL_COLOUR_IDS.length)];
+  });
+  useEffect(() => setHomeColour(colour), [colour]);
   // The page previews the colour the new poll will get.
   usePollColour(colour);
   const [joinCode, setJoinCode] = useState("");

@@ -186,3 +186,11 @@ export const removeHostKey = (pollId: string): void => {
   delete keys[pollId];
   safeSet(K_HOST_KEYS, JSON.stringify(keys));
 };
+
+// ── Home colour ────────────────────────────────────────────────────────────
+// The colour last picked on Home, so the next visit starts with it.
+const K_HOME_COLOUR = withNs("home:colour");
+
+export const getHomeColour = (): string | null => safeGet(K_HOME_COLOUR);
+
+export const setHomeColour = (colour: string): void => safeSet(K_HOME_COLOUR, colour);

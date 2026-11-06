@@ -8,7 +8,7 @@
 
 Screenshots are the real app with demo polls, captured by `design-explorations/_harness/capture-screens.mjs`. [Desktop host view](./public/rankzap-admin.png).
 
-Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. The Podium design uses condensed Archivo type, a staircase ballot, and bold colour. Home stays brand yellow; hosts can choose from eight poll colours when creating a poll or change the colour later. The current design uses a light theme.
+Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. The Podium design uses condensed Archivo type, a staircase ballot, and bold colour. Home starts in the colour last picked there (a random one on a first visit) and previews the colour the new poll will get; hosts can change it later. The icons are black and white so no colour is favoured. The current design uses a light theme.
 
 - Create a poll, join with a four-character code, or reopen your recent polls from Home.
 - Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
@@ -22,7 +22,7 @@ Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallie
 - Vite 8 + React 19 + TypeScript 6
 - `react-router-dom` 7 (`BrowserRouter`)
 - `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
-- `tailwindcss` v4 with semantic colour tokens, eight per-poll palettes, and reduced-motion support
+- `tailwindcss` v4 with semantic colour tokens, sixteen per-poll palettes, and reduced-motion support
 - `nanoid` for voter IDs
 - `qrcode` for the admin's share QR
 - Cloudflare Workers + Durable Objects for the poll server, with `@cloudflare/vite-plugin` running it inside `npm run dev`
@@ -111,6 +111,7 @@ A poll nobody has touched for 30 days deletes itself, and a poll that was create
 ```
 rankzap:admin:lastRoomId           # last poll this browser created
 rankzap:admin:recentPolls          # recent host polls on this device ({ roomId, savedAt }[])
+rankzap:home:colour                  # colour last picked on Home
 rankzap:vote:userId                  # global voter identity
 rankzap:vote:name                    # last entered display name
 rankzap:host:keys                    # host keys for polls this browser created ({ [pollId]: key })
@@ -149,7 +150,7 @@ src/
     pollConnection.ts            # WebSocket to one poll: reconnects, snapshots, actions
     poll.tsx                     # PollProvider and usePoll
     pollApi.ts                   # HTTP calls: create, summary, delete
-    pollColour.ts                # Applies a poll's palette; restores yellow on Home
+    pollColour.ts                # Applies a poll's palette; black when none is set
     types.ts                     # Data types, palette table and length limits
     tally.ts                     # Borda, Dowdall and Copeland
     storage.ts                   # Admin/voter localStorage helpers
@@ -167,7 +168,7 @@ src/
       VoterResults.tsx           # Submitted/closed results, ties and sharing
       shared.tsx                 # Shared poll data type, modal, header and footer
   components/
-    ColourPicker.tsx            # Eight accessible colour swatches
+    ColourPicker.tsx            # Sixteen accessible colour swatches
     ArrangeOptions.tsx          # dnd-kit staircase ballot
     LiveOptions.tsx             # Live score bands, inline edit and option removal
     AddOption.tsx               # Single-add and multiline paste
