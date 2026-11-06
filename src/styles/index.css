@@ -135,6 +135,44 @@ textarea:focus-visible {
   }
 }
 
+/* Home headline: the word after "Rank" rotates (RotatingWord.tsx). */
+.rotating-word {
+  position: relative;
+  display: inline-grid;
+  vertical-align: bottom;
+  /* Clip letters as they rise in and lift out, without trimming the glyphs. */
+  overflow: hidden;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
+  white-space: nowrap;
+  transition: font-size 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.rotating-word-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+.rotating-word-row {
+  grid-area: 1 / 1;
+}
+.rotating-word-letter {
+  display: inline-block;
+}
+.is-entering .rotating-word-letter {
+  animation: word-rise 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.08) both;
+}
+.is-leaving .rotating-word-letter {
+  animation: word-lift 0.42s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+@keyframes word-rise {
+  from { transform: translateY(125%) rotate(5deg); }
+  to { transform: none; }
+}
+@keyframes word-lift {
+  from { transform: none; opacity: 1; }
+  to { transform: translateY(-125%) rotate(-4deg); opacity: 0; }
+}
+
 .drag-handle {
   touch-action: none;
 }
