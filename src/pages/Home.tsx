@@ -14,6 +14,7 @@ import {
 } from "../lib/storage";
 import { ColourPicker } from "../components/ColourPicker";
 import { Arrow } from "../components/Arrow";
+import { RotatingWord } from "../components/RotatingWord";
 import { usePollColour } from "../lib/pollColour";
 
 interface RecentPollView extends RecentPollEntry {
@@ -313,8 +314,13 @@ export function Home() {
       {/* At 1240px: 1184px inside the gutters = 672px + 48px + 464px. */}
       <div className="grid gap-8 pt-6 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)] md:items-center lg:gap-12 lg:pt-10">
         <div>
-          <h1 className="display text-[clamp(112px,25vw,180px)] tracking-[-0.03em] lg:text-[clamp(180px,17vw,232px)]">
-            Rank<br />it.
+          <h1
+            aria-label="Rank it."
+            className="display text-[clamp(112px,25vw,180px)] tracking-[-0.03em] lg:text-[clamp(180px,17vw,232px)]"
+          >
+            <span aria-hidden="true">Rank</span>
+            <br />
+            <RotatingWord />
           </h1>
           <p className="mt-6 max-w-md text-lg leading-snug font-semibold sm:text-xl">
             One link. Everyone ranks their favourites. See what comes out on top.
