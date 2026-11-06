@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef } from "react";
+import { CopyCode } from "../../components/CopyCode";
 import { X } from "lucide-react";
 import type { Meta, Option, Settings, UserRecord, Vote } from "../../lib/types";
 
@@ -145,9 +146,7 @@ export function PollTopBar({ roomId, children }: { roomId: string; children?: Re
           Rankzap
         </span>
       )}
-      <span className="bg-chip px-2.5 py-[7px] tracking-[0.04em] text-chip-ink" aria-label={`Poll code ${roomId}`}>
-        {roomId}
-      </span>
+      <CopyCode roomId={roomId} />
     </div>
   );
 }
