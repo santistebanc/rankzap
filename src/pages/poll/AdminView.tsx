@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { CopyCode } from "../../components/CopyCode";
 import { useNavigate } from "react-router-dom";
 import { usePoll, useSendAction } from "../../lib/poll";
 import { clampTitle, TALLY_MODE_LABELS, type Settings } from "../../lib/types";
@@ -61,7 +62,7 @@ export function AdminView({ poll }: { poll: PollData }) {
           </svg>
           Rankzap
         </button>
-        <span className="bg-chip px-2.5 py-[7px] font-extrabold tracking-[0.04em] text-chip-ink">{roomId}</span>
+        <CopyCode roomId={roomId} className="font-extrabold" />
         <span className="font-bold">
           {closed ? "Closed" : "Open"} · {votedCount} {votedCount === 1 ? "vote" : "votes"}
         </span>
