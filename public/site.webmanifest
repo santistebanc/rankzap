@@ -3,8 +3,8 @@
   "short_name": "Rankzap",
   "display": "browser",
   "start_url": "/",
-  "theme_color": "#ffdd1f",
-  "background_color": "#ffdd1f",
+  "theme_color": "#0b0b0b",
+  "background_color": "#0b0b0b",
   "icons": [
     {
       "src": "/favicon.svg",

@@ -22,7 +22,7 @@ export function applyPollColour(palette: PagePalette): void {
 
 /**
  * Paints the page in the poll's colour while a poll screen is mounted.
- * Unmounting restores the brand yellow from index.css, so Home stays yellow.
+ * Unmounting restores the neutral black from index.css.
  */
 export function usePollColour(palette: PagePalette): void {
   useLayoutEffect(() => {
