@@ -140,12 +140,9 @@ textarea:focus-visible {
   position: relative;
   display: inline-grid;
   vertical-align: bottom;
-  /* Clip letters as they rise in and lift out, without trimming the glyphs. */
-  overflow: hidden;
-  padding-block: 0.08em;
-  margin-block: -0.08em;
+  /* Always a full-size line, so a smaller word doesn't move what's below. */
+  height: 1lh;
   white-space: nowrap;
-  transition: font-size 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .rotating-word-measure {
   position: absolute;
@@ -154,6 +151,13 @@ textarea:focus-visible {
 }
 .rotating-word-row {
   grid-area: 1 / 1;
+  /* A shrunk word hangs right under "Rank"; the spare room goes below it. */
+  align-self: start;
+  /* Each word clips its own letters as they rise in and lift out, so a
+     smaller word appears from its own baseline, without trimming glyphs. */
+  overflow: hidden;
+  padding-block: 0.08em;
+  margin-block: -0.08em;
 }
 .rotating-word-letter {
   display: inline-block;
