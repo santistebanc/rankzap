@@ -51,7 +51,7 @@ export function VoterResults({
   const selectedName = selectedVoterId ? usersMap.get(selectedVoterId)?.name || "Voter" : "Voter";
 
   return (
-    <section aria-label={closed ? "Final results" : "Results"} className="grid">
+    <section aria-label={closed ? "Final results" : "Results"} className="grid pt-3">
       {closed ? (
         <FinalBanner
           summary={voteSummary}
@@ -61,7 +61,7 @@ export function VoterResults({
         />
       ) : (
         <div className="bg-[#0b0b0b] px-[18px] pt-5 pb-[18px] text-white">
-          <h1 className="display mb-2 text-[56px] text-sig-fg">{hasVoted ? "You're in." : "Not in yet."}</h1>
+          <h2 className="display mb-2 text-[56px] text-sig-fg">{hasVoted ? "You're in." : "Not in yet."}</h2>
           <p className="mb-3.5 text-[15px]">
             {!hasVoted
               ? "You're looking at the results without a vote. Rank the options to add yours."

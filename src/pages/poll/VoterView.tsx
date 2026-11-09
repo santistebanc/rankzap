@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { nanoid } from "nanoid";
 import { usePoll } from "../../lib/poll";
 import { clampOption, NAME_MAX, type Option, type UserMode } from "../../lib/types";
-import { adaptiveSize } from "../../lib/adaptiveSize";
 import { fallbackVoterName, persistVoterName, type VoterIdentity } from "../../lib/identity";
 import { getVoterRank, setVoterRank } from "../../lib/storage";
 import { ArrangeOptions } from "../../components/ArrangeOptions";
@@ -13,7 +12,9 @@ import { VoterResults } from "./VoterResults";
 import {
   PollTopBar,
   PoweredByFooter,
+  questionFontSize,
   sameRanking,
+  StickyQuestion,
   shuffleIds,
   type PollData,
 } from "./shared";
@@ -201,16 +202,19 @@ export function VoterView({ poll, identity }: { poll: PollData; identity: VoterI
         {name ? <span className="min-w-0 truncate">Voting as {name}</span> : undefined}
       </PollTopBar>
 
+      <StickyQuestion>
+        <h1
+          className="display border-b-4 border-current pt-1 pb-2 wrap-break-word"
+          style={{ fontSize: questionFontSize(pollHeading, 28, 44) }}
+        >
+          {pollHeading}
+        </h1>
+      </StickyQuestion>
+
       <div className="flex-1">
         <Activity mode={voterView === "compose" ? "visible" : "hidden"}>
           <section aria-label="Your vote" inert={voterView !== "compose" ? true : undefined}>
-            <h1
-              className="display mx-[18px] mt-[18px] mb-1.5 wrap-break-word"
-              style={{ fontSize: adaptiveSize(pollHeading, 34, 52, 16, 80) }}
-            >
-              {pollHeading}
-            </h1>
-            <p className="mx-[18px] mb-1 text-[15px] font-semibold">
+            <p className="mx-[18px] mt-3 mb-1 text-[15px] font-semibold">
               {meta.state === "closed"
                 ? "This poll is closed."
                 : !settings.allowRevote && hasVoted

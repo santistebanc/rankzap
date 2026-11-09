@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from "react";
 import { CopyCode } from "../../components/CopyCode";
 import { X } from "lucide-react";
+import { adaptiveSize } from "../../lib/adaptiveSize";
 import type { Meta, Option, Settings, UserRecord, Vote } from "../../lib/types";
 
 /** The poll as both views read it. Built from the live snapshot in Layout. */
@@ -132,6 +133,19 @@ export function shuffleIds(ids: string[]): string[] {
     out[j] = tmp;
   }
   return out;
+}
+
+/**
+ * The question, pinned to the top of the viewport so it stays in sight while
+ * the options scroll under it. The 4px rule is the band's bottom edge.
+ */
+export function StickyQuestion({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`sticky top-0 z-30 bg-ground px-[18px] pt-2 ${className}`}>{children}</div>;
+}
+
+/** Font size for the pinned question: big when short, never wider than the phone. */
+export function questionFontSize(text: string, minPx: number, maxPx: number): string {
+  return `min(${adaptiveSize(text, minPx, maxPx, 14, 80)}px, 11vw)`;
 }
 
 /** Poll screens' top row: whatever the screen puts on the left, the room code on the right. */

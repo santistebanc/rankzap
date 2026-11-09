@@ -3,14 +3,13 @@ import { CopyCode } from "../../components/CopyCode";
 import { useNavigate } from "react-router-dom";
 import { usePoll, useSendAction } from "../../lib/poll";
 import { clampTitle, TALLY_MODE_LABELS, type Settings } from "../../lib/types";
-import { adaptiveSize } from "../../lib/adaptiveSize";
 import { SharePanel, ShareScreen } from "../../components/ShareLink";
 import { UsersList } from "../../components/UsersList";
 import { AddOption } from "../../components/AddOption";
 import { LiveOptions } from "../../components/LiveOptions";
 import { ColourPanel, Panel, ScoringPanel, SettingsPanel } from "../../components/Settings";
 import { VoterRankingPanel } from "../../components/VoterRankingPanel";
-import { PoweredByFooter, type PollData } from "./shared";
+import { PoweredByFooter, questionFontSize, StickyQuestion, type PollData } from "./shared";
 
 type Confirming = "close" | "reset" | "deleteVote" | null;
 
@@ -257,7 +256,7 @@ function PollTitle({ settings }: { settings: Settings }) {
   };
 
   return (
-    <div className="px-[18px] lg:px-7">
+    <StickyQuestion className="lg:px-7">
       <textarea
         ref={ref}
         rows={1}
@@ -284,10 +283,10 @@ function PollTitle({ settings }: { settings: Settings }) {
             ref.current?.blur();
           }
         }}
-        style={{ fontSize: `min(${adaptiveSize(draft, 44, 84, 12, 60)}px, 14vw)` }}
+        style={{ fontSize: questionFontSize(draft, 30, 56) }}
         className="display block w-full resize-none overflow-hidden rounded-none border-b-4 border-current bg-transparent pt-1 pb-2 text-ink outline-none placeholder:text-current placeholder:opacity-60 focus:shadow-[0_3px_0_currentColor]"
       />
-    </div>
+    </StickyQuestion>
   );
 }
 
