@@ -72,6 +72,12 @@ function randomToken(bytes: number): string {
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "content-type": "application/json", "cache-control": "no-store" },
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "no-store",
+      // JSON is never a page: nothing may run, load or frame it. Pages get theirs from public/_headers.
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-content-type-options": "nosniff",
+    },
   });
 }
