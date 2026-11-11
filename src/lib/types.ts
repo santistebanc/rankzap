@@ -77,7 +77,7 @@ export const POLL_COLOURS: Record<
 export const POLL_COLOUR_IDS = Object.keys(POLL_COLOURS) as PollColour[];
 
 export function pollColourOf(value: unknown): PollColour {
-  return typeof value === "string" && value in POLL_COLOURS
+  return typeof value === "string" && Object.hasOwn(POLL_COLOURS, value)
     ? (value as PollColour)
     : DEFAULT_POLL_COLOUR;
 }
