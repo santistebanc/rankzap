@@ -1,4 +1,4 @@
-# On every push and pull request: install, run the unit tests, then type-check and build.
+# On every push and pull request: install, run the unit tests, type-check and build, and scan for leaked secrets.
 name: CI
 
 on:
@@ -27,3 +27,19 @@ jobs:
         run: npm test
       - name: Type-check and build
         run: npm run build
+
+  # Stops a change that adds a password, key or token. GitHub push protection
+  # (turned on in the repository settings) also blocks known key types on push.
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read  # the action lists the commits of a pull request
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
