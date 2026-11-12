@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "tool": "project-showcase/capture.mjs",
+  "project": "Rankzap",
+  "source": "http://localhost:4173",
+  "commit": "2ad5a20",
+  "capturedAt": "2026-11-11T12:57:32.512Z",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 900,
+      "scale": 1
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "scale": 2,
+      "mobile": true
+    }
+  },
+  "warnings": [],
+  "items": [
+    {
+      "id": "home",
+      "kind": "screenshot",
+      "file": "screens/home-desktop-light.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "caption": "Home: start a poll in a colour, or join one with a four-character code",
+      "path": "/",
+      "hero": false,
+      "width": 1440,
+      "bytes": 64661
+    },
+    {
+      "id": "home",
+      "kind": "screenshot",
+      "file": "screens/home-mobile-light.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "caption": "Home: start a poll in a colour, or join one with a four-character code",
+      "path": "/",
+      "hero": false,
+      "width": 780,
+      "bytes": 57492
+    },
+    {
+      "id": "ballot",
+      "kind": "screenshot",
+      "file": "screens/ballot-mobile-light.png",
+      "viewport": "mobile",
+      "theme": "light",
+      "caption": "A voter ranks the options by dragging them, best at the top",
+      "path": "/",
+      "hero": false,
+      "width": 780,
+      "bytes": 84892
+    },
+    {
+      "id": "host",
+      "kind": "screenshot",
+      "file": "screens/host-desktop-light.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "caption": "The host sees live scores, who voted, the share code and the scoring method",
+      "path": "/",
+      "hero": false,
+      "width": 1440,
+      "bytes": 84221
+    },
+    {
+      "id": "share",
+      "kind": "screenshot",
+      "file": "screens/share-desktop-light.png",
+      "viewport": "desktop",
+      "theme": "light",
+      "caption": "A full-screen QR code lets a room join from their phones",
+      "path": "/",
+      "hero": false,
+      "width": 1440,
+      "bytes": 25012
+    },
+    {
+      "id": "rank-and-vote",
+      "kind": "clip",
+      "files": {
+        "gif": "clips/rank-and-vote.gif",
+        "poster": "clips/rank-and-vote.png",
+        "webm": "clips/rank-and-vote.webm"
+      },
+      "viewport": "mobile",
+      "theme": "light",
+      "caption": "Drag a favourite to the top, add a name, lock in the vote and see the live result",
+      "path": "/",
+      "hero": true,
+      "durationS": 7.4,
+      "gifWidth": 320,
+      "videoWidth": 390,
+      "bytes": {
+        "gif": 257749,
+        "poster": 81394,
+        "webm": 140469
+      }
+    },
+    {
+      "id": "host-live",
+      "kind": "clip",
+      "files": {
+        "gif": "clips/host-live.gif",
+        "poster": "clips/host-live.png",
+        "webm": "clips/host-live.webm"
+      },
+      "viewport": "desktop",
+      "theme": "light",
+      "caption": "The host page updates live as each vote arrives",
+      "path": "/",
+      "hero": false,
+      "durationS": 7.1,
+      "gifWidth": 800,
+      "videoWidth": 1440,
+      "bytes": {
+        "gif": 162221,
+        "poster": 84296,
+        "webm": 188860
+      }
+    }
+  ]
+}
