@@ -2,188 +2,61 @@
   <img src="./public/rankzap-logo.svg" alt="Rankzap" width="280" />
 </p>
 
-[Live app](https://rankzap.site)
+Rankzap runs live ranked-choice polls: share one link, everyone drags the options into order, and the tally updates as votes arrive.
 
-![Rankzap ballot, results and host controls](./public/rankzap-screenshot.png)
+**[Open Rankzap](https://rankzap.site)** · [Docs](docs/how-it-works.md)
 
-Screenshots are the real app with demo polls, captured by `design-explorations/_harness/capture-screens.mjs`. [Desktop host view](./public/rankzap-admin.png).
+![Drag a favourite to the top, add a name, lock in the vote and see the live result](docs/media/clips/rank-and-vote.gif)
 
-Real-time, mobile-first ranked-voting app. Drag to rank, submit, see live tallies. The Podium design uses condensed Archivo type, a staircase ballot, and bold colour. Home starts in the colour last picked there (a random one on a first visit) and previews the colour the new poll will get; hosts can change it later. The icons are black and white so no colour is favoured. The current design uses a light theme.
+## Features
 
-- Create a poll, join with a four-character code, or reopen your recent polls from Home.
-- Two pages per poll: an **admin** view (`/:roomId/admin`) and a **voter** view (`/:roomId`).
-- Three tally modes: **Borda Count**, **Dowdall**, **Copeland**.
-- Real-time sync, presence (online / voting / editing / voted indicators) and storage through its own small server: one Cloudflare Durable Object per poll (`worker/`).
-- Poll IDs are 4-character uppercase alphanumeric (e.g. `A3ZK`). URLs are normalised to uppercase on load.
-- The app and the poll server deploy together as one Cloudflare Worker.
+<table>
+<tr>
+<td width="50%"><img src="docs/media/screens/ballot-mobile-light.png" alt="A voter ranks the options by dragging them, best at the top" width="220"></td>
+<td><b>Drag to rank</b><br>Voters put every option in order on a staircase ballot, best at the top.</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/clips/host-live.gif" alt="The host page updates live as each vote arrives"></td>
+<td><b>Live host page</b><br>Scores, voters and presence update over a WebSocket as each vote arrives.</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/screens/host-desktop-light.png" alt="The host sees live scores, who voted, the share code and the scoring method"></td>
+<td><b>Three scoring methods</b><br>Hosts switch between Borda Count, Dowdall and Copeland at any time.</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/screens/share-desktop-light.png" alt="A full-screen QR code lets a room join from their phones"></td>
+<td><b>Join by code or QR</b><br>A four-character code and a full-screen QR code bring a room in.</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/screens/home-mobile-light.png" alt="Home: start a poll in a colour, or join one with a four-character code" width="220"></td>
+<td><b>A colour per poll</b><br>Each poll takes one of sixteen colours; hosts can change it later.</td>
+</tr>
+</table>
 
-## Stack
+## Quick start
 
-- Vite 8 + React 19 + TypeScript 6
-- `react-router-dom` 7 (`BrowserRouter`)
-- `@dnd-kit/core` + `@dnd-kit/sortable` for drag-to-rank
-- `tailwindcss` v4 with semantic colour tokens, sixteen per-poll palettes, and reduced-motion support
-- `nanoid` for voter IDs
-- `qrcode` for the admin's share QR
-- Cloudflare Workers + Durable Objects for the poll server, with `@cloudflare/vite-plugin` running it inside `npm run dev`
-
-## Local development
-
-```bash
+```sh
+git clone https://github.com/santistebanc/rankzap.git
+cd rankzap
 npm install
-npm run dev        # the app and the poll server, on one port
+npm run dev   # → the app and the poll server on one port (Vite prints the URL)
 ```
 
-Use **Node `^20.19` or `≥22.12`** (same as Vite 8 / Rolldown).
+Use Node `^20.19` or `>=22.12`. Nothing needs configuring: local polls are stored in `.wrangler/`.
 
-There's nothing to configure. `npm run dev` runs the Worker in `worker/` (the poll server) inside Vite, using Cloudflare's local runtime. Local polls are stored in `.wrangler/` and survive restarts.
+## How it's built
 
-To try it on a phone privately with Tailscale, add the computer's Tailscale hostname to `VITE_DEV_ALLOWED_HOSTS` in `.env.local` (see `.env.example`), restart `npm run dev`, and run `tailscale serve --bg --https=8443 http://127.0.0.1:5173` (use the port Vite prints). Open the HTTPS link on a phone signed in to the same tailnet. Polls connect over that same address.
+- **Frontend:** Vite, React 19 and TypeScript; `@dnd-kit` for drag-to-rank and Tailwind CSS v4 with per-poll colour tokens.
+- **Poll server:** one Cloudflare Durable Object per poll keeps the poll, checks each action and pushes a fresh snapshot to every WebSocket.
+- **Trust model:** creating a poll returns a secret host key kept in the browser; voters are not authenticated, so polls are not for binding ballots.
+- **Deployment:** the app and the poll server ship as one Cloudflare Worker; GitHub Actions deploys every push to `main`.
 
-```bash
-npm run build        # → dist/client (app) and dist/rankzap (Worker)
-npm run preview      # serve the built bundle locally, Worker included
-npm run cf-typegen   # regenerate worker/worker-configuration.d.ts after editing wrangler.jsonc
-```
+## More
 
-## Deployment to Cloudflare
-
-The app and the poll server are one Worker, configured in `wrangler.jsonc`: the Worker answers `/api/*`, and every other path is the built app (unknown paths get `index.html`, so deep links work).
-
-From your machine:
-
-```bash
-npx wrangler login   # once
-npm run deploy       # build, then wrangler deploy
-```
-
-From GitHub: `.github/workflows/deploy.yml` deploys on every push to `main`. Add two repository secrets under **Settings → Secrets and variables → Actions**: `CLOUDFLARE_API_TOKEN` (a token from the "Edit Cloudflare Workers" template) and `CLOUDFLARE_ACCOUNT_ID`.
-
-The workflow skips the deploy until `CLOUDFLARE_API_TOKEN` is set.
-
-The Worker answers on `rankzap.site` and `www.rankzap.site` (the `routes` in `wrangler.jsonc`) and at `rankzap.santistebanc94.workers.dev`. A custom domain must be a zone in the same Cloudflare account, with its nameservers pointing at Cloudflare.
-
-## How it works
-
-### Routing
-
-| Path | Page |
-|---|---|
-| `/` | **Home** — create a poll with a colour, join by code, or reopen a recent poll from this device. |
-| `/:roomId/admin` | Admin — edit title/options, inspect voters, change colour/scoring/settings, close/reset, share link and full-screen QR. |
-| `/:roomId` | Voter — drag to rank, add your name as you lock in your vote, watch results, see the final winner. |
-
-Anything else redirects to `/`. Lowercase room IDs in the URL are silently redirected to their uppercase canonical form.
-
-### Poll server
-
-Each poll is one Durable Object (`worker/pollRoom.ts`), named by its code. It keeps the whole poll in memory and in its storage:
-
-```
-state       "open" | "closed"
-settings    { tallyMode, ballotTitle, showLiveResults, allowRevote, allowAdd, showUsers, showVoterVotes, colour? }
-options     { id, text, addedBy, addedAt }[]
-users       { id, name, mode: "idle" | "voting" | "editing", ignored? } by user id
-votes       { userId, ranking: string[], submittedAt, ignored? } by user id
-```
-
-Who's online isn't stored: it's the set of voters with an open WebSocket.
-
-Browsers connect with a WebSocket (`/api/polls/:id/ws`) and send actions (`join`, `vote`, `addOptions`, `updateSettings`, `setState`, …; see `src/lib/protocol.ts`). The server checks each action, saves the change, and sends every connection a fresh snapshot. Options a voter adds while ranking are saved together with their vote.
-
-HTTP endpoints cover what doesn't need a live connection:
-
-| Request | Does |
-|---|---|
-| `POST /api/polls` | Create a poll. Returns its code and a host key. |
-| `GET /api/polls/:id` | Title, colour, state and first options, for Home's recent polls. |
-| `DELETE /api/polls/:id` | Delete a poll. Needs the host key. |
-
-A poll nobody has touched for 30 days deletes itself, and a poll that was created but never set up deletes itself after a day.
-
-`mode` semantics:
-- `"voting"` — voter is on the compose tab and has never submitted a vote
-- `"editing"` — voter is on the compose tab, has submitted before, and their current ranking differs from the submitted one (submit button re-enabled)
-- `"idle"` — everything else
-
-### localStorage layout (admin/voter strictly isolated)
-
-```
-rankzap:admin:lastRoomId           # last poll this browser created
-rankzap:admin:recentPolls          # recent host polls on this device ({ roomId, savedAt }[])
-rankzap:home:colour                  # colour last picked on Home
-rankzap:vote:userId                  # global voter identity
-rankzap:vote:name                    # last entered display name
-rankzap:host:keys                    # host keys for polls this browser created ({ [pollId]: key })
-rankzap:room:{roomId}:vote:rank      # voter's local drag order (saved on every drag-end)
-```
-
-### Tally
-
-All three modes filter votes against the current option set on read. Results are sorted by score desc, ties broken by `addedAt` ascending.
-
-| Mode | Score |
-|---|---|
-| Borda | 1st = `N-1`, 2nd = `N-2`, …; unranked = 0 |
-| Dowdall | 1st = 1, 2nd = ½, 3rd = ⅓, …; unranked = 0 |
-| Copeland | Per pair (A,B): +1 to the option more voters preferred, +0.5 each on tie. |
-
-### Privacy / trust model
-
-Creating a poll returns a secret host key, kept in that browser's localStorage. Only connections with the key can change the poll, and `/:id/admin` shows "Not your poll" without it. Clearing the browser's storage loses host access.
-
-Voters aren't authenticated: anyone with the link can vote, and voter IDs live in localStorage, so a voter can vote again from another browser. Don't use this for sensitive or binding ballots.
-
-## Project layout
-
-```text
-worker/
-  index.ts                       # Routes /api/polls to each poll's Durable Object
-  pollRoom.ts                    # One poll: storage, actions, WebSockets, expiry
-  worker-configuration.d.ts      # Generated by `npm run cf-typegen`
-src/
-  main.tsx                       # React root and router
-  App.tsx                        # Lazy-loaded routes
-  styles/index.css               # Podium colour/type/motion tokens
-  lib/
-    protocol.ts                  # Messages and types shared with the poll server
-    pollConnection.ts            # WebSocket to one poll: reconnects, snapshots, actions
-    poll.tsx                     # PollProvider and usePoll
-    pollApi.ts                   # HTTP calls: create, summary, delete
-    pollColour.ts                # Applies a poll's palette; black when none is set
-    types.ts                     # Data types, palette table and length limits
-    tally.ts                     # Borda, Dowdall and Copeland
-    storage.ts                   # Admin/voter localStorage helpers
-    identity.ts                  # Voter identity and display name
-    adaptiveSize.ts              # Fits type to the length of an option or question
-    url.ts                       # Voter/admin URL builders
-  pages/
-    Home.tsx                     # Create, join by code and recent host polls
-    Layout.tsx                   # Connects to the poll, builds poll data, applies the colour
-    AdminPage.tsx
-    RankzapPage.tsx
-    poll/
-      AdminView.tsx              # Responsive host panels and poll actions
-      VoterView.tsx              # Ballot, with the name asked at lock-in
-      VoterResults.tsx           # Submitted/closed results, ties and sharing
-      shared.tsx                 # Shared poll data type, modal, header and footer
-  components/
-    ColourPicker.tsx            # Sixteen accessible colour swatches
-    ArrangeOptions.tsx          # dnd-kit staircase ballot
-    LiveOptions.tsx             # Live score bands, inline edit and option removal
-    AddOption.tsx               # Single-add and multiline paste
-    SubmitVote.tsx              # Vote submission, progress and errors
-    UsersList.tsx               # Participants and selectable voter tags
-    UserPill.tsx                # Presence/vote status tags
-    VoterRankingPanel.tsx       # Individual ranking list
-    Settings.tsx               # Host panels, scoring and switches
-    ShareLink.tsx              # Share panel and full-screen QR
-    Arrow.tsx
-    Punch.tsx                   # Feedback when a score or rank changes
-```
-
-`design-explorations/` contains the original directions, the approved Podium mockup, and local preview harnesses. Harness data is fake and is not included in the production app.
+- [How it works](docs/how-it-works.md): local development, deployment, routing, the poll server, tally rules and project layout.
+- [Media and capture config](docs/media/), refreshed with the project-showcase capture script (`docs/media/seed.mjs` creates the demo polls).
+- `design-explorations/`: the original design directions and the approved Podium mockup.
 
 ## License
 
-MIT
+MIT.
