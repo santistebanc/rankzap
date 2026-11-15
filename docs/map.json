@@ -1,0 +1,9 @@
+{
+  "parts": [
+    {"id": "screens", "name": "Poll screens", "about": "Home, voting, results and admin pages", "paths": ["src", "index.html", "public", "vite.config.ts"], "links": ["logic"]},
+    {"id": "logic", "name": "Poll logic", "about": "Vote counting, poll data and live connection", "paths": ["src/lib"], "links": ["server"]},
+    {"id": "server", "name": "Live poll server", "about": "Keeps each poll room and sends updates", "paths": ["worker", "wrangler.jsonc"], "links": []},
+    {"id": "designs", "name": "Design trials", "about": "Earlier design ideas for the poll page", "paths": ["design-explorations"], "links": []},
+    {"id": "docs", "name": "Docs and setup", "about": "README, media and project settings", "paths": ["README.md", "docs", "package.json", "tsconfig.json", "tsconfig.app.json", "tsconfig.node.json", "tsconfig.worker.json", "vitest.config.ts"], "links": []}
+  ]
+}
